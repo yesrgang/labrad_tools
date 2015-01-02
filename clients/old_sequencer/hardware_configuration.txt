@@ -1,0 +1,4 @@
+a1, trigger, 0
+a2, blue splitter AOM, 1
+a3, MOT Coil TTL, 0
+a4, randumb shit, 1
