@@ -4,6 +4,7 @@ from client_tools import SuperSpinBox
 from connection import connection
 from twisted.internet.defer import inlineCallbacks
 import numpy as np
+from time import sleep
 
 class PSUControl(QtGui.QGroupBox):
     has_new_state = False
@@ -46,10 +47,10 @@ class PSUControl(QtGui.QGroupBox):
         self.state_button = QtGui.QPushButton()
         self.state_button.setCheckable(1)
         
-        self.current_box = SuperSpinBox(self.current_range, 2)
+        self.current_box = SuperSpinBox(self.current_range, self.current_decimals) 
         self.current_box.setFixedWidth(self.spinbox_width)
         
-        self.voltage_box = SuperSpinBox(self.voltage_range, 3)
+        self.voltage_box = SuperSpinBox(self.voltage_range, self.voltage_decimals)
         self.voltage_box.setFixedWidth(self.spinbox_width)
 
         if self.layout is None:
@@ -62,7 +63,7 @@ class PSUControl(QtGui.QGroupBox):
         self.layout.addWidget(QtGui.QLabel('Voltage [V]: '), 3, 0, 1, 1, QtCore.Qt.AlignRight)
         self.layout.addWidget(self.voltage_box, 3, 1)
         self.setLayout(self.layout)
-        self.setFixedSize(110 + self.spinbox_width, 166)
+        self.setFixedSize(120 + self.spinbox_width, 166)
 
     @inlineCallbacks
     def connect_signals(self):
@@ -88,7 +89,7 @@ class PSUControl(QtGui.QGroupBox):
         s = yield server.state()
  
     def receive_values(self, c, signal):
-        name, state, current, voltage = signal
+        name, state, current, voltage, power = signal
         print signal
         if name == self.name:
             self.free = False
@@ -127,10 +128,14 @@ class PSUControl(QtGui.QGroupBox):
             self.has_new_current = False
             server = yield self.cxn.get_server(self.server_name)
             yield server.current(self.current_box.value())
+#            sleep(.5)
+#            yield server.current()
         elif self.has_new_volatage:
             self.has_new_volatage = False
             server = yield self.cxn.get_server(self.server_name)
             yield server.voltage(self.voltage_box.value())
+#            sleep(.5)
+#            yield server.voltage()
 
 #    def removeWidgets(self):
 #        for i in reversed(range(self.layout.count())):

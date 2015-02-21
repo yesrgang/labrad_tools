@@ -3,7 +3,9 @@ class PSUConfig(object):
         self.name = 'psu0'
         self.server_name = 'yesr13_sorensen_psu'
         self.update_id = 461020
+        
+        self.current_decimals = 0
+        self.voltage_decimals = 1
 
-
-        self.update_time = 10 # [ms]
-        self.spinbox_width = 100 # [pixels]
+        self.update_time = 500 # [ms]
+        self.spinbox_width = 80 # [pixels]

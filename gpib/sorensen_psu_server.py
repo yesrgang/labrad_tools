@@ -18,6 +18,7 @@ timeout = 5
 from labrad.server import setting, Signal
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from twisted.internet.defer import inlineCallbacks, returnValue
+from time import sleep
 
 
 class SorensenPSUWrapper(GPIBDeviceWrapper):
@@ -85,7 +86,7 @@ class SorensenPSUServer(GPIBManagedServer):
     def __init__(self, config_name):
         self.config_name = config_name
         self._load_configuration()
-        self.update_values = Signal(self.update_id, "signal: update_values", '(sbvv)')
+        self.update_values = Signal(self.update_id, "signal: update_values", '(sbvvv)')
         GPIBManagedServer.__init__(self)
 
     @setting(10, 'state', state='b', returns='b')
@@ -102,6 +103,7 @@ class SorensenPSUServer(GPIBManagedServer):
         dev = self.selectedDevice(c)
         if current is not None: 
             yield dev.set_current(current)
+            sleep(.5)
         current = yield dev.get_current()
         yield self.notify_listeners(c)
         returnValue(current)
@@ -111,6 +113,7 @@ class SorensenPSUServer(GPIBManagedServer):
         dev = self.selectedDevice(c)
         if voltage is not None:
             yield dev.set_voltage(voltage)
+            sleep(.5)
         voltage = yield dev.get_voltage()
         yield self.notify_listeners(c)
         returnValue(voltage)
@@ -120,6 +123,7 @@ class SorensenPSUServer(GPIBManagedServer):
         dev = self.selectedDevice(c)
         if power is not None:
             yield dev.set_power(power)
+            sleep(.5)
         power = yield dev.get_power()
         yield self.notify_listeners(c)
         returnValue(power)
@@ -130,7 +134,8 @@ class SorensenPSUServer(GPIBManagedServer):
         s = yield dev.get_state()
         c = yield dev.get_current()
         v = yield dev.get_voltage()
-        self.update_values((dev.name, s,c,v))
+        p = yield dev.get_power()
+        yield self.update_values((dev.name, s, c, v, p))
 
     def _load_configuration(self):
         config = __import__(self.config_name).SorensenPSUConfig()
