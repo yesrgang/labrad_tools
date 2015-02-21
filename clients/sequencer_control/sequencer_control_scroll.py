@@ -24,16 +24,13 @@ class SequencerButton(QtGui.QPushButton):
         self.setFixedSize(sbwidth, sbheight)
 
 class SequencerButton(QtGui.QFrame):
-    def __init__(self, initial_state):
+    def __init__(self):
         super(SequencerButton, self).__init__(None)
         self.setFixedSize(sbwidth, sbheight)
         self.setFrameShape(2)
         self.setLineWidth(1)
         #self.setAutoFillBackground(True)
-        if initial_state:
-            self.setChecked(1)
-        else:
-            self.setChecked(0)
+        self.setChecked(0)
     
     def setChecked(self, state):
         if state:
@@ -67,37 +64,55 @@ class AddButton(QtGui.QPushButton):
 
 class DelButton(QtGui.QPushButton):
     def __init__(self):
-        super(AddButton, self).__init__(None)
+        super(DelButton, self).__init__(None)
         #self.setCheckable(1)
         self.setText('Del')
         self.setFixedSize(sbwidth, sbheight)
 
-class DurationBox(QtGui.QDoubleSpinBox):
-    def __init__(self, initial_duration):
-        super(DurationBox,  self).__init__(None)
+class TimingBox(QtGui.QDoubleSpinBox):
+    def __init__(self):
+        super(TimingBox,  self).__init__(None)
         self.setButtonSymbols(QtGui.QAbstractSpinBox.NoButtons)
         self.setDecimals(2)
-        self.setValue(initial_duration)
+        self.setValue(1)
         self.setRange(1e-5, 10000)
 #        self.setStyleSheet('QWidget {background-color: #eeeeee}') # set widget background
         self.setFixedSize(sbwidth, sbheight)
 
-class LogicColumn(QtGui.QWidget):
-    def __init__(self, initial_logic, initial_duration):
-        super(LogicColumn, self).__init__(None)
-        self.populate(initial_logic, initial_duration)
+class TimingRow(QtGui.QWidget):
+    def __init__(self, num_columns):
+        super(TimingRow, self).__init__(None)
+        self.populate(num_columns)
+        #self.set_timing(initial_times)
 
-    def populate(self, logic, duration):
-        self.duration_box = DurationBox(duration) 
-        self.sequencer_buttons = [SequencerButton(l) for l in logic]
-        self.add_button = AddButton()
-        self.del_button = QtGui.QPushButton('Del')
-        self.del_button.setFixedSize(sbwidth, sbheight)
-
-        self.layout = QtGui.QVBoxLayout()
+    def populate(self, num_columns):
+        self.timing_boxes = [TimingBox() for i in range(num_columns)]
+        self.layout = QtGui.QHBoxLayout()
+        for tb in self.timing_boxes:
+            self.layout.addWidget(tb)
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.addWidget(self.duration_box)
+        self.setLayout(self.layout)
+
+    def get_timing(self):
+        return [tb.value() for tb in self.timing_boxes]
+
+    def set_timings(self, times):
+        for tb, t in zip(self.timing_boxes, times):
+            tb.setValue(t)
+
+class LogicColumn(QtGui.QWidget):
+    def __init__(self, num_rows):
+        super(LogicColumn, self).__init__(None)
+        self.populate(num_rows)
+
+    def populate(self, num_rows):
+        self.sequencer_buttons = [SequencerButton() for i in range(num_rows)]
+        self.add_button = AddButton()
+        self.del_button = DelButton()
+
+        self.layout = QtGui.QVBoxLayout()
+        
         for i, sb in enumerate(self.sequencer_buttons):
             if not i%15:
                 self.layout.addWidget(Spacer(sbheight/2, sbwidth))
@@ -105,48 +120,28 @@ class LogicColumn(QtGui.QWidget):
         self.layout.addWidget(Spacer(sbheight/2, sbwidth))
         self.layout.addWidget(self.add_button)
         self.layout.addWidget(self.del_button)
+        
+        self.layout.setSpacing(0)
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.layout)
 
     def get_logic(self):
-        return (self.duration_box.value(), [int(sb.isChecked()) for sb in self.sequencer_buttons])
+        return [int(sb.isChecked()) for sb in self.sequencer_buttons]
 
     def set_logic(self, logic):
-        duration, states = logic
-        self.duration_box.setValue(duration)
-        for i, s in enumerate(states):
-            self.sequencer_buttons[i].setChecked(s)
+        for sb, l in zip(self.sequencer_buttons, logic):
+            sb.setChecked(l)
 
 class LogicArray(QtGui.QWidget):
     def __init__(self, num_rows, num_columns):
         super(LogicArray, self).__init__(None)
-        self.logic_columns = [LogicColumn(num_rows*[False], 1) for i in range(num_columns)]
+        self.logic_columns = [LogicColumn(num_rows) for i in range(num_columns)]
         self.layout = QtGui.QHBoxLayout()
         for lc in self.logic_columns:
             self.layout.addWidget(lc)
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.layout)
-        
-        #self.duration_boxes = [DurationBox(1) for i in range(num_columns)]
-        #self.sequencer_buttons = [[SequencerButton(False) for j in range(num_rows)] for i in range(num_columns)]
-        #self.add_buttons = [AddButton() for i in range(num_columns)]
-        #self.del_buttons = [DelButton() for i in range(num_columns)]
-        #self.layout = QtGui.QGridLayout()
-        #self.layout.setSpacing(0)
-        #self.layout.setContentsMargins(0, 0, 0, 0)
-        #for i, db in enumerate(self.duration_boxes):
-        #    self.layout.addWidget(db, 0, i)
-        #for i, l in enumerate(self.sequencer_buttons):
-        #    for j, sb in enumerate(l):
-        #        self.layout.addWidget(sb, j+1, i)
-        #for i, ab in enumerate(self.add_buttons):
-        #    self.layout.addWidget(ab, num_columns+2, i)
-        #for i, db in enumerate(self.del_buttons):
-        #    self.layout.addWidget(db, num_columns+3, i)
-
-
-
-
 
 class NameBox(QtGui.QLabel):
     def __init__(self, name):
@@ -165,14 +160,11 @@ class NameColumn(QtGui.QGroupBox):
         self.layout = QtGui.QVBoxLayout()
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 10, 0)
-        self.layout.addWidget(NameBox('')) # blank. browse and run
         for i, nb in enumerate(self.name_boxes):
             if not i%15:
                 self.layout.addWidget(Spacer(sbheight/2, nbwidth))
             self.layout.addWidget(nb)
         self.layout.addWidget(Spacer(sbheight/2, nbwidth))
-        self.layout.addWidget(NameBox('')) #blank. add button
-        self.layout.addWidget(NameBox('')) #blank. del button
         self.setLayout(self.layout)
 
 class BrowseAndRun(QtGui.QWidget):
@@ -231,79 +223,104 @@ class SequencerClient(QtGui.QWidget):
 
     def initialize(self):
         self.browse_and_run = BrowseAndRun()
-        self.browse_and_run.browse_button.clicked.connect(self.browse)
-        self.browse_and_run.run_button.clicked.connect(self.save_sequence)
         self.name_column = NameColumn(self.names)
         self.logic_array = LogicArray(len(self.names), maxcols)
-        
+        self.timing_row = TimingRow(maxcols)
+ 
         self.layout = QtGui.QGridLayout()
         self.layout.setSpacing(0)
         self.layout.addWidget(self.browse_and_run, 0, 1, 1, 100000)
 
-        self.layout.addWidget(self.name_column, 1, 0)
-        self.layout.addWidget(self.logic_array, 1, 1)
-        #for i, lc in enumerate(self.logic_columns):
-        #    self.layout.addWidget(lc, 1, 1+i)
+#        self.layout.addWidget(self.scroll_area, 1, 1)
 
-        self.browse_and_run.run_button.clicked.connect(self.get_logic)
+        self.layout.addWidget(self.timing_row, 1, 1)
+        self.layout.addWidget(self.name_column, 2, 0)
+        self.layout.addWidget(self.logic_array, 2, 1)
+
+        self.browse_and_run.run_button.clicked.connect(self.save_sequence)
+        self.browse_and_run.run_button.clicked.connect(self.program_sequence)
+        self.browse_and_run.browse_button.clicked.connect(self.browse)
         for i, lc in enumerate(self.logic_array.logic_columns):
             lc.del_button.clicked.connect(self.del_row(i))
         for i, lc in enumerate(self.logic_array.logic_columns):
             lc.add_button.clicked.connect(self.add_row(i))
         
-        self.setLayout(self.layout)
 #        self.setStyleSheet('QWidget {background-color: #f4a460}') # set widget background
+        for tb in reversed(self.timing_row.timing_boxes):
+            tb.hide()
         for lc in reversed(self.logic_array.logic_columns):
             lc.hide()
         self.name_column.hide()
+        
+#        meta_widget = QtGui.QWidget()
+#        meta_layout = QtGui.QVBoxLayout()
+#        meta_layout.setContentsMargins(0, 0, 0, 0)
+#        meta_layout.setSpacing(0)
+#        scroll_area = QtGui.QScrollArea()
+#        meta_widget.setLayout(self.layout)
+#        scroll_area.setWidget(meta_widget)
+#        meta_layout.addWidget(scroll_area)
+        
 
-    def resize(self, logic):
-        self.setFixedWidth(nbwidth+36+sbwidth*max(10,len(logic)))
+
+        self.setLayout(self.layout)
+
+
+    def resize(self, sequence):
+        self.setFixedWidth(nbwidth+36+sbwidth*max(10,len(sequence)))
 
     def browse(self):
         file_name = QtGui.QFileDialog().getOpenFileName()
         try:
             self.browse_and_run.sequence_location_box.setText(file_name)
-            self.load_sequence(file_name)
+            sequence = self.load_sequence(file_name)
+            self.display_sequence(sequence)
             self.browse_and_run.sequence_location_box.setText(file_name)
-        except:
+        except Exception, e:
+            print e
             print 'could not load file: ', file_name
-    
+ 
     def save_sequence(self):
-        logic = self.get_logic()
-        array = [str(l) +'\n'  for l in self.get_logic()]
         outfile = open(self.browse_and_run.sequence_location_box.text(), 'w')
+        array = [str(l) +'\n'  for l in self.get_sequence()]
         outfile.write(''.join(array))
-        
+
+    def program_sequence(self):
+        print self.get_sequence()
+
+  
     def load_sequence(self, file_name):
         infile = open(file_name, 'r')
-        logic = [eval(l.split('\n')[:-1][0]) for l in infile.readlines()]
+        return [eval(l.split('\n')[:-1][0]) for l in infile.readlines()]
+
+    def display_sequence(self, sequence):
         self.name_column.show()
-        self.set_logic(logic)
+        for tb, lc, seq in zip(self.timing_row.timing_boxes, self.logic_array.logic_columns, sequence):
+            timing, logic = seq
+            tb.show()
+            tb.setValue(timing)
+            lc.show()
+            lc.set_logic(logic)
 
-    def get_logic(self):
-        return [lc.get_logic() for lc in self.logic_array.logic_columns if not lc.isHidden()] # only keep relavent 
-
-    def set_logic(self, logic):
-        for col, log in zip(self.logic_array.logic_columns, logic):
-            col.show()
-            col.set_logic(log)
+    def get_sequence(self):
+        return [(tb.value(), lc.get_logic()) for tb, lc in zip(self.timing_row.timing_boxes, self.logic_array.logic_columns) if not lc.isHidden()]
     
     def add_row(self, i):
         def ar():
-            logic = self.get_logic()
-            logic.insert(i+1, logic[i])
-            self.set_logic(logic)
-            self.resize(logic)
+            sequence = self.get_sequence()
+            sequence.insert(i+1, sequence[i])
+            self.display_sequence(sequence)
+            self.resize(sequence)
         return ar
 
     def del_row(self, i):
         def dr():
-            logic = self.get_logic()
-            logic.pop(i)
-            self.set_logic(logic)
-            self.logic_array.logic_columns[len(logic)].hide()
-            self.resize(logic)
+            sequence = self.get_sequence()
+            sequence.pop(i)
+            self.display_sequence(sequence)
+            self.timing_row.timing_boxes[len(sequence)].hide()
+            self.logic_array.logic_columns[len(sequence)].hide()
+            self.resize(sequence)
         return dr
     
     def closeEvent(self, x):

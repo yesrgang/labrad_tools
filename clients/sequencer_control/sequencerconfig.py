@@ -48,7 +48,7 @@ class SequencerConfig(object):
 #                'C13': 'C13',
 #                'C14': 'C14',
 #                'C15': 'C15',
-
+#
 #                'D01': 'D01',
 #                'D02': 'D02',
 #                'D03': 'D03',
