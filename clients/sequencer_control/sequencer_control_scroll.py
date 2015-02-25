@@ -6,6 +6,7 @@ import numpy as np
 
 sbwidth = 60
 sbheight = 15
+pbheight = 20
 nbwidth = 90
 maxcols = 100
 
@@ -60,14 +61,14 @@ class AddButton(QtGui.QPushButton):
         super(AddButton, self).__init__(None)
         self.setText('Add')
         #self.setCheckable(1)
-        self.setFixedSize(sbwidth, sbheight)
+        self.setFixedSize(sbwidth, pbheight)
 
 class DelButton(QtGui.QPushButton):
     def __init__(self):
         super(DelButton, self).__init__(None)
         #self.setCheckable(1)
         self.setText('Del')
-        self.setFixedSize(sbwidth, sbheight)
+        self.setFixedSize(sbwidth, pbheight)
 
 class TimingBox(QtGui.QDoubleSpinBox):
     def __init__(self):
