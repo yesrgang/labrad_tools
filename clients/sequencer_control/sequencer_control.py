@@ -243,7 +243,7 @@ class SequencerClient(QtGui.QWidget):
 
         self.scrollarea = QtGui.QScrollArea()
         self.scrollarea.setWidget(self.logic_array)
-        self.scrollarea.setWidgetResizeable(True)
+        self.scrollarea.setWidgetResizable(True)
 
         self.layout.addWidget(self.name_column, 1, 0)
 #        self.layout.addWidget(self.logic_array, 1, 1)
