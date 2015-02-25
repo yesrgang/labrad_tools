@@ -68,7 +68,7 @@ class AddButton(QtGui.QPushButton):
 
 class DelButton(QtGui.QPushButton):
     def __init__(self):
-        super(AddButton, self).__init__(None)
+        super(DelButton, self).__init__(None)
         #self.setCheckable(1)
         self.setText('Del')
         self.setFixedSize(sbwidth, pbheight)
@@ -92,8 +92,7 @@ class LogicColumn(QtGui.QWidget):
         self.duration_box = DurationBox(duration) 
         self.sequencer_buttons = [SequencerButton(l) for l in logic]
         self.add_button = AddButton()
-        self.del_button = QtGui.QPushButton('Del')
-        self.del_button.setFixedSize(sbwidth, sbheight)
+        self.del_button = DelButton()
 
         self.layout = QtGui.QVBoxLayout()
         self.layout.setSpacing(0)
@@ -244,10 +243,11 @@ class SequencerClient(QtGui.QWidget):
         self.scrollarea = QtGui.QScrollArea()
         self.scrollarea.setWidget(self.logic_array)
         self.scrollarea.setWidgetResizable(True)
+        self.scrollarea.setFixedHeight(self.logic_array.height()+20)
 
         self.layout.addWidget(self.name_column, 1, 0)
 #        self.layout.addWidget(self.logic_array, 1, 1)
-        self.layout.addWidget(self.scrollarea, 1, 1)
+#        self.layout.addWidget(self.scrollarea, 1, 1)
 
         self.browse_and_run.run_button.clicked.connect(self.get_logic)
         for i, lc in enumerate(self.logic_array.logic_columns):
@@ -262,7 +262,8 @@ class SequencerClient(QtGui.QWidget):
         self.name_column.hide()
 
     def resize(self, logic):
-        self.setFixedWidth(nbwidth+36+sbwidth*max(10,len(logic)))
+        self.scrollarea.setFixedWidth(min(sbwidth*len(logic)+4, 20*sbwidth))
+        self.setFixedWidth(min(nbwidth+36+sbwidth*max(10,len(logic)), nbwidth+36+sbwidth*20))
 
     def browse(self):
         file_name = QtGui.QFileDialog().getOpenFileName()
@@ -280,10 +281,13 @@ class SequencerClient(QtGui.QWidget):
         outfile.write(''.join(array))
         
     def load_sequence(self, file_name):
+        if not self.layout.itemAtPosition(1, 1):
+            self.layout.addWidget(self.scrollarea, 1, 1)
         infile = open(file_name, 'r')
         logic = [eval(l.split('\n')[:-1][0]) for l in infile.readlines()]
         self.name_column.show()
         self.set_logic(logic)
+        self.resize(logic)
 
     def get_logic(self):
         return [lc.get_logic() for lc in self.logic_array.logic_columns if not lc.isHidden()] # only keep relavent 
