@@ -241,10 +241,13 @@ class SequencerClient(QtGui.QWidget):
         self.layout.setSpacing(0)
         self.layout.addWidget(self.browse_and_run, 0, 1, 1, 100000)
 
+        self.scrollarea = QtGui.QScrollArea()
+        self.scrollarea.setWidget(self.logic_array)
+        self.scrollarea.setWidgetResizeable(True)
+
         self.layout.addWidget(self.name_column, 1, 0)
-        self.layout.addWidget(self.logic_array, 1, 1)
-        #for i, lc in enumerate(self.logic_columns):
-        #    self.layout.addWidget(lc, 1, 1+i)
+#        self.layout.addWidget(self.logic_array, 1, 1)
+        self.layout.addWidget(self.scrollarea, 1, 1)
 
         self.browse_and_run.run_button.clicked.connect(self.get_logic)
         for i, lc in enumerate(self.logic_array.logic_columns):
