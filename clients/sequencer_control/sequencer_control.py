@@ -243,7 +243,8 @@ class SequencerClient(QtGui.QWidget):
         self.scrollarea = QtGui.QScrollArea()
         self.scrollarea.setWidget(self.logic_array)
         self.scrollarea.setWidgetResizable(True)
-        self.scrollarea.setFixedHeight(self.logic_array.height()+20)
+        self.scrollarea.setFixedHeight(self.logic_array.height()+16)
+        self.scrollarea.setFrameShape(0)
 
         self.layout.addWidget(self.name_column, 1, 0)
 #        self.layout.addWidget(self.logic_array, 1, 1)
@@ -262,7 +263,7 @@ class SequencerClient(QtGui.QWidget):
         self.name_column.hide()
 
     def resize(self, logic):
-        self.scrollarea.setFixedWidth(min(sbwidth*len(logic)+4, 20*sbwidth))
+        self.scrollarea.setFixedWidth(min(sbwidth*len(logic)+2, 20*sbwidth))
         self.setFixedWidth(min(nbwidth+36+sbwidth*max(10,len(logic)), nbwidth+36+sbwidth*20))
 
     def browse(self):

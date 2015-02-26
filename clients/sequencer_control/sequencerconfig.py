@@ -1,5 +1,11 @@
 class SequencerConfig(object):
     def __init__(self):
+        self.sbwidth = 60 # width of sequencer logic buttons
+        self.sbheight = 15 # height of sequencer logic buttons
+        self.pbheight = 20 # height of add/del buttons
+        self.nbwidth = 90 # width of name box
+        self.maxcols = 100 # number of columns for the widget to preload
+
         self.channels = {
                 'A01': 'A01',
                 'A02': 'A02',
