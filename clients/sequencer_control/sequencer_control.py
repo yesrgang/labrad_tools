@@ -1,5 +1,6 @@
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
+from client_tools import SuperSpinBox
 from connection import connection
 from twisted.internet.defer import inlineCallbacks
 import numpy as np
@@ -89,7 +90,9 @@ class LogicColumn(QtGui.QWidget):
         self.populate(initial_logic, initial_duration)
 
     def populate(self, logic, duration):
-        self.duration_box = DurationBox(duration) 
+        units =  [(0, 's'), (-3, 'ms'), (-6, 'us'), (-9, 'ns')]
+        #self.duration_box = DurationBox(duration)
+        self.duration_box = SuperSpinBox([500e-9, 1000], units)
         self.sequencer_buttons = [SequencerButton(l) for l in logic]
         self.add_button = AddButton()
         self.del_button = DelButton()
@@ -112,7 +115,8 @@ class LogicColumn(QtGui.QWidget):
 
     def set_logic(self, logic):
         duration, states = logic
-        self.duration_box.setValue(duration)
+        self.duration_box.display(duration) #self.duration_box.setValue(duration)
+        #self.duration_box.setValue(duration)
         for i, s in enumerate(states):
             self.sequencer_buttons[i].setChecked(s)
 
@@ -164,7 +168,7 @@ class NameColumn(QtGui.QGroupBox):
         self.name_boxes = [NameBox(n) for n in names]
         self.layout = QtGui.QVBoxLayout()
         self.layout.setSpacing(0)
-        self.layout.setContentsMargins(0, 0, 10, 0)
+        self.layout.setContentsMargins(0, 0, 5, 0)
         self.layout.addWidget(NameBox('')) # blank. browse and run
         for i, nb in enumerate(self.name_boxes):
             if not i%15:
@@ -212,12 +216,8 @@ class SequencerClient(QtGui.QWidget):
             self.cxn = connection()
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
-        try:
-            self.get_configuration()
-            self.populate()
-        except Exception, e:
-            print e
-            self.setDisabled(True)
+        self.get_configuration()
+        self.populate()
 
     @inlineCallbacks
     def get_configuration(self):
@@ -268,12 +268,9 @@ class SequencerClient(QtGui.QWidget):
 
     def browse(self):
         file_name = QtGui.QFileDialog().getOpenFileName()
-        try:
-            self.browse_and_run.sequence_location_box.setText(file_name)
-            self.load_sequence(file_name)
-            self.browse_and_run.sequence_location_box.setText(file_name)
-        except:
-            print 'could not load file: ', file_name
+        self.browse_and_run.sequence_location_box.setText(file_name)
+        self.load_sequence(file_name)
+        self.browse_and_run.sequence_location_box.setText(file_name)
     
     def save_sequence(self):
         logic = self.get_logic()
