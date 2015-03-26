@@ -17,8 +17,9 @@ timeout = 20
 """
 from dds_server import DDSServer
 
-
 config_name = 'redmasterdds_config'
+__server__ = DDSServer(config_name)
+
 if __name__ == "__main__":
     from labrad import util
-    util.runServer(DDSServer(config_name))
+    util.runServer(__server__)
