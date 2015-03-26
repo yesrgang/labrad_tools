@@ -1,11 +1,13 @@
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
+from client_tools import SuperSpinBox
 from connection import connection
 from twisted.internet.defer import inlineCallbacks
 import numpy as np
 
 sbwidth = 60
 sbheight = 15
+pbheight = 20
 nbwidth = 90
 maxcols = 100
 
@@ -63,14 +65,14 @@ class AddButton(QtGui.QPushButton):
         super(AddButton, self).__init__(None)
         self.setText('Add')
         #self.setCheckable(1)
-        self.setFixedSize(sbwidth, sbheight)
+        self.setFixedSize(sbwidth, pbheight)
 
 class DelButton(QtGui.QPushButton):
     def __init__(self):
-        super(AddButton, self).__init__(None)
+        super(DelButton, self).__init__(None)
         #self.setCheckable(1)
         self.setText('Del')
-        self.setFixedSize(sbwidth, sbheight)
+        self.setFixedSize(sbwidth, pbheight)
 
 class DurationBox(QtGui.QDoubleSpinBox):
     def __init__(self, initial_duration):
@@ -88,11 +90,12 @@ class LogicColumn(QtGui.QWidget):
         self.populate(initial_logic, initial_duration)
 
     def populate(self, logic, duration):
-        self.duration_box = DurationBox(duration) 
+        units =  [(0, 's'), (-3, 'ms'), (-6, 'us'), (-9, 'ns')]
+        #self.duration_box = DurationBox(duration)
+        self.duration_box = SuperSpinBox([500e-9, 1000], units)
         self.sequencer_buttons = [SequencerButton(l) for l in logic]
         self.add_button = AddButton()
-        self.del_button = QtGui.QPushButton('Del')
-        self.del_button.setFixedSize(sbwidth, sbheight)
+        self.del_button = DelButton()
 
         self.layout = QtGui.QVBoxLayout()
         self.layout.setSpacing(0)
@@ -112,7 +115,8 @@ class LogicColumn(QtGui.QWidget):
 
     def set_logic(self, logic):
         duration, states = logic
-        self.duration_box.setValue(duration)
+        self.duration_box.display(duration) #self.duration_box.setValue(duration)
+        #self.duration_box.setValue(duration)
         for i, s in enumerate(states):
             self.sequencer_buttons[i].setChecked(s)
 
@@ -164,7 +168,7 @@ class NameColumn(QtGui.QGroupBox):
         self.name_boxes = [NameBox(n) for n in names]
         self.layout = QtGui.QVBoxLayout()
         self.layout.setSpacing(0)
-        self.layout.setContentsMargins(0, 0, 10, 0)
+        self.layout.setContentsMargins(0, 0, 5, 0)
         self.layout.addWidget(NameBox('')) # blank. browse and run
         for i, nb in enumerate(self.name_boxes):
             if not i%15:
@@ -212,12 +216,8 @@ class SequencerClient(QtGui.QWidget):
             self.cxn = connection()
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
-        try:
-            self.get_configuration()
-            self.populate()
-        except Exception, e:
-            print e
-            self.setDisabled(True)
+        self.get_configuration()
+        self.populate()
 
     @inlineCallbacks
     def get_configuration(self):
@@ -240,10 +240,15 @@ class SequencerClient(QtGui.QWidget):
         self.layout.setSpacing(0)
         self.layout.addWidget(self.browse_and_run, 0, 1, 1, 100000)
 
+        self.scrollarea = QtGui.QScrollArea()
+        self.scrollarea.setWidget(self.logic_array)
+        self.scrollarea.setWidgetResizable(True)
+        self.scrollarea.setFixedHeight(self.logic_array.height()+16)
+        self.scrollarea.setFrameShape(0)
+
         self.layout.addWidget(self.name_column, 1, 0)
-        self.layout.addWidget(self.logic_array, 1, 1)
-        #for i, lc in enumerate(self.logic_columns):
-        #    self.layout.addWidget(lc, 1, 1+i)
+#        self.layout.addWidget(self.logic_array, 1, 1)
+#        self.layout.addWidget(self.scrollarea, 1, 1)
 
         self.browse_and_run.run_button.clicked.connect(self.get_logic)
         for i, lc in enumerate(self.logic_array.logic_columns):
@@ -258,16 +263,14 @@ class SequencerClient(QtGui.QWidget):
         self.name_column.hide()
 
     def resize(self, logic):
-        self.setFixedWidth(nbwidth+36+sbwidth*max(10,len(logic)))
+        self.scrollarea.setFixedWidth(min(sbwidth*len(logic)+2, 20*sbwidth))
+        self.setFixedWidth(min(nbwidth+36+sbwidth*max(10,len(logic)), nbwidth+36+sbwidth*20))
 
     def browse(self):
         file_name = QtGui.QFileDialog().getOpenFileName()
-        try:
-            self.browse_and_run.sequence_location_box.setText(file_name)
-            self.load_sequence(file_name)
-            self.browse_and_run.sequence_location_box.setText(file_name)
-        except:
-            print 'could not load file: ', file_name
+        self.browse_and_run.sequence_location_box.setText(file_name)
+        self.load_sequence(file_name)
+        self.browse_and_run.sequence_location_box.setText(file_name)
     
     def save_sequence(self):
         logic = self.get_logic()
@@ -276,10 +279,13 @@ class SequencerClient(QtGui.QWidget):
         outfile.write(''.join(array))
         
     def load_sequence(self, file_name):
+        if not self.layout.itemAtPosition(1, 1):
+            self.layout.addWidget(self.scrollarea, 1, 1)
         infile = open(file_name, 'r')
         logic = [eval(l.split('\n')[:-1][0]) for l in infile.readlines()]
         self.name_column.show()
         self.set_logic(logic)
+        self.resize(logic)
 
     def get_logic(self):
         return [lc.get_logic() for lc in self.logic_array.logic_columns if not lc.isHidden()] # only keep relavent 
