@@ -19,15 +19,15 @@ class AD9915(object):
 class DDSConfig(object):
     def __init__(self):
         self.name = '%LABRADNODE% Red Master DDS Server'
-        self.serial_server_name = 'vagabond_serial_server'
-        self.port = '/dev/ttyACM1'
+        self.serial_server_name = 'yesr12_serial_server'
+        self.port = '/dev/ttyACM0'
         self.timeout = T.Value(1, 's')
         self.baudrate = 9600
         self.stopbits=1
         self.bytesize=8
 
         self.update_id = 698017
-        self.sweep_dwell = 1 # [s]
+        self.sweep_dwell = 60 # [s]
 
         self.dds = {
                      'red master': AD9915(address=0,

@@ -106,7 +106,7 @@ class DDSServer(SerialDeviceServer):
             rate = self.dds[name].sweeprate
         else:
             self.dds[name].sweeprate = rate
-            f = open(self.name + '_sweeps.txt', 'a')
+            f = open(self.name.replace(' ', '_') + '_sweeps.txt', 'a')
             f.write(str({name: [dds.frequency, dds.sweeprate, time.time()] for name, dds in self.dds.items()})+'\n')
         yield self.notify_listeners(name)
         returnValue(rate)

@@ -1,21 +1,3 @@
-"""
-### BEGIN NODE INFO
-[info]
-name = DDS Server
-version = 1.0
-description = 
-instancename = %LABRADNODE% DDS Server
-
-[startup]
-cmdline = %PYTHON% %FILE%
-timeout = 20
-
-[shutdown]
-message = 987654321
-timeout = 20
-### END NODE INFO
-"""
-
 from serialdeviceserver import SerialDeviceServer, setting, inlineCallbacks, SerialDeviceError, SerialConnectionError, PortRegError
 from labrad.server import Signal
 from labrad.types import Error
@@ -31,27 +13,15 @@ POWER_ID = 698009
 CLKIN = 20e6 # [MHz]
 
 class DDSServer(SerialDeviceServer):
-    name = '%LABRADNODE% DDS Server'
+    name = '%LABRADNODE% DDS'
 
     update_state = Signal(STATE_ID, 'signal: update_state', 'b')
     update_frequency = Signal(FREQUENCY_ID, 'signal: update_frequency', 'v')
     update_power = Signal(POWER_ID, 'signal: update_power', 'v')
     
-    @inlineCallbacks
     def initServer(self):
-        yield self.get_configuration(None)
-        try:
-            yield self.init_serial(self.serial_server_name, self.port)
-        except SerialConnectionError, e:
-            self.serial_server = None
-            if e.code == 0:
-                print 'Could not find serial server for node: {}'.format(self.node_server)
-                print 'Please start correct serial server'
-            elif e.code == 1:
-                print 'Error opening serial connection'
-                print 'Check set up and restart serial server'
-            else: 
-                raise
+      	self.get_configuration(None)
+        self.init_serial(self.serial_server_name, self.ports)
     
     @setting(1, 'get configuration', returns='s')
     def get_configuration(self, c):
@@ -121,9 +91,9 @@ class DDSServer(SerialDeviceServer):
     @setting(6, 'state', name='s')
     def state(self, c, name):
         return True
-
-
-    
-if __name__ == "__main__":
-    from labrad import util
-    util.runServer(DDSServer())
+#
+#
+#    
+#if __name__ == "__main__":
+#    from labrad import util
+#    util.runServer(DDSServer())
