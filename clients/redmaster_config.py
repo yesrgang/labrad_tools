@@ -1,7 +1,7 @@
 class RedMasterConfig(object):
     def __init__(self):
         self.name = 'red master'
-        self.server_name = 'yesr12_red_master_dds_server'
+        self.server_name = 'yesr12_red_master_dds'
         self.update_id = 461017 
 
         self.frequency_stepsize = 1e-2
