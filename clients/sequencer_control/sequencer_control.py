@@ -93,6 +93,7 @@ class LogicColumn(QtGui.QWidget):
         units =  [(0, 's'), (-3, 'ms'), (-6, 'us'), (-9, 'ns')]
         #self.duration_box = DurationBox(duration)
         self.duration_box = SuperSpinBox([500e-9, 1000], units)
+        self.duration_box.display(duration)
         self.sequencer_buttons = [SequencerButton(l) for l in logic]
         self.add_button = AddButton()
         self.del_button = DelButton()
@@ -115,7 +116,7 @@ class LogicColumn(QtGui.QWidget):
 
     def set_logic(self, logic):
         duration, states = logic
-        self.duration_box.display(duration) #self.duration_box.setValue(duration)
+        self.duration_box.display(duration)
         #self.duration_box.setValue(duration)
         for i, s in enumerate(states):
             self.sequencer_buttons[i].setChecked(s)
@@ -130,27 +131,6 @@ class LogicArray(QtGui.QWidget):
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.layout)
-        
-        #self.duration_boxes = [DurationBox(1) for i in range(num_columns)]
-        #self.sequencer_buttons = [[SequencerButton(False) for j in range(num_rows)] for i in range(num_columns)]
-        #self.add_buttons = [AddButton() for i in range(num_columns)]
-        #self.del_buttons = [DelButton() for i in range(num_columns)]
-        #self.layout = QtGui.QGridLayout()
-        #self.layout.setSpacing(0)
-        #self.layout.setContentsMargins(0, 0, 0, 0)
-        #for i, db in enumerate(self.duration_boxes):
-        #    self.layout.addWidget(db, 0, i)
-        #for i, l in enumerate(self.sequencer_buttons):
-        #    for j, sb in enumerate(l):
-        #        self.layout.addWidget(sb, j+1, i)
-        #for i, ab in enumerate(self.add_buttons):
-        #    self.layout.addWidget(ab, num_columns+2, i)
-        #for i, db in enumerate(self.del_buttons):
-        #    self.layout.addWidget(db, num_columns+3, i)
-
-
-
-
 
 class NameBox(QtGui.QLabel):
     def __init__(self, name):
