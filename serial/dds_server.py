@@ -11,12 +11,6 @@ import time
 class DDSServer(SerialDeviceServer):
     name = '%LABRADNODE% DDS Server'
 
-#    update_state = Signal(self.state_id, 'signal: update_state', '(sb)')
-#    update_frequency = Signal(self.frequency_id, 'signal: update_frequency', '(sv)')
-#    update_power = Signal(self.power_id, 'signal: update_power', '(sv)')
-#    update_sweepstate = Signal(self.sweepstate_id, 'signal: update_sweepstate', '(sb)')
-#    update_sweeprate = Signal(self.sweeprate_id, 'signal: update_sweeprate', '(sv)')
-
     def __init__(self, config_name):
         SerialDeviceServer.__init__(self)
         self.config_name = config_name

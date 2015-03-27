@@ -8,7 +8,7 @@ class V18(object):
 
 class VerdiConfig(object):
     def __init__(self):
-        self.serial_server_name = 'vagabond_serial_server'
+        self.serial_server_name = 'yesr12_serial_server'
         self.port = '/dev/ttyUSB0'
         self.timeout = T.Value(1, 's')
         self.baudrate = 19200

@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Red Master DDS
+name = Six DDS
 version = 1.0
 description = 
-instancename = %LABRADNODE% Red Master DDS
+instancename = %LABRADNODE% Six DDS
 
 [startup]
 cmdline = %PYTHON% %FILE%
