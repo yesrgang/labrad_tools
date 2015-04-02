@@ -5,7 +5,7 @@ from connection import connection
 from twisted.internet.defer import inlineCallbacks
 import numpy as np
 
-sbwidth = 60
+sbwidth = 65
 sbheight = 15
 pbheight = 20
 nbwidth = 90
@@ -59,18 +59,15 @@ class SequencerButton(QtGui.QFrame):
         else:
             self.setChecked(True)
 
-
 class AddButton(QtGui.QPushButton):
     def __init__(self):
         super(AddButton, self).__init__(None)
         self.setText('Add')
-        #self.setCheckable(1)
         self.setFixedSize(sbwidth, pbheight)
 
 class DelButton(QtGui.QPushButton):
     def __init__(self):
         super(DelButton, self).__init__(None)
-        #self.setCheckable(1)
         self.setText('Del')
         self.setFixedSize(sbwidth, pbheight)
 
