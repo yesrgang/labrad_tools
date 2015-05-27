@@ -260,6 +260,7 @@ class AnalogVoltageControl(QtGui.QGroupBox):
         outfile.write(''.join(infos))
 
     def browse(self):
+        #file_name = QtGui.QFileDialog(directory='/home/yertle/code/labrad/clients/').getOpenFileName()
         file_name = QtGui.QFileDialog().getOpenFileName()
         self.load_and_save.location_box.setText(file_name)
         self.load(file_name)
@@ -297,12 +298,10 @@ class AnalogVoltageControl(QtGui.QGroupBox):
             self.set_columns(infos)
         return dc
 
-
     def get_sequence(self):
         """should send ramp_types, parameters to server and recieve T, V"""
         ramp_types = [str(c.ramp_select.currentText()) for c in self.ramp_table.cols if not c.isHidden()]
         ramp_parameters = [{k: b.value() for k, b in c.stack.currentWidget().p_boxes.items()} for c in self.ramp_table.cols if not c.isHidden()]
-        print ramp_types
         for i in range(len(ramp_parameters)):
             ramp_parameters[i]['vf'] = ramp_parameters[i]['v']
         ramp_parameters[0]['vi'] = 0
@@ -329,8 +328,6 @@ if __name__ == '__main__':
 
     widget.show()
     reactor.run()
-
-
 
 
 
