@@ -24,7 +24,10 @@ class SuperSpinBox(QtGui.QLineEdit):
                     if unit == u:
                         self.unit = u
                         self.display_factor = 10.**f
-            self.display(self.value())
+            try:
+                self.display(self.value())
+            except: 
+                self.display(0)
         super(SuperSpinBox, self).keyPressEvent(c)
         if c.key() == QtCore.Qt.Key_Up:
             self.step(up=1)
