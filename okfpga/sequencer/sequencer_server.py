@@ -68,7 +68,7 @@ class SequencerServer(LabradServer):
     def set_mode(self, mode):
         self.xem.SetWireInValue(0x00, self.mode_num[mode])
 
-    @setting(01, 'get channels', returns='s'):
+    @setting(01, 'get channels', returns='s')
     def get_channels(self, c):
         returnValue(str(self.channels))
 
