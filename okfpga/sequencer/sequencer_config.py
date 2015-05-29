@@ -2,6 +2,7 @@ class SequencerConfig(object):
     def __init__(self):
         self.bit_file = 'dac.bit'
         self.mode_num = {'idle': 0, 'load': 1, 'run': 2}
+        self.clk_frequency = 50e6
 
         self.channels = {
                         'A00': 'TTL00',
