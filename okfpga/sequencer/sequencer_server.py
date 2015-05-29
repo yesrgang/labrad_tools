@@ -2,8 +2,9 @@
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
-from sequencer_configuration import SequencerConfiguration
-from sequencer_api import SequencerAPI
+import ok
+#from sequencer_configuration import SequencerConfiguration
+#from sequencer_api import SequencerAPI
 
 class SequencerServer(LabradServer):
     name = 'sequencer'
@@ -14,7 +15,7 @@ class SequencerServer(LabradServer):
         self.load_configuration()
 
     def load_configuration(self):
-        config = __inport__(self.config_name).SequencerConfig()
+        config = __import__(self.config_name).SequencerConfig()
         for key, value in config.__dict__.items():
             setattr(self, key, value)
 
@@ -81,7 +82,7 @@ class SequencerServer(LabradServer):
 if __name__ == "__main__":
     config_name = 'sequencer_config'
     __server__ = SequencerServer(config_name)
-    form labrad import util
+    from labrad import util
     util.runServer(__server__)
 
 
