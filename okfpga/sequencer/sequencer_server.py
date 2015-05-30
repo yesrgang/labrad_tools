@@ -19,7 +19,6 @@ class SequencerServer(LabradServer):
         for key, value in config.__dict__.items():
             setattr(self, key, value)
 
-    @inlineCallbacks
     def initServer(self):
 #        self.channels = SequencerConfiguration.channels
         self.initialize_board()
@@ -42,7 +41,7 @@ class SequencerServer(LabradServer):
             if iden == self.okDeviceID:
                 self.xem = tmp
                 print 'Connected to {}'.format(iden)
-                self.programOKBoard()
+                self.program_board()
                 return True
         return False
 
@@ -54,20 +53,26 @@ class SequencerServer(LabradServer):
 
     def _time_to_ticks(self, time):
         return int(time*self.clk_frequency)
-
+    
     def _program_sequence(self, sequence):
-        """ sequence is list of tuples [(duration, [logic]), ...] """
+        """ sequence is list of tuples [(duration, {name: logic}), ...] """
         ba = []
         for t, l in sequence:
-            ba += list([sum([2**j for j, b in enumerate(l[i:i+8]) if b]) for i in range(0, 64, 8)])
+            #l is a dict
+            l2 = [l[n] for k, n in sorted(self.channels.items())]
+            print l2
+            ba += list([sum([2**j for j, b in enumerate(l2[i:i+8]) if b]) for i in range(0, 64, 8)])
             ba += list([int(eval(hex(self._time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)])
+        ba += [0]*96
         self.set_mode('idle')
         self.set_mode('load')
-        self.xem.WriteToPipeIn(ba)
+        self.xem.WriteToPipeIn(0x80, bytearray(ba))
         self.set_mode('idle')
 
     def set_mode(self, mode):
+        print mode
         self.xem.SetWireInValue(0x00, self.mode_num[mode])
+        self.xem.UpdateWireIns()
 
     @setting(01, 'get channels', returns='s')
     def get_channels(self, c):
@@ -78,6 +83,7 @@ class SequencerServer(LabradServer):
         infile = open(file_name, 'r')
         sequence = [eval(line.split('\n')[:-1][0]) for line in infile.readlines()]
         self._program_sequence(sequence)
+        self.set_mode('run')
 
 if __name__ == "__main__":
     config_name = 'sequencer_config'

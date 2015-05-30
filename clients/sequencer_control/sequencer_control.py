@@ -103,7 +103,7 @@ class LogicArray(QtGui.QWidget):
         self.populate()
 
     def populate(self):
-        self.logic_columns = [LogicColumn(channels) for i in range(100)]
+        self.logic_columns = [LogicColumn(channels) for i in range(20)]
         self.layout = QtGui.QHBoxLayout()
         for lc in self.logic_columns:
             self.layout.addWidget(lc)
@@ -145,7 +145,7 @@ class DurationRow(QtGui.QWidget):
 
     def populate(self):
         units =  [(0, 's'), (-3, 'ms'), (-6, 'us'), (-9, 'ns')]
-        self.duration_boxes = [SuperSpinBox([500e-9, 10], units) for i in range(100)]
+        self.duration_boxes = [SuperSpinBox([500e-9, 10], units) for i in range(20)]
         self.layout = QtGui.QHBoxLayout()
         for db in self.duration_boxes:
             self.layout.addWidget(db)
@@ -172,7 +172,7 @@ class AddDltRow(QtGui.QWidget):
         self.populate()
 
     def populate(self):
-        self.add_dlt_buttons = [AddDltButton() for i in range(100)]
+        self.add_dlt_buttons = [AddDltButton() for i in range(20)]
         self.layout = QtGui.QHBoxLayout()
         for ad in self.add_dlt_buttons:
             self.layout.addWidget(ad)
@@ -368,24 +368,73 @@ class NameAndLogic(QtGui.QWidget):
         return dr
 
 channels = {
-            'A00': 'TTL00',
-            'A01': 'TTL01',
-            'A02': 'TTL02',
-            'A03': 'TTL03',
-            'A04': 'TTL04',
-            'A05': 'TTL05',
-            'A06': 'TTL06',
-            'A07': 'TTL07',
-            'A08': 'TTL08',
-            'A09': 'TTL09',
-            'A10': 'TTL10',
-            'A11': 'TTL11',
-            'A12': 'TTL12',
-            'A13': 'TTL13',
-            'A14': 'TTL14',
-            'A15': 'TTL15',
-            'A16': 'TTL16',
-            'A17': 'TTL17',
+            'A00': 'TTLA00',
+            'A01': 'TTLA01',
+            'A02': 'TTLA02',
+            'A03': 'TTLA03',
+            'A04': 'TTLA04',
+            'A05': 'TTLA05',
+            'A06': 'TTLA06',
+            'A07': 'TTLA07',
+            'A08': 'TTLA08',
+            'A09': 'TTLA09',
+            'A10': 'TTLA10',
+            'A11': 'TTLA11',
+            'A12': 'TTLA12',
+            'A13': 'TTLA13',
+            'A14': 'TTLA14',
+            'A15': 'TTLA15',
+
+            'B00': 'TTLB00',
+            'B01': 'TTLB01',
+            'B02': 'TTLB02',
+            'B03': 'TTLB03',
+            'B04': 'TTLB04',
+            'B05': 'TTLB05',
+            'B06': 'TTLB06',
+            'B07': 'TTLB07',
+            'B08': 'TTLB08',
+            'B09': 'TTLB09',
+            'B10': 'TTLB10',
+            'B11': 'TTLB11',
+            'B12': 'TTLB12',
+            'B13': 'TTLB13',
+            'B14': 'TTLB14',
+            'B15': 'TTLB15',
+
+            'C00': 'TTLC00',
+            'C01': 'TTLC01',
+            'C02': 'TTLC02',
+            'C03': 'TTLC03',
+            'C04': 'TTLC04',
+            'C05': 'TTLC05',
+            'C06': 'TTLC06',
+            'C07': 'TTLC07',
+            'C08': 'TTLC08',
+            'C09': 'TTLC09',
+            'C10': 'TTLC10',
+            'C11': 'TTLC11',
+            'C12': 'TTLC12',
+            'C13': 'TTLC13',
+            'C14': 'TTLC14',
+            'C15': 'TTLC15',
+            
+            'D00': 'TTLD00',
+            'D01': 'TTLD01',
+            'D02': 'TTLD02',
+            'D03': 'TTLD03',
+            'D04': 'TTLD04',
+            'D05': 'TTLD05',
+            'D06': 'TTLD06',
+            'D07': 'TTLD07',
+            'D08': 'TTLD08',
+            'D09': 'TTLD09',
+            'D10': 'TTLD10',
+            'D11': 'TTLD11',
+            'D12': 'TTLD12',
+            'D13': 'TTLD13',
+            'D14': 'TTLD14',
+            'D15': 'TTLD15',
             }
 
 if __name__ == '__main__':
