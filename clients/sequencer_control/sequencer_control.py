@@ -295,7 +295,7 @@ class NameAndLogic(QtGui.QWidget):
         self.name_scroll.setFixedWidth(100)
         
         height = self.duration_scroll.height() + self.logic_array.height() + self.add_dlt_scroll.height() + self.hscroll.height()
-        self.setMaximumHeight(400)
+        self.setMaximumHeight(1000)
 
     def connect_widgets(self):
         self.vscroll.verticalScrollBar().valueChanged.connect(self.adjust_for_vscroll)
