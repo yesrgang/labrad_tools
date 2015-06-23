@@ -3,11 +3,10 @@ from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 import ok
-#from sequencer_configuration import SequencerConfiguration
-#from sequencer_api import SequencerAPI
 
 class SequencerServer(LabradServer):
     name = 'sequencer'
+    mode='idle'
 
     def __init__(self, config_name):
         LabradServer.__init__(self)
@@ -59,20 +58,20 @@ class SequencerServer(LabradServer):
         ba = []
         for t, l in sequence:
             #l is a dict
-            l2 = [l[n] for k, n in sorted(self.channels.items())]
+            l2 = [l[d['name']] for k, d in sorted(self.channels.items())]
             print l2
             ba += list([sum([2**j for j, b in enumerate(l2[i:i+8]) if b]) for i in range(0, 64, 8)])
             ba += list([int(eval(hex(self._time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)])
         ba += [0]*96
-        self.set_mode('idle')
-        self.set_mode('load')
+        self.set_sequencer_mode('idle')
+        self.set_sequencer_mode('load')
         self.xem.WriteToPipeIn(0x80, bytearray(ba))
-        self.set_mode('idle')
+        self.set_sequencer_mode('idle')
 
-    def set_mode(self, mode):
-        print mode
-        self.xem.SetWireInValue(0x00, self.mode_num[mode])
+    def set_sequencer_mode(self, mode):
+        self.xem.SetWireInValue(0x00, self.sequencer_mode_num[mode])
         self.xem.UpdateWireIns()
+        self.seuqencer_mode = mode
 
     @setting(01, 'get channels', returns='s')
     def get_channels(self, c):
@@ -83,13 +82,33 @@ class SequencerServer(LabradServer):
         infile = open(file_name, 'r')
         sequence = [eval(line.split('\n')[:-1][0]) for line in infile.readlines()]
         self._program_sequence(sequence)
-        self.set_mode('run')
+        self.set_sequencer_mode('run')
+
+    @setting(03, 'sequencer mode', mode='s', returns='s')
+    def sequencer_mode(self, c, mode=None):
+        if mode is not None:
+            self.set_sequencer_mode(mode)
+        returnValue(self.sequencer_mode)
+
+    def write_channel_modes(self): 
+        cm_list = [d['mode'] for k, d in sorted(self.channels.items())]
+        bas = [sum([2**j for j, m in enumerate(cm_list[i:i+16]) if m is 'manual']) for i in range(0, 64, 16)]
+        for ba, wire in zip(bas, self.channel_mode_wires):
+            self.xem.SetWireInValue(wire, ba)
+        self.xem.UpdateWireIns()
+
+    @setting(04, 'manual', channel='s', state='b')
+    def manual(self, c, channel, state=None):
+        if state is not None:
+            self.channels[self.name_to_key[channel]]['state'] = state
+            self.write_channel_modes
+
+
+
+        
 
 if __name__ == "__main__":
     config_name = 'sequencer_config'
     __server__ = SequencerServer(config_name)
     from labrad import util
     util.runServer(__server__)
-
-
-        
