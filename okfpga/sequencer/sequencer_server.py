@@ -108,7 +108,7 @@ class SequencerServer(LabradServer):
         cm_list = [d['mode'] for k, d in sorted(self.channels.items())]
         cs_list = [d['state'] for k, d in sorted(self.channels.items())]
         ci_list = [d['invert'] for k, d in sorted(self.channels.items())]
-        bas = [sum([2**j for j, (m, s, i) in enumerate(zip(cm_list[i:i+16], cs_list[i:i+16], ci_list[i:i+16])) (if m is 'manual' and s) or (m is 'auto' and i)]) for i in range(0, 64, 16)]
+        bas = [sum([2**j for j, (m, s, i) in enumerate(zip(cm_list[i:i+16], cs_list[i:i+16], ci_list[i:i+16])) if (m is 'manual' and s) or (m is 'auto' and i)]) for i in range(0, 64, 16)]
         for ba, wire in zip(bas, self.channel_mode_wires):
             self.xem.SetWireInValue(wire, ba)
         self.xem.UpdateWireIns()
