@@ -97,12 +97,35 @@ class SequencerServer(LabradServer):
             self.xem.SetWireInValue(wire, ba)
         self.xem.UpdateWireIns()
 
-    @setting(04, 'manual', channel='s', state='b')
-    def manual(self, c, channel, state=None):
+    @setting(04, 'channel mode', channel='s', mode='s', returns='s')
+    def channel_mode(self, c, channel, mode=None):
+        if mode is not None:
+            self.channels[self.name_to_key[channel]]['mode'] = mode
+            self.write_channel_modes()
+        returnValue(self.channels[self.name_to_key[channel]]['mode'])
+    
+    def write_channel_stateinvs(self): 
+        cm_list = [d['mode'] for k, d in sorted(self.channels.items())]
+        cs_list = [d['state'] for k, d in sorted(self.channels.items())]
+        ci_list = [d['invert'] for k, d in sorted(self.channels.items())]
+        bas = [sum([2**j for j, (m, s, i) in enumerate(zip(cm_list[i:i+16], cs_list[i:i+16], ci_list[i:i+16])) (if m is 'manual' and s) or (m is 'auto' and i)]) for i in range(0, 64, 16)]
+        for ba, wire in zip(bas, self.channel_mode_wires):
+            self.xem.SetWireInValue(wire, ba)
+        self.xem.UpdateWireIns()
+
+    @setting(05, 'channel manual state', channel='s', state='i', returns='i')
+    def channel_manual_state(self, c, channel, state):
         if state is not None:
             self.channels[self.name_to_key[channel]]['state'] = state
-            self.write_channel_modes
+            self.write_channel_stateinvs()
+        returnValue(self.channels[self.name_to_key[channel]]['state'])
 
+    @setting(06, 'channel invert', channel='s', invert='i', returns='i')
+    def channel_invert(self, c, channel, invert=None):
+        if invert is not None:
+            self.channels[self.name_to_key[channel]]['invert'] = invert
+            self.write_channel_stateinvs()
+        returnValue(self.channels[self.name_to_key[channel]]['invert'])
 
 
         
