@@ -20,7 +20,7 @@ ncwidth = 130
 drheight = 20
 pps = 1001
 
-max_columns = 20
+max_columns = 100
 
 def merge_dicts(*dictionaries):
     merged_dictionary = {}
@@ -121,7 +121,7 @@ class DigitalArray(QtGui.QWidget):
         self.populate()
 
     def populate(self):
-        self.columns = [DigitalColumn(self.channels) for i in range(100)]
+        self.columns = [DigitalColumn(self.channels) for i in range(max_columns)]
         self.layout = QtGui.QHBoxLayout()
         for lc in self.columns:
             self.layout.addWidget(lc)
@@ -144,6 +144,7 @@ class NameBox(QtGui.QLabel):
         super(NameBox, self).__init__(None)
         self.setText(name)
         self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter  )
+        self.name = name.split(': ')[1]
 
     def mousePressEvent(self, x):
         self.clicked.emit()
@@ -174,7 +175,7 @@ class DurationRow(QtGui.QWidget):
 
     def populate(self):
         units =  [(0, 's'), (-3, 'ms'), (-6, 'us'), (-9, 'ns')]
-        self.boxes = [SuperSpinBox([500e-9, 10], units) for i in range(100)]
+        self.boxes = [SuperSpinBox([500e-9, 10], units) for i in range(max_columns)]
         self.layout = QtGui.QHBoxLayout()
         for db in self.boxes:
             self.layout.addWidget(db)
@@ -209,7 +210,7 @@ class AddDltRow(QtGui.QWidget):
         self.populate()
 
     def populate(self):
-        self.buttons = [AddDltButton() for i in range(100)]
+        self.buttons = [AddDltButton() for i in range(max_columns)]
         self.layout = QtGui.QHBoxLayout()
         for ad in self.buttons:
             self.layout.addWidget(ad)
@@ -364,12 +365,13 @@ class AnalogArray(FigureCanvas):
         self.fig.subplots_adjust(left=0, bottom = 0, right=1, top=1)
 
     def plot_sequence(self, sequence):
-        S = sum([t for t, r in sequence])
         X = self.get_points(sequence)
         self.axes.cla()
         for i, (c, n) in enumerate(sorted(self.channels.items())):
             x = np.array(X[n]) - i*20
             self.axes.plot(x)
+        for i in range(len(self.channels.items())-1):
+            self.axes.axhline(-10-i*20, linestyle="--", color='grey')
         self.axes.set_ylim(-20*len(self.channels.items())+10, 10)
         self.axes.set_xlim(0, len(sequence)*pps)
         self.draw()
@@ -387,16 +389,16 @@ class AnalogArray(FigureCanvas):
 
     def get_continuous(self, p):
         if p['type'] == 'linear':
-            return lambda t: G(0, p['t'])(t)*(p['vi']+(p['vf']-p['vi'])/p['t']*t)
+            return lambda t: G(0-1e-9, p['t']+1e-9)(t)*(p['vi']+(p['vf']-p['vi'])/p['t']*t)
         elif p['type'] == 'linear2':
-            return lambda t: G2(0, p['t'])(t)*(p['vi']+(p['vf']-p['vi'])/p['t']*t)
+            return lambda t: G2(0-1e-9, p['t']+1e-9)(t)*(p['vi']+(p['vf']-p['vi'])/p['t']*t)
         elif p['type'] == 'exp':
             A = (p['vf'] - p['vi'])/(np.exp(p['t']/p['tau']) - 1)
             C = p['vi'] - A
-            continuous = lambda t: G(0, p['t'])(t)*(A * np.exp(t/p['tau']) + C)
+            continuous = lambda t: G(0-1e-9, p['t']+1e-9)(t)*(A * np.exp(t/p['tau']) + C)
             T = np.linspace(0, p['t'], p['pts'])
             V = continuous(T)
-            lp2 = [{'vf': V[i+1], 'vi': V[i], 't': p['t']/float(p['pts']-1), 'type': 'linear2'} for i in range(int(p['pts'])-1)]
+            lp2 = [{'vf': V[i+1], 'vi': V[i], 't': p['t']/float(p['pts']-1), 'type': 'linear'} for i in range(int(p['pts'])-1)]
             lp2[-1]['type'] = 'linear'
             return lambda t: sum([self.get_continuous(p2)(t-T[i]) for i, p2 in enumerate(lp2)])
         elif p['type'] == 'step':
@@ -592,7 +594,7 @@ class RampTable(QtGui.QWidget):
         self.populate()
 
     def populate(self):
-        self.cols = [RampColumn() for i in range(100)]
+        self.cols = [RampColumn() for i in range(max_columns)]
         self.layout = QtGui.QHBoxLayout()
         for c in self.cols:
             self.layout.addWidget(c)
@@ -829,6 +831,8 @@ class Sequencer(QtGui.QWidget):
         self.analog_channels = analog_channels
         self.populate()
 
+        self.set_sequence([(1, dict([(name, {'type': 'linear', 'v': 0, 'length': (1, 1)}) for name in analog_channels.values()] + [(name, 0) for name in digital_channels.values()]), )])
+
     def populate(self):
         self.browse_and_save = BrowseAndSave()
 
@@ -960,12 +964,13 @@ class Sequencer(QtGui.QWidget):
             b.dlt.clicked.connect(self.dlt_column(i))
 
         for l in self.analog_sequencer.name_column.labels.values():
-            l.clicked.connect(self.edit_analog_voltage)
+            l.clicked.connect(self.edit_analog_voltage(l.name))
 
-    def edit_analog_voltage(self):
-        sequence = AnalogVoltageEditor('DACA00', self.get_sequence()).getEditedSequence('DACA00', self.get_sequence())
-        self.set_sequence(sequence)
-
+    def edit_analog_voltage(self, channel_name):
+        def eav():
+            sequence = AnalogVoltageEditor(channel_name, self.get_sequence()).getEditedSequence(channel_name, self.get_sequence())
+            self.set_sequence(sequence)
+        return eav
 
     def adjust_for_dvscroll(self):
         val = self.digital_vscroll.verticalScrollBar().value()
