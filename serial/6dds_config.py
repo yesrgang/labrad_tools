@@ -41,4 +41,15 @@ class DDSConfig(object):
                                           sweeprate=1,  # [Hz/s]
                                           sweeprate_range=(-1000, 1000), # [Hz/s]
                                           sysclk=300e6),
+                     
+                     'dds1':              AD9854(address=1,
+                                          state=True,
+                                          frequency=80e6, # [Hz]
+                                          frequency_range=(1e3, 140e6), # [Hz]
+                                          amplitude=1,
+                                          amplitude_range=(0, 1),
+                                          sweepstate=False,
+                                          sweeprate=1,  # [Hz/s]
+                                          sweeprate_range=(-1000, 1000), # [Hz/s]
+                                          sysclk=300e6),
                      }

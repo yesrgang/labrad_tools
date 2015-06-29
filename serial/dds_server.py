@@ -71,6 +71,7 @@ class DDSServer(SerialDeviceServer):
             self.dds[name].frequency = frequency
         for c in self.instruction_set(self.dds[name].address, self.dds[name].freg, self.dds[name].ftw()):
             yield self.serial_server.write(c)
+#        yield self.serial_server.write_lines(self.instruction_set(self.dds[name].address, self.dds[name].freg, self.dds[name].ftw()))
         yield self.notify_listeners(name)
         returnValue(frequency)
     
