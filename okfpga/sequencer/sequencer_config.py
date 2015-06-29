@@ -18,14 +18,14 @@ class SequencerConfig(object):
             'invert' is bool, is "on" hi or lo?
         """
         self.channels = {
-                        'A00': {'name': 'TTLA00', 'mode': 'auto', 'manual state': 0, 'invert': 0},
-                        'A01': {'name': 'TTLA01', 'mode': 'auto', 'manual state': 0, 'invert': 0},
-                        'A02': {'name': 'TTLA02', 'mode': 'auto', 'manual state': 0, 'invert': 0},
-                        'A03': {'name': 'TTLA03', 'mode': 'auto', 'manual state': 0, 'invert': 0},
-                        'A04': {'name': 'TTLA04', 'mode': 'auto', 'manual state': 0, 'invert': 0},
-                        'A05': {'name': 'TTLA05', 'mode': 'auto', 'manual state': 0, 'invert': 0},
-                        'A06': {'name': 'TTLA06', 'mode': 'auto', 'manual state': 0, 'invert': 0},
-                        'A07': {'name': 'TTLA07', 'mode': 'auto', 'manual state': 0, 'invert': 0},
+                        'A00': {'name': '3D MOT AOM', 'mode': 'auto', 'manual state': 0, 'invert': 1},
+                        'A01': {'name': '3D MOT Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 0},
+                        'A02': {'name': 'Fluores. AOM', 'mode': 'auto', 'manual state': 0, 'invert': 1},
+                        'A03': {'name': 'Fluores. Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 1},
+                        'A04': {'name': 'Abs. AOM', 'mode': 'auto', 'manual state': 0, 'invert': 1},
+                        'A05': {'name': 'Abs. Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 1},
+                        'A06': {'name': 'TC Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 1},
+                        'A07': {'name': 'Zeeman Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 1},
                         'A08': {'name': 'TTLA08', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'A09': {'name': 'TTLA09', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'A10': {'name': 'TTLA10', 'mode': 'auto', 'manual state': 0, 'invert': 0},
