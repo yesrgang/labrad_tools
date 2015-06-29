@@ -1120,7 +1120,7 @@ analog_channels = {
             'A07': 'DACA07',
             }
 
-test_ramp = [(1, {name: {'type': 'exp', 'v': 10, 'tau': .5, 'pts': 10} for name in analog_channels.values()})] + [(1, {name: {'type': 'step', 'v': 0, 'length': (1, 1)} for name in analog_channels.values()})] + [(1, {name: {'type': 'linear', 'v': 10, 'length': (1, 1)} for name in analog_channels.values()})]*3 + [(.1, {name: {'type': 'linear', 'v': 0, 'length': (1, 1)} for name in analog_channels.values()})]*3
+#test_ramp = [(1, {name: {'type': 'exp', 'v': 10, 'tau': .5, 'pts': 10} for name in analog_channels.values()})] + [(1, {name: {'type': 'step', 'v': 0, 'length': (1, 1)} for name in analog_channels.values()})] + [(1, {name: {'type': 'linear', 'v': 10, 'length': (1, 1)} for name in analog_channels.values()})]*3 + [(.1, {name: {'type': 'linear', 'v': 0, 'length': (1, 1)} for name in analog_channels.values()})]*3
 
 sequence = [(1, dict([(name, {'type': 'linear', 'v': 0, 'length': (1, 1)}) for name in analog_channels.values()] + [(name, 0) for name in digital_channels.values()]), )]*19
 
