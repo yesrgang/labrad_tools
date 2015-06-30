@@ -854,7 +854,13 @@ class AnalogVoltageEditor(QtGui.QDialog):
             return old_sequence
 
     def keyPressEvent(self, c):
-        QtGui.QWidget().keyPressEvent(c)
+        if QtGui.QApplication.keyboardModifiers() == QtCore.Qt.ControlModifier:
+            if c.key() == QtCore.Qt.Key_Return:
+                self.buttons.accepted.emit()
+            if c.key() == QtCore.Qt.Key_Q:
+                self.buttons.rejected.emit()
+        else:
+            QtGui.QWidget().keyPressEvent(c)
 
 """ end analog voltage editor """
 
@@ -1033,7 +1039,7 @@ class Sequencer(QtGui.QWidget):
         self.analog_sequencer.name_column.scroll_area.horizontalScrollBar().setValue(val)
     
     def browse(self):
-        file_name = QtGui.QFileDialog().getOpenFileName()
+        file_name = QtGui.QFileDialog().getOpenFileName(directory='.')
         self.browse_and_save.location_box.setText(file_name)
         self.load_sequence(file_name)
 
@@ -1101,10 +1107,9 @@ class Sequencer(QtGui.QWidget):
     def keyPressEvent(self, c):
         super(Sequencer, self).keyPressEvent(c)
         if QtGui.QApplication.keyboardModifiers() == QtCore.Qt.ControlModifier:
-            if c.key() == (QtCore.Qt.Key_Z):
+            if c.key() == QtCore.Qt.Key_Z:
                 self.undo()
-                print '!!!'
-            if c.key() == (QtCore.Qt.Key_R):
+            if c.key() == QtCore.Qt.Key_R:
                 self.redo()
 
 
