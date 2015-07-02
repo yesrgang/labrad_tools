@@ -74,6 +74,7 @@ class SequencerServer(LabradServer):
 
     @setting(01, 'get channels', returns='s')
     def get_channels(self, c):
+        yield None
         returnValue(str(self.channels))
 
     @setting(02, 'run sequence', file_name='s')
