@@ -137,9 +137,9 @@ class SequencerServer(LabradServer):
         self.xem.UpdateWireIns()
         self.seuqencer_mode = mode
 
-    @setting(01, 'get channels', returns='s')
+    @setting(01, 'get channels')
     def get_channels(self, c):
-        returnValue(str(self.channels))
+        return str(self.channels)
 
     @setting(02, 'run sequence', file_name='s', returns='s')
     def run_sequence(self, c, file_name):

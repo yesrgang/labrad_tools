@@ -868,22 +868,21 @@ class AnalogVoltageEditor(QtGui.QDialog):
 class Sequencer(QtGui.QWidget):
     def __init__(self, digital_channels, analog_channels, cxn=None):
         super(Sequencer, self).__init__(None)
-        self.digital_channels = digital_channels
-        self.analog_channels = analog_channels
+        #self.digital_channels = digital_channels
+        #self.analog_channels = analog_channels
         self.digital_servername = 'sequencer'
         self.analog_servername = 'analog_sequencer'
         self.cxn = cxn
         self.connect()
-        self.populate()
 
         self.sequence_history = []
         self.sequence_history_index = 0
-        self.set_sequence([(1, dict([(name, {'type': 'linear', 'v': 0, 'length': (1, 1)}) for name in analog_channels.values()] + [(name, 0) for name in digital_channels.values()]), )])
+        self.default_sequence = [(1, dict([(name, {'type': 'linear', 'v': 0, 'length': (1, 1)}) for name in analog_channels.values()] + [(name, 0) for name in digital_channels.values()]), )]
 
     @inlineCallbacks
     def connect(self):
         if self.cxn is None:
-            self.cxn = connection()
+            self.cxn = connection()  
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
         try:
@@ -891,6 +890,8 @@ class Sequencer(QtGui.QWidget):
             self.digital_channels = yield dserver.get_channels()
             aserver = yield self.cxn.get_server(self.analog_servername)
             self.analog_channels = yield aserver.get_channels()
+            self.populate()
+            self.set_sequence(self.default_sequence)
         except Exception, e:
             print e
             self.setDisabled(True)
