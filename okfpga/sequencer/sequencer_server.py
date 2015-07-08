@@ -80,6 +80,7 @@ class SequencerServer(LabradServer):
     def run_sequence(self, c, sequence):
         self._program_sequence(sequence)
         self.set_sequencer_mode('run')
+        print '???'
 
     @setting(02, 'run sequence from file', file_name='s')
     def run_sequence_from_file(self, c, file_name):

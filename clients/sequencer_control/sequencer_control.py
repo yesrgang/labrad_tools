@@ -894,7 +894,7 @@ class Sequencer(QtGui.QWidget):
             print ac
             self.analog_channels = eval(ac)
             self.populate()
-            self.default_sequence = [(1, dict([(name, {'type': 'linear', 'v': 0, 'length': (1, 1)}) for name in self.analog_channels.values()] + [(name, 0) for name in self.digital_channels.values()]), )]
+            self.default_sequence = [(1, dict([(name, {'type': 'linear', 'v': 0, 'length': (1, 1)}) for name in self.analog_channels.values()] + [(name, 0) for name in digital_channels.values()]), )]
             self.set_sequence(self.default_sequence)
         except Exception, e:
             print e
@@ -1072,6 +1072,10 @@ class Sequencer(QtGui.QWidget):
         sequence = [str(seq) + '\n' for seq in self.get_sequence()]
         outfile = open(self.browse_and_save.location_box.text(), 'w')
         outfile.write(''.join(sequence))
+        aserver = yield self.cxn.get_server(self.analog_servername)
+        yield aserver.run_sequence(sequence)
+        dserver = yield self.cxn.get_server(self.digital_servername)
+        yield dserver.run_sequence(sequence)
 
     def load_sequence(self, file_name):
         infile = open(file_name, 'r')
