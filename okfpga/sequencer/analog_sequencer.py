@@ -139,7 +139,7 @@ class SequencerServer(LabradServer):
 
     @setting(01, 'get channels')
     def get_channels(self, c):
-        return str(self.channels)
+        return str({k: d['name'] for k, d in self.channels})
 
     @setting(02, 'run sequence', file_name='s', returns='s')
     def run_sequence(self, c, file_name):

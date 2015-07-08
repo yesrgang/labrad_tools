@@ -887,9 +887,11 @@ class Sequencer(QtGui.QWidget):
         self.context = yield self.cxn.context()
         try:
             dserver = yield self.cxn.get_server(self.digital_servername)
-            self.digital_channels = yield dserver.get_channels()
+            dc = yield dserver.get_channels()
+            self.digital_channels = eval(dc)
             aserver = yield self.cxn.get_server(self.analog_servername)
-            self.analog_channels = yield aserver.get_channels()
+            ac = yield aserver.get_channels()
+            self.analog_channels = eval(ac)
             self.populate()
             self.set_sequence(self.default_sequence)
         except Exception, e:
