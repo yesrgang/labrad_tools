@@ -1026,6 +1026,7 @@ class Sequencer(QtGui.QWidget):
         self.hscroll_name.horizontalScrollBar().valueChanged.connect(self.adjust_for_hscroll_name)
 
         self.browse_and_save.save_button.clicked.connect(self.save_sequence)
+        self.browse_and_save.save_button.clicked.connect(self.run_sequence)
         self.browse_and_save.browse_button.clicked.connect(self.browse)
 
         for i, b in enumerate(self.add_dlt_row.buttons):
@@ -1067,15 +1068,19 @@ class Sequencer(QtGui.QWidget):
         file_name = QtGui.QFileDialog().getOpenFileName(directory='.')
         self.browse_and_save.location_box.setText(file_name)
         self.load_sequence(file_name)
-
+    
     def save_sequence(self):
         sequence = [str(seq) + '\n' for seq in self.get_sequence()]
         outfile = open(self.browse_and_save.location_box.text(), 'w')
         outfile.write(''.join(sequence))
+
+    @inlineCallbacks
+    def run_sequence(self, c):
+        filename = open(self.browse_and_save.location_box.text(), 'w')
         aserver = yield self.cxn.get_server(self.analog_servername)
-        yield aserver.run_sequence(sequence)
+        yield aserver.run_sequence_from_file(filename)
         dserver = yield self.cxn.get_server(self.digital_servername)
-        yield dserver.run_sequence(sequence)
+        yield dserver.run_sequence_from_file(filename)
 
     def load_sequence(self, file_name):
         infile = open(file_name, 'r')
