@@ -74,7 +74,7 @@ class SequencerServer(LabradServer):
 
     @setting(01, 'get channels')
     def get_channels(self, c):
-        return str({k: d['name'] for k, d in self.channels})
+        return str({k: d['name'] for k, d in self.channels.items()})
 
     @setting(02, 'run sequence', file_name='s')
     def run_sequence(self, c, file_name):
