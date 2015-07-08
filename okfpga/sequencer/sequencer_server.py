@@ -88,6 +88,8 @@ class SequencerServer(LabradServer):
         sequence = [eval(line.split('\n')[:-1][0]) for line in infile.readlines()]
         self._program_sequence(sequence)
         self.set_sequencer_mode('run')
+        print '!!!'
+        return file_name
 
     @setting(03, 'sequencer mode', mode='s')
     def _sequencer_mode(self, c, mode=None):

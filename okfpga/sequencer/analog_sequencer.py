@@ -147,14 +147,14 @@ class SequencerServer(LabradServer):
         self.set_sequencer_mode('run')
         print '???'
     
-    @setting(02, 'run sequence from file', file_name='s', returns='s')
+    @setting(02, 'run sequence from file', file_name='s')
     def run_sequence_from_file(self, c, file_name):
         infile = open(file_name, 'r')
         sequence = [eval(line.split('\n')[:-1][0]) for line in infile.readlines()]
         self._program_sequence(sequence)
         self.set_sequencer_mode('run')
-        yield None
-        returnValue(file_name)
+        print '!!!'
+        return file_name
 
     @setting(03, 'sequencer mode', mode='s')
     def _sequencer_mode(self, c, mode=None):
