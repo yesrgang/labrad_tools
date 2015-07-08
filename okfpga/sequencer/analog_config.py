@@ -23,14 +23,14 @@ class SequencerConfig(object):
             'manual voltage' is number in Volts [-10, 10]
         """
         self.channels = {
-                        'A00': {'name': 'DACA00', 'mode': 'auto', 'manual voltage': 0},
-                        'A01': {'name': 'DACA01', 'mode': 'auto', 'manual voltage': 0},
-                        'A02': {'name': 'DACA02', 'mode': 'auto', 'manual voltage': 0},
-                        'A03': {'name': 'DACA03', 'mode': 'auto', 'manual voltage': 0},
-                        'A04': {'name': 'DACA04', 'mode': 'auto', 'manual voltage': 0},
-                        'A05': {'name': 'DACA05', 'mode': 'auto', 'manual voltage': 0},
-                        'A06': {'name': 'DACA06', 'mode': 'auto', 'manual voltage': 0},
-                        'A07': {'name': 'DACA07', 'mode': 'auto', 'manual voltage': 0},
+                        'E00': {'name': 'Alpha Intensity', 'mode': 'auto', 'manual voltage': 0},
+                        'E01': {'name': 'Beta Intensity', 'mode': 'auto', 'manual voltage': 0},
+                        'E02': {'name': 'DACA02', 'mode': 'auto', 'manual voltage': 0},
+                        'E03': {'name': 'DACA03', 'mode': 'auto', 'manual voltage': 0},
+                        'E04': {'name': 'DACA04', 'mode': 'auto', 'manual voltage': 0},
+                        'E05': {'name': 'DACA05', 'mode': 'auto', 'manual voltage': 0},
+                        'E06': {'name': 'DACA06', 'mode': 'auto', 'manual voltage': 0},
+                        'E07': {'name': 'DACA07', 'mode': 'auto', 'manual voltage': 0},
                         }
 
         self.name_to_key = {d['name']: k for k, d in self.channels.items()}

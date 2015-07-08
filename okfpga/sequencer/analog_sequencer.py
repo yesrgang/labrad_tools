@@ -108,7 +108,6 @@ class SequencerServer(LabradServer):
                 if float(sequence[m][1][d['name']]['v']) != float(sequence[m-1][1][d['name']]['v']): # we need to change voltage
                     dv = sequence[m][1][d['name']]['v'] - sequence[m-1][1][d['name']]['v']
                     t = sequence[m][0]
-                    print 'k: ', k, 'rr', self.ramp_rate(dv, t)
                     ba += [int(eval(hex(self.ramp_rate(dv, t))) >> i & 0xff) for i in range(0, 16, 8)]
                     ba += [int(eval(hex(self.time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)]
                 elif sequence[m-1][1][d['name']]['v'] != sequence[m-2][1][d['name']]['v']: # we need to keep voltage
@@ -128,7 +127,6 @@ class SequencerServer(LabradServer):
     
     def _program_sequence(self, sequence):
         ba = self._make_sequence(sequence)
-        print ba
         self.set_sequencer_mode('idle')
         self.set_sequencer_mode('load')
         self.xem.WriteToPipeIn(0x80, bytearray(ba))
