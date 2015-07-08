@@ -877,7 +877,6 @@ class Sequencer(QtGui.QWidget):
 
         self.sequence_history = []
         self.sequence_history_index = 0
-        self.default_sequence = [(1, dict([(name, {'type': 'linear', 'v': 0, 'length': (1, 1)}) for name in analog_channels.values()] + [(name, 0) for name in digital_channels.values()]), )]
 
     @inlineCallbacks
     def connect(self):
@@ -889,10 +888,13 @@ class Sequencer(QtGui.QWidget):
             dserver = yield self.cxn.get_server(self.digital_servername)
             dc = yield dserver.get_channels()
             self.digital_channels = eval(dc)
+            print dc
             aserver = yield self.cxn.get_server(self.analog_servername)
             ac = yield aserver.get_channels()
+            print ac
             self.analog_channels = eval(ac)
             self.populate()
+            self.default_sequence = [(1, dict([(name, {'type': 'linear', 'v': 0, 'length': (1, 1)}) for name in self.analog_channels.values()] + [(name, 0) for name in self.digital_channels.values()]), )]
             self.set_sequence(self.default_sequence)
         except Exception, e:
             print e

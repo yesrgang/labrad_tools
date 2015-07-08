@@ -76,8 +76,13 @@ class SequencerServer(LabradServer):
     def get_channels(self, c):
         return str({k: d['name'] for k, d in self.channels.items()})
 
-    @setting(02, 'run sequence', file_name='s')
-    def run_sequence(self, c, file_name):
+    @setting(07, 'run sequence', sequence='s')
+    def run_sequence(self, c, sequence):
+        self._program_sequence(sequence)
+        self.set_sequencer_mode('run')
+
+    @setting(02, 'run sequence from file', file_name='s')
+    def run_sequence_from_file(self, c, file_name):
         infile = open(file_name, 'r')
         sequence = [eval(line.split('\n')[:-1][0]) for line in infile.readlines()]
         self._program_sequence(sequence)
