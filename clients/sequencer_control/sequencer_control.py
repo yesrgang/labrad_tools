@@ -1076,7 +1076,7 @@ class Sequencer(QtGui.QWidget):
 
     @inlineCallbacks
     def run_sequence(self, c):
-        filename = open(self.browse_and_save.location_box.text(), 'w')
+        filename = self.browse_and_save.location_box.text()
         aserver = yield self.cxn.get_server(self.analog_servername)
         yield aserver.run_sequence_from_file(filename)
         dserver = yield self.cxn.get_server(self.digital_servername)
