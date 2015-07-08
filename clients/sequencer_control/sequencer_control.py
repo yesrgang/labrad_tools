@@ -1078,6 +1078,7 @@ class Sequencer(QtGui.QWidget):
     def run_sequence(self, c):
         filename = str(self.browse_and_save.location_box.text())
         aserver = yield self.cxn.get_server(self.analog_servername)
+        print aserver
         yield aserver.run_sequence_from_file(filename)
         dserver = yield self.cxn.get_server(self.digital_servername)
         yield dserver.run_sequence_from_file(filename)
