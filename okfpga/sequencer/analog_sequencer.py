@@ -1,3 +1,21 @@
+"""
+### BEGIN NODE INFO
+[info]
+name = Analog Sequencer
+version = 1.0
+description = 
+instancename = %LABRADNODE% Analog Sequencer
+
+[startup]
+cmdline = %PYTHON% %FILE%
+timeout = 20
+
+[shutdown]
+message = 987654321
+timeout = 20
+### END NODE INFO
+"""
+
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue

@@ -8,20 +8,21 @@ node_dict = {
                             'TDS2014B',
                             #'Data Vault',
                             #'N5181A'
-             ],
-             'node yesr10': 
-             [
+                            ],
+             'node yesr10': [
                             'GPIB Bus',
                             'Serial Server'
-             ],
-             'node yesr9':
-             [
+                            ],
+             'node yesr9': [
                             'GPIB Bus'
-             ],
-             'node yesr12':
-             [
+                           ],
+             'node yesr12': [
                             'Serial Server',
                             'Red Master DDS',
-             ]             
+                            ],             
+             'node yesr20': [
+                            'Digital Sequencer',
+                            'Analog Sequencer',
+                            ],
              }
 
