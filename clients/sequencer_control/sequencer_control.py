@@ -870,8 +870,8 @@ class Sequencer(QtGui.QWidget):
         super(Sequencer, self).__init__(None)
         #self.digital_channels = digital_channels
         #self.analog_channels = analog_channels
-        self.digital_servername = 'sequencer'
-        self.analog_servername = 'analog_sequencer'
+        self.digital_servername = 'yesr20_digital_sequencer'
+        self.analog_servername = 'yesr20_analog_sequencer'
         self.cxn = cxn
         self.connect()
 
