@@ -26,7 +26,7 @@ import numpy as np
 import ok
 
 class SequencerServer(LabradServer):
-    name = 'analog sequencer'
+    name = '%LABRADNODE$% Analog Sequencer'
     mode='idle'
 
     def __init__(self, config_name):
