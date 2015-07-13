@@ -115,7 +115,6 @@ class PRO8000Server(GPIBManagedServer):
     def __init__(self, configuration_filename):
         self.configuration_filename = configuration_filename
         self.load_configuration()
-        print self.deviceName
         GPIBManagedServer.__init__(self)
     
     def load_configuration(self):
@@ -180,11 +179,16 @@ class PRO8000Server(GPIBManagedServer):
     @setting(15, 'get system configuration')
     def get_system_configuration(self, c):
         conf =  self.load_configuration()
-        return str(conf.__dict__)
+	d = {k: v for k, v in conf.__dict__.items() if k is not 'controller'}
+        return str(d)
 #        from pro8000config import PRO8000Config, LDC80xxConfig
 #        self.sysconf = PRO8000Config()
 #        sysconf_str = str(self.sysconf.get_dict())
 #        return sysconf_str
+    @setting(16, 'get controller configuration', controller_name='s')
+    def get_controller_configuration(self, c, controller_name):
+        conf = self.load_configuration()
+	return str(conf.__dict__['controller'][controller_name].__dict__)
 
 #    @setting(16, 'get controller configuration', controller_name='s', returns='s')
 #    def get_controller_configuration(self, c, controller_name):
