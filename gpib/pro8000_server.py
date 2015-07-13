@@ -123,11 +123,11 @@ class PRO8000Server(GPIBManagedServer):
             setattr(self, key, value)
         return configuration
 
-    @inlineCallbacks
-    def initServer(self):
-        yield self.get_system_configuration(None)
-        self.deviceName = self.sysconf.device_name
-        yield GPIBManagedServer.initServer(self)
+#    @inlineCallbacks
+#    def initServer(self):
+#        yield self.get_system_configuration(None)
+#        self.deviceName = self.sysconf.device_name
+#        yield GPIBManagedServer.initServer(self)
 
     @setting(10, 'state', controller_name='s', state='b', returns='b')
     def state(self, c, controller_name, state=None):
