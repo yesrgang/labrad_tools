@@ -119,7 +119,7 @@ class PRO8000Server(GPIBManagedServer):
 
     def load_configuration(self):
         configuration = __import__(self.configuration_filename).PRO8000Config()
-        for key, value in config.__dict__.items():
+        for key, value in configuration.__dict__.items():
             setattr(self, key, value)
         return configuration
 
