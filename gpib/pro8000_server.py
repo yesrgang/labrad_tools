@@ -128,6 +128,11 @@ class PRO8000Server(GPIBManagedServer):
     def initServer(self):
         yield GPIBManagedServer.initServer(self)
 
+    def select_device(self, c, key):
+        dev = self.selectDevice(c, key=key)
+        dev.set_configuration(self.configuration)
+        return dev.name
+
     @setting(10, 'state', controller_name='s', state='b', returns='b')
     def state(self, c, controller_name, state=None):
         dev = self.selectedDevice(c)

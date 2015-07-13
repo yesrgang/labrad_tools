@@ -14,9 +14,9 @@ class PRO8000Config(object):
         self.gpib_device_id = 'yesr20 GPIB Bus - GPIB0::10'
         self.controller_order = ['ZS', 'MOT', 'TC']
         self.controller = {
-                'ZS': LDC80xxConfig(slot=2, min_current=0.0, max_current=0.153, def_current=0.1480, step_size=1e-4),
-                'MOT': LDC80xxConfig(slot=4, min_current=0.0, max_current=0.153, def_current=0.1480, step_size=1e-4),
-                'TC': LDC80xxConfig(slot=6, min_current=0.0, max_current=0.153, def_current=0.1480, step_size=1e-4), 
+                '3D': LDC80xxConfig(slot=2, min_current=0.0, max_current=0.153, def_current=0.1480, step_size=1e-4),
+                'ZS': LDC80xxConfig(slot=4, min_current=0.0, max_current=0.153, def_current=0.1480, step_size=1e-4),
+                '2D': LDC80xxConfig(slot=6, min_current=0.0, max_current=0.153, def_current=0.1480, step_size=1e-4), 
                 #'2.6': LDC80xxConfig(slot=8, min_current=0.0, max_current=0.100, def_current=0.0821, step_size=1e-6)
                 }
 
