@@ -114,8 +114,8 @@ class PRO8000Server(GPIBManagedServer):
 
     def __init__(self, configuration_filename):
         self.configuration_filename = configuration_filename
-@        self.load_configuration()
-@        print self.deviceName
+#        self.load_configuration()
+#        print self.deviceName
         GPIBManagedServer.__init__(self)
     
     def load_configuration(self):
