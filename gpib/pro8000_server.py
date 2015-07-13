@@ -179,7 +179,8 @@ class PRO8000Server(GPIBManagedServer):
 
     @setting(15, 'get system configuration')
     def get_system_configuration(self, c):
-        return str(self.load_configuration().__dict__)
+        conf =  self.load_configuration()
+        return str(conf.__dict__)
 #        from pro8000config import PRO8000Config, LDC80xxConfig
 #        self.sysconf = PRO8000Config()
 #        sysconf_str = str(self.sysconf.get_dict())
