@@ -187,7 +187,7 @@ class PRO8000Server(GPIBManagedServer):
 #        return ctlconf_str
         
 
-__server__ = PRO8000Server()
+__server__ = PRO8000Server('pro8000_configuration')
 
 if __name__ == '__main__':
     from labrad import util
