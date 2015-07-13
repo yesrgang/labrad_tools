@@ -123,6 +123,7 @@ class PRO8000Server(GPIBManagedServer):
         configuration = __import__(self.configuration_filename).PRO8000Config()
         for key, value in configuration.__dict__.items():
             setattr(self, key, value)
+        yield None
         return configuration
 
     @inlineCallbacks
