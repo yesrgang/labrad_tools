@@ -114,23 +114,21 @@ class PRO8000Server(GPIBManagedServer):
 
     def __init__(self, configuration_filename):
         self.configuration_filename = configuration_filename
-        self.load_configuration()
-        print self.deviceName
+@        self.load_configuration()
+@        print self.deviceName
         GPIBManagedServer.__init__(self)
     
-    @inlineCallbacks
     def load_configuration(self):
         configuration = __import__(self.configuration_filename).PRO8000Config()
         for key, value in configuration.__dict__.items():
             setattr(self, key, value)
-        yield None
         return configuration
 
     @inlineCallbacks
     def initServer(self):
 #        yield self.get_system_configuration(None)
 #        self.deviceName = self.sysconf.device_name
-        yield self.load_configuration()
+        self.load_configuration()
         print self.deviceName
         yield GPIBManagedServer.initServer(self)
 
