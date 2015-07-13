@@ -10,7 +10,7 @@ class LDC80xxConfig(object):
 class PRO8000Config(object):
     def __init__(self):
         self.name = '%LABRADNODE% PRO8000'
-        self.device_name = 'PROFILE PRO8000'
+        self.deviceName = 'PROFILE PRO8000'
         self.gpib_device_id = 'yesr20 GPIB Bus - GPIB0::10'
         self.controller_order = ['ZS', 'MOT', 'TC']
         self.controller = {
