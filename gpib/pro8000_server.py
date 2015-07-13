@@ -128,9 +128,10 @@ class PRO8000Server(GPIBManagedServer):
     def initServer(self):
 #        yield self.get_system_configuration(None)
 #        self.deviceName = self.sysconf.device_name
-        self.load_configuration()
+        configed = self.load_configuration()
         print self.deviceName
-        yield GPIBManagedServer.initServer(self)
+        if configed: 
+            yield GPIBManagedServer.initServer(self)
 
     @setting(10, 'state', controller_name='s', state='b', returns='b')
     def state(self, c, controller_name, state=None):
