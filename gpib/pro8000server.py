@@ -28,20 +28,26 @@ POWER_ID = 698003
 
 class PRO8000Wrapper(GPIBDeviceWrapper):
     def initialize(self):
-        self.load_configuration()
+        pass
+#        self.load_configuration()
 
-    def load_configuration(self):
-        from pro8000config import PRO8000Config, LDC80xxConfig
-        self.sysconf = PRO8000Config()
+#    def load_configuration(self):
+#        from pro8000config import PRO8000Config, LDC80xxConfig
+#        self.sysconf = PRO8000Config()
+#
+#    def ctl_conf(self, controller_name):
+#        conf = self.sysconf.controller[controller_name].get_dict()
+#        return conf
 
-    def ctl_conf(self, controller_name):
-        conf = self.sysconf.controller[controller_name].get_dict()
-        return conf
+    def set_configuration(self, configuration):
+        self.configuration = configuration
 
     @inlineCallbacks
     def set_slot(self, controller_name):
-        slot = self.ctl_conf(controller_name)['slot']
-        yield self.write(':SLOT {}'.format(self.ctl_conf(controller_name)['slot']))
+        slot = self.configuration.controller[controller_name].slot
+        yield self.write(':SLOT {}'.format(slot))
+#        slot = self.ctl_conf(controller_name)['slot']
+#        yield self.write(':SLOT {}'.format(self.ctl_conf(controller_name)['slot']))
 
     @inlineCallbacks
     def get_current(self, controller_name):
@@ -53,7 +59,8 @@ class PRO8000Wrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def set_current(self, controller_name, current):
         yield self.set_slot(controller_name)
-        current = sorted([0, current, self.ctl_conf(controller_name)['max_current']])[1]
+        max_current = self.configuration.controller[controller_name].max_current
+        current = sorted([0, current, max_current])[1]
         yield self.write(':ILD:SET {}'.format(current))
         returnValue(current)
 
@@ -79,7 +86,7 @@ class PRO8000Wrapper(GPIBDeviceWrapper):
         if state is True:
             yield self.write(':LASER ON')
             time.sleep(1) # what's the rush, man? 
-            stop_value = self.ctl_conf(controller_name)['def_current']
+            stop_value = self.configuration.controller[controller_name].def_currnet
             yield self.dial_current(controller_name, stop_value)
         else:
             yield self.dial_current(controller_name, 0.)
@@ -97,13 +104,24 @@ class PRO8000Wrapper(GPIBDeviceWrapper):
 
 class PRO8000Server(GPIBManagedServer):
     """Provides basic CW control for Thor Labs PRO 8000 laser diode controller"""
-    name = '%LABRADNODE% PRO8000'
-    deviceName = 'PROFILE PRO8000'
+#    name = '%LABRADNODE% PRO8000'
+#    deviceName = 'PROFILE PRO8000'
     deviceWrapper = PRO8000Wrapper
 
     update_state = Signal(STATE_ID, "signal: update_state", '(sb)')
     update_current = Signal(CURRENT_ID, "signal: update_current", '(sv)')
     update_power = Signal(POWER_ID, "signal: update_power", '(sv)')
+
+    def __init__(self, configuration_filename):
+        self.configuration_filename = configuration_filename
+        self.load_configuration()
+        GPIBManagedServer.__init__(self)
+
+    def load_configuration(self):
+        configuration = __import__(self.configuration_filename).PRO8000Config()
+        for key, value in config.__dict__.items():
+            setattr(self, key, value)
+        return configuration
 
     @inlineCallbacks
     def initServer(self):
@@ -153,19 +171,20 @@ class PRO8000Server(GPIBManagedServer):
         yield self.current(c, controller_name)
         yield self.power(c, controller_name)
 
-    @setting(15, 'get system configuration', returns='s')
+    @setting(15, 'get system configuration')
     def get_system_configuration(self, c):
-        from pro8000config import PRO8000Config, LDC80xxConfig
-        self.sysconf = PRO8000Config()
-        sysconf_str = str(self.sysconf.get_dict())
-        return sysconf_str
+        return str(self.load_configuration())
+#        from pro8000config import PRO8000Config, LDC80xxConfig
+#        self.sysconf = PRO8000Config()
+#        sysconf_str = str(self.sysconf.get_dict())
+#        return sysconf_str
 
-    @setting(16, 'get controller configuration', controller_name='s', returns='s')
-    def get_controller_configuration(self, c, controller_name):
-        from pro8000config import PRO8000Config, LDC80xxConfig
-        self.sysconf = PRO8000Config()
-        ctlconf_str = str(self.sysconf.controller[controller_name].get_dict())
-        return ctlconf_str
+#    @setting(16, 'get controller configuration', controller_name='s', returns='s')
+#    def get_controller_configuration(self, c, controller_name):
+#        from pro8000config import PRO8000Config, LDC80xxConfig
+#        self.sysconf = PRO8000Config()
+#        ctlconf_str = str(self.sysconf.controller[controller_name].get_dict())
+#        return ctlconf_str
         
 
 __server__ = PRO8000Server()
