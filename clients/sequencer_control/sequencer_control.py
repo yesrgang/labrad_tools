@@ -888,10 +888,8 @@ class Sequencer(QtGui.QWidget):
             dserver = yield self.cxn.get_server(self.digital_servername)
             dc = yield dserver.get_channels()
             self.digital_channels = eval(dc)
-            print dc
             aserver = yield self.cxn.get_server(self.analog_servername)
             ac = yield aserver.get_channels()
-            print ac
             self.analog_channels = eval(ac)
             self.populate()
             self.default_sequence = [(1, dict([(name, {'type': 'linear', 'v': 0, 'length': (1, 1)}) for name in self.analog_channels.values()] + [(name, 0) for name in digital_channels.values()]), )]
@@ -1078,12 +1076,9 @@ class Sequencer(QtGui.QWidget):
     def run_sequence(self, c):
         filename = str(self.browse_and_save.location_box.text())
         aserver = yield self.cxn.get_server(self.analog_servername)
-        print aserver
         fn = yield aserver.run_sequence_from_file(filename)
-        print fn
         dserver = yield self.cxn.get_server(self.digital_servername)
         fn = yield dserver.run_sequence_from_file(filename)
-        print fn
 
     def load_sequence(self, file_name):
         infile = open(file_name, 'r')
