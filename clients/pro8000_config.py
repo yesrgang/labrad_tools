@@ -10,3 +10,4 @@ class PRO8000Config(object):
         self.state_id = 461001
         self.current_id = 461002
         self.power_id = 461003
+        self.controller_order = ['3D', '2D', 'ZS']

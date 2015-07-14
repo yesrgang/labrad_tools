@@ -181,12 +181,18 @@ class LDC80xxClient(QtGui.QGroupBox):
 
 class StateWidget(QtGui.QGroupBox):
     layout = None
-    def __init__(self, reactor, cxn=None):
-        self.servername = servername
+    def __init__(self, configuration_filename, reactor, cxn=None):
+        QtGui.QDialog.__init__(self)
+        self.configuration_filename = configuration_filename
         self.reactor = reactor
         self.cxn = cxn
-        QtGui.QDialog.__init__(self)
+        self.load_control_configuration()
         self.connect()
+
+    def load_control_configuration(self):
+        self.configuration = __import__(self.configuration_filename).PRO8000Config()
+        for key, value in self.configuration.__dict__.items():
+            setattr(self, key, value)
 
     @inlineCallbacks
     def connect(self):
@@ -195,19 +201,30 @@ class StateWidget(QtGui.QGroupBox):
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
         try:
-            yield self.getConfiguration()
+            yield self.get_server_configuration()
             self.populateGUI()
             yield self.connectSignals()
         except Exception, e:
             print e
             self.setDisabled(True)
-
+    
     @inlineCallbacks
-    def getConfiguration(self):
+    def get_server_configuration(self):
         server = yield self.cxn.get_server(self.servername)
         sysconf_str = yield server.get_system_configuration()
-        self.sysconf = eval(sysconf_str)
-        yield server.select_device(self.sysconf['gpib_device_id'])
+        for key, value in eval(sysconf_str).iteritems():
+            setattr(self, key, value)
+        yield server.select_device(self.gpib_device_id)
+#        ctlconf_str = yield server.get_controller_configuration(self.diode_name)
+#        for key, value in eval(ctlconf_str).iteritems():
+#            setattr(self, key, value)
+
+#    @inlineCallbacks
+#    def getConfiguration(self):
+#        server = yield self.cxn.get_server(self.servername)
+#        sysconf_str = yield server.get_system_configuration()
+#        self.sysconf = eval(sysconf_str)
+#        yield server.select_device(self.sysconf['gpib_device_id'])
    
     def populateGUI(self):
         self.on_button = QtGui.QPushButton('On')
@@ -258,12 +275,24 @@ class StateWidget(QtGui.QGroupBox):
 
 class PRO8000Client(QtGui.QWidget):
     layout = None
-    def __init__(self, reactor, cxn=None):
-        self.servername = servername
+    def __init__(self, configuration_filename, reactor, cxn=None):
+        QtGui.QDialog.__init__(self)
+        self.configuration_filename = configuration_filename
         self.reactor = reactor
         self.cxn = cxn
-        QtGui.QDialog.__init__(self)
+        #self.servername = servername
+        self.load_control_configuration()
         self.connect()
+    
+    def load_control_configuration(self):
+        self.configuration = __import__(self.configuration_filename).PRO8000Config()
+        for key, value in self.configuration.__dict__.items():
+            setattr(self, key, value)
+#            if key == 'diodes':
+#                for key2, value2 in self.configuration.diodes[self.diode_name].__dict__.items():
+#                    setattr(self, key, value)
+#            else:
+#                setattr(self, key, value)
 
     @inlineCallbacks
     def connect(self):
@@ -272,7 +301,7 @@ class PRO8000Client(QtGui.QWidget):
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
         try:
-            yield self.loadConfiguration()
+#            yield self.loadConfiguration()
             self.populateGUI()
             yield self.connectSignals()
         except Exception, e:
@@ -289,13 +318,13 @@ class PRO8000Client(QtGui.QWidget):
         self.setWindowTitle(self.servername + ' Control')
         if self.layout is None:
             self.layout = QtGui.QHBoxLayout()
-        for diode_name in self.sysconf['controller_order']:
-            widget = LDC80xxWidget(diode_name, self.reactor, self.cxn)
+        for diode_name in self.controller_order:
+            widget = LDC80xxClient(self.configuration_filename, diode_name, self.reactor, self.cxn)
             self.layout.addWidget(widget)
-        widget = StateWidget(self.reactor)
-        self.layout.addWidget(widget)
+        self.state_widget = StateWidget(self.configuration_filename, self.reactor)
+        self.layout.addWidget(self.state_widget)
         self.setLayout(self.layout)
-        self.setFixedSize(200*len(self.sysconf['controller_order'])+150, 120)
+        self.setFixedSize(200*len(self.controller_order)+150, 120)
 
     @inlineCallbacks
     def connectSignals(self):
@@ -312,7 +341,7 @@ class PRO8000Client(QtGui.QWidget):
     def reinitialize(self):
         self.removeWidgets()
         self.setDisabled(False)
-        yield self.loadConfiguration()
+#        yield self.loadConfiguration()
         self.populateGUI()
 
     def disable(self):
@@ -326,7 +355,7 @@ if __name__ == '__main__':
     import qt4reactor 
     qt4reactor.install()
     from twisted.internet import reactor
-    widget = PRO8000Client(reactor)
-    widget = LDC80xxClient('pro8000_config', '2D', reactor)
+    widget = PRO8000Client('pro8000_config', reactor)
+#    widget = LDC80xxClient('pro8000_config', '2D', reactor)
     widget.show()
     reactor.run()
