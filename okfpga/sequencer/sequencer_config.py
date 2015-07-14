@@ -73,7 +73,7 @@ class SequencerConfig(object):
                         'D01': {'name': 'Alpha Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'D02': {'name': 'Beta AOM', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'D03': {'name': 'Beta Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 0},
-                        'D04': {'name': 'Spin pol. AOM', 'mode': 'auto', 'manual state': 0, 'invert': 1},
+                        'D04': {'name': 'Spin pol. AOM', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'D05': {'name': 'Spin pol. Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'D06': {'name': '679 AOM', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'D07': {'name': '707 AOM', 'mode': 'auto', 'manual state': 0, 'invert': 0},

@@ -86,7 +86,7 @@ class PRO8000Wrapper(GPIBDeviceWrapper):
         if state is True:
             yield self.write(':LASER ON')
             time.sleep(1) # what's the rush, man? 
-            stop_value = self.configuration.controller[controller_name].def_currnet
+            stop_value = self.configuration.controller[controller_name].def_current
             yield self.dial_current(controller_name, stop_value)
         else:
             yield self.dial_current(controller_name, 0.)
@@ -165,7 +165,7 @@ class PRO8000Server(GPIBManagedServer):
     @setting(13, 'system state', state='b', returns='*b')
     def system_state(self, c, state=None):
         state_list = []
-        for controller_name in self.sysconf.controller_order:
+        for controller_name in self.controller_order:
            s = yield self.state(c, controller_name, state)
            state_list.append(s)
         returnValue(state_list)
