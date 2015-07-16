@@ -24,7 +24,7 @@ class SequencerConfig(object):
                         'A03': {'name': 'Fluores. Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 1},
                         'A04': {'name': 'Abs. AOM', 'mode': 'auto', 'manual state': 0, 'invert': 1},
                         'A05': {'name': 'Abs. Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 1},
-                        'A06': {'name': 'TC Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 1},
+                        'A06': {'name': '2D Mot Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 1},
                         'A07': {'name': 'Zeeman Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 1},
                         'A08': {'name': 'TTLA08', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'A09': {'name': 'TTLA09', 'mode': 'auto', 'manual state': 0, 'invert': 0},
@@ -73,8 +73,8 @@ class SequencerConfig(object):
                         'D01': {'name': 'Alpha Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'D02': {'name': 'Beta AOM', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'D03': {'name': 'Beta Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 0},
-                        'D04': {'name': 'Spin pol. AOM', 'mode': 'auto', 'manual state': 0, 'invert': 0},
-                        'D05': {'name': 'Spin pol. Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 0},
+                        'D04': {'name': 'Spin Pol. AOM', 'mode': 'auto', 'manual state': 0, 'invert': 1},
+                        'D05': {'name': 'Spin Pol. Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'D06': {'name': '679 AOM', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'D07': {'name': '707 AOM', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'D08': {'name': 'Repump Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 0},
@@ -83,8 +83,8 @@ class SequencerConfig(object):
                         'D11': {'name': 'TTLD11', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'D12': {'name': 'TTLD12', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'D13': {'name': 'TTLD13', 'mode': 'auto', 'manual state': 0, 'invert': 0},
-                        'D14': {'name': 'TTLD14', 'mode': 'auto', 'manual state': 0, 'invert': 0},
-                        'D15': {'name': 'TTLD15', 'mode': 'auto', 'manual state': 0, 'invert': 0},
+                        'D14': {'name': 'Aosense Heater Enable', 'mode': 'manual', 'manual state': 1, 'invert': 0},
+                        'D15': {'name': 'E Trigger', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         }
 
         self.name_to_key = {d['name']: k for k, d in self.channels.items()}

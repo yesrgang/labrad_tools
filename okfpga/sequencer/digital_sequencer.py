@@ -44,6 +44,8 @@ class DigitalSequencer(LabradServer):
         if not connected:
             raise Exception("sequencer board not found")
         self.program_board()
+	self.write_channel_modes()
+	self.write_channel_stateinvs()
 
     def connect_board(self):
         fp = ok.FrontPanel()
@@ -104,7 +106,6 @@ class DigitalSequencer(LabradServer):
         sequence = [eval(line.split('\n')[:-1][0]) for line in infile.readlines()]
         self._program_sequence(sequence)
         self.set_sequencer_mode('run')
-        print '!!!'
         return file_name
 
     @setting(03, 'sequencer mode', mode='s')

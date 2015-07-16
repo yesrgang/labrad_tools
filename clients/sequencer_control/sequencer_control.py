@@ -1143,6 +1143,9 @@ class Sequencer(QtGui.QWidget):
                 self.undo()
             if c.key() == QtCore.Qt.Key_R:
                 self.redo()
+            if c.key() == QtCore.Qt.Key_S:
+                self.save_sequence()
+                self.run_sequence(c)
         
 digital_channels = {
                     'A00': {'name': '3D MOT AOM', 'mode': 'auto', 'manual state': 0, 'invert': 1},

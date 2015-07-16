@@ -10,7 +10,7 @@ node_dict = {
                             #'N5181A'
                             ],
              'node yesr10': [
-                            #'GPIB Bus',
+                            'GPIB Bus',
                             #'Serial Server'
                             ],
              'node yesr9': [
@@ -25,6 +25,7 @@ node_dict = {
                             'Analog Sequencer',
                             'GPIB Device Manager',
                             'GPIB Bus',
+			    'PRO8000',
                             ],
              }
 
