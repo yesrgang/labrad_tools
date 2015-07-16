@@ -20,7 +20,7 @@ from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.threads import deferToThread
-
+import json
 import time
 import numpy as np
 import ok
@@ -161,9 +161,9 @@ class SequencerServer(LabradServer):
 
     @setting(07, 'run sequence', sequence='s')
     def run_sequence(self, c, sequence):
+        sequence = json.loads(sequence)
         self._program_sequence(sequence)
         self.set_sequencer_mode('run')
-        print '???'
     
     @setting(02, 'run sequence from file', file_name='s')
     def run_sequence_from_file(self, c, file_name):

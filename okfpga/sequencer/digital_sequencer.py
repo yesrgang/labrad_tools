@@ -19,6 +19,7 @@ timeout = 20
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
+import json
 import ok
 
 class DigitalSequencer(LabradServer):
@@ -97,6 +98,7 @@ class DigitalSequencer(LabradServer):
 
     @setting(07, 'run sequence', sequence='s')
     def run_sequence(self, c, sequence):
+        sequence = json.loads(sequence)
         self._program_sequence(sequence)
         self.set_sequencer_mode('run')
 
