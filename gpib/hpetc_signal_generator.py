@@ -1,3 +1,4 @@
+
 """
 ### BEGIN NODE INFO
 [info]
@@ -17,11 +18,9 @@ timeout = 5
 """
 
 import numpy as np
-import time
 from labrad.server import setting, Signal
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from twisted.internet.defer import inlineCallbacks, returnValue
-from twisted.internet.task import LoopingCall
 
 #STATE_ID = 698013
 #FREQUENCY_ID = 698014
@@ -30,11 +29,6 @@ from twisted.internet.task import LoopingCall
 class HPSignalGeneratorWrapper(GPIBDeviceWrapper):
     def initialize(self):
         pass
-
-#    def load_configuration(self, name):
-#        """ name is from config file"""
-#        from n5181aconfig import ServerConfig
-#        self.config = ServerConfig().device_dict[name]
 
     def set_configuration(self, configuration):
         self.configuration = configuration
@@ -57,53 +51,49 @@ class HPSignalGeneratorWrapper(GPIBDeviceWrapper):
 
     @inlineCallbacks
     def set_frequency(self, frequency):
-        yield self.write('FREQ:CW {} MHz'.format(frequency))
+        yield self.write('FREQ:CW {} Hz'.format(frequency))
 
     @inlineCallbacks
-    def get_power(self):
+    def get_amplitude(self):
         ans = yield self.query('POW:AMPL?')
         returnValue(float(ans))
 
     @inlineCallbacks
-    def set_power(self, power):
-        yield self.write('POW:AMPL {} DBM'.format(power))
+    def set_amplitude(self, amplitude):
+        yield self.write('POW:AMPL {} DBM'.format(amplitude))
 
 
 class HPSignalGeneratorServer(GPIBManagedServer):
     """Provides basic control for HP signal generators"""
-#    name = '%LABRADNODE% HP Signal Generator'
-#    deviceName = ''
     deviceWrapper = HPSignalGeneratorWrapper
-#
-#    update_state = Signal(STATE_ID, "signal: update_state", 'b')
-#    update_frequency = Signal(FREQUENCY_ID, "signal: update_frequency", 'v')
-#    update_power = Signal(POWER_ID, "signal: update_power", 'v')
-
+    
     def __init__(self, configuration_filename):
         self.configuration_filename = configuration_filename
-        self.load_configuration()
-        GPIBManagedServer.__init__(self)
+        self.configuration = self.load_configuration()
+        self.update_state = Signal(self.state_id, "signal: update_state", '(sb)')
+        self.update_frequency = Signal(self.frequency_id, "signal: update_frequency", '(sv)')
+        self.update_amplitude = Signal(self.amplitude_id, "signal: update_amplitude", '(sv)')
+	if self.configuration:
+            GPIBManagedServer.__init__(self)
     
     def load_configuration(self):
-        self.configuration = __import__(self.configuration_filename).PRO8000Config()
-        for key, value in self.configuration.__dict__.items():
+        configuration = __import__(self.configuration_filename).ServerConfig()
+        for key, value in configuration.__dict__.items():
             setattr(self, key, value)
-        return self.configuration
+        return configuration
     
     @inlineCallbacks
     def initServer(self):
-        self.update_state = Signal(self.state_id, "signal: update_state", '(sb)')
-        self.update_current = Signal(self.current_id, "signal: update_current", '(sv)')
-        self.update_power = Signal(self.power_id, "signal: update_power", '(sv)')
         yield GPIBManagedServer.initServer(self)
+#	self.load_configuration()
 
     @setting(9, 'select device by name', name='s', returns='s')    
     def select_device_by_name(self, c, name):
-        gpib_device_id = self.devices[name].gpib_device_id
+	gpib_device_id = self.instruments[name].gpib_device_id
         yield self.select_device(c, gpib_device_id)
         dev = self.selectedDevice(c)
-        dev.load_configuration(self.devices[name])
-        returnValue(name)
+        dev.set_configuration(self.instruments[name])
+        returnValue(str(self.instruments[name].__dict__))
 
     @setting(10, 'state', state='b', returns='b')
     def state(self, c, state=None):
@@ -123,55 +113,29 @@ class HPSignalGeneratorServer(GPIBManagedServer):
         yield self.update_frequency(frequency)
         returnValue(frequency)
 
-    @setting(12, 'power', power='v', returns='v')
-    def power(self, c, power=None):
+    @setting(12, 'amplitude', amplitude='v', returns='v')
+    def amplitude(self, c, amplitude=None):
         dev = self.selectedDevice(c)
-        if power is not None:
-            yield dev.set_power(power)
-        power = yield dev.get_power()
-        yield self.update_power(power)
-        returnValue(power)
+        if amplitude is not None:
+            yield dev.set_amplitude(amplitude)
+        amplitude = yield dev.get_amplitude()
+        yield self.update_amplitude(amplitude)
+        returnValue(amplitude)
 
-    @setting(13, 'sweep', parameters='(vb)', returns='(vb)')
-    def sweep(self, c, parameters=None):
-        dev = self.selectedDevice(c)
-        if parameters is not None:
-            dev.config.sweep_rate = parameters[0]
-            dev.config.sweep_state = parameters[1]
-        return (dev.config.sweep_rate, dev.config.sweep_state)
-    
-    @inlineCallbacks
-    def _sweep(self):
-        for k  in self.devices.keys():
-            dev = self.devices[k]
-            if hasattr(dev, 'config'):
-                if dev.config.sweep_state:
-                    f = yield dev.get_frequency()
-                    f += dev.config.sweep_rate*self.sweep_dwell
-                    yield dev.set_frequency(f)
-                    yield self.update_frequency(f)
-    
     @setting(14, 'request values')
     def request_values(self, c):
         yield self.state(c)
         yield self.frequency(c)
-        yield self.power(c)
+        yield self.amplitude(c)
 
-    @setting(15, 'get configuration', returns='s')
-    def get_configuration(self, c):
-        from n5181aconfig import ServerConfig, N5181AConfig
-        config = ServerConfig()
-        # for name, obj in config.device_dict.items():
-        #     if obj.gpib_device_id in self.devices.keys():
-        #         self.devices[obj.gpib_device_id].load_configuration(name)
-
-        for key, value in config.__dict__.items():
-            setattr(self, key, value)
-        return str(config.__dict__)
+    @setting(15, 'get system configuration', returns='s')
+    def get_system_configuration(self, c):
+        conf = self.load_configuration()
+        return str(conf)
 
 
-if __name__ == '__main__':
-    configuration_name = 'hpetc_signal_generator_config.py'
-    __server__ = HPSignalGeneratorServer()
-    from labrad import util
-    util.runServer(__server__)
+#if __name__ == '__main__':
+#    configuration_name = 'hpetc_signal_generator_config'
+#    __server__ = HPSignalGeneratorServer(configuration_name)
+#    from labrad import util
+#    util.runServer(__server__)

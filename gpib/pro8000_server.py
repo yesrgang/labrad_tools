@@ -122,9 +122,9 @@ class PRO8000Server(GPIBManagedServer):
 
     @inlineCallbacks
     def initServer(self):
-        self.update_state = Signal(self.state_id, "signal: update_state", '(sb)')
-        self.update_current = Signal(self.current_id, "signal: update_current", '(sv)')
-        self.update_power = Signal(self.power_id, "signal: update_power", '(sv)')
+#        self.update_state = Signal(self.state_id, "signal: update_state", '(sb)')
+#        self.update_current = Signal(self.current_id, "signal: update_current", '(sv)')
+#        self.update_power = Signal(self.power_id, "signal: update_power", '(sv)')
         yield GPIBManagedServer.initServer(self)
 
     @setting(2, 'select device', key=[': Select first device', 's: Select device by name',
