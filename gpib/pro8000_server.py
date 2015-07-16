@@ -108,9 +108,6 @@ class PRO8000Server(GPIBManagedServer):
 #    deviceName = 'PROFILE PRO8000'
     deviceWrapper = PRO8000Wrapper
 
-    update_state = Signal(STATE_ID, "signal: update_state", '(sb)')
-    update_current = Signal(CURRENT_ID, "signal: update_current", '(sv)')
-    update_power = Signal(POWER_ID, "signal: update_power", '(sv)')
 
     def __init__(self, configuration_filename):
         self.configuration_filename = configuration_filename
@@ -125,6 +122,9 @@ class PRO8000Server(GPIBManagedServer):
 
     @inlineCallbacks
     def initServer(self):
+        self.update_state = Signal(self.state_id, "signal: update_state", '(sb)')
+        self.update_current = Signal(self.current_id, "signal: update_current", '(sv)')
+        self.update_power = Signal(self.power_id, "signal: update_power", '(sv)')
         yield GPIBManagedServer.initServer(self)
 
     @setting(2, 'select device', key=[': Select first device', 's: Select device by name',
