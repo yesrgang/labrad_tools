@@ -38,7 +38,8 @@ class HPSignalGeneratorWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def get_state(self):
         ans = yield self.query('OUTP:STAT?')
-        returnValue(bool(int(ans)))
+	self.state = bool(int(ans))
+        returnValue(ans)
 
     @inlineCallbacks
     def set_state(self, state):
@@ -47,7 +48,8 @@ class HPSignalGeneratorWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def get_frequency(self):
         ans = yield self.query('FREQ:CW?')
-        returnValue(float(ans)*1e-6) # keep things in MHz 
+	self.frequency = float(ans)
+#        returnValue(float(ans)*1e-6) # keep things in MHz 
 
     @inlineCallbacks
     def set_frequency(self, frequency):
@@ -56,7 +58,8 @@ class HPSignalGeneratorWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def get_amplitude(self):
         ans = yield self.query('POW:AMPL?')
-        returnValue(float(ans))
+	self.amplitude = float(ans)
+#        returnValue(float(ans))
 
     @inlineCallbacks
     def set_amplitude(self, amplitude):
@@ -93,6 +96,7 @@ class HPSignalGeneratorServer(GPIBManagedServer):
         yield self.select_device(c, gpib_device_id)
         dev = self.selectedDevice(c)
         dev.set_configuration(self.instruments[name])
+	dev.instrument_name = name
         returnValue(str(self.instruments[name].__dict__))
 
     @setting(10, 'state', state='b', returns='b')
@@ -100,27 +104,27 @@ class HPSignalGeneratorServer(GPIBManagedServer):
         dev = self.selectedDevice(c)
         if state is not None:
             yield dev.set_state(state)
-        sate = yield dev.get_state()
-        yield self.update_state(state)
-        returnValue(state)
+        yield dev.get_state()
+        yield self.update_state((dev.instrument_name, dev.state))
+        returnValue(dev.state)
 
     @setting(11, 'frequency', frequency='v', returns='v')
     def frequency(self, c, frequency=None):
         dev = self.selectedDevice(c)
         if frequency is not None:
             yield dev.set_frequency(frequency)
-        frequency = yield dev.get_frequency()
-        yield self.update_frequency(frequency)
-        returnValue(frequency)
+        yield dev.get_frequency()
+        yield self.update_frequency((dev.instrument_name, dev.frequency))
+        returnValue(dev.frequency)
 
     @setting(12, 'amplitude', amplitude='v', returns='v')
     def amplitude(self, c, amplitude=None):
         dev = self.selectedDevice(c)
         if amplitude is not None:
             yield dev.set_amplitude(amplitude)
-        amplitude = yield dev.get_amplitude()
-        yield self.update_amplitude(amplitude)
-        returnValue(amplitude)
+        yield dev.get_amplitude()
+        yield self.update_amplitude((dev.instrument_name, dev.amplitude))
+        returnValue(dev.amplitude)
 
     @setting(14, 'request values')
     def request_values(self, c):
