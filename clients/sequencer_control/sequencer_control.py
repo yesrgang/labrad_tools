@@ -5,6 +5,7 @@ from client_tools import SuperSpinBox
 from connection import connection
 from twisted.internet.defer import inlineCallbacks
 import numpy as np
+import json
 import matplotlib
 matplotlib.use('Qt4Agg')
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -1074,11 +1075,14 @@ class Sequencer(QtGui.QWidget):
 
     @inlineCallbacks
     def run_sequence(self, c):
-        filename = str(self.browse_and_save.location_box.text())
+        #filename = str(self.browse_and_save.location_box.text())
+        sequence = json.dumps(self.get_sequence())
         aserver = yield self.cxn.get_server(self.analog_servername)
-        fn = yield aserver.run_sequence_from_file(filename)
+        #fn = yield aserver.run_sequence_from_file(filename)
+        yield aserver.run_sequence(sequence)
         dserver = yield self.cxn.get_server(self.digital_servername)
-        fn = yield dserver.run_sequence_from_file(filename)
+        #fn = yield dserver.run_sequence_from_file(filename)
+        yield dserver.run_sequence(sequence)
 
     def load_sequence(self, file_name):
         infile = open(file_name, 'r')
