@@ -11,8 +11,12 @@ class ServerConfig(object):
         self.name = '%LABRADNODE% N5181A'
         self.deviceName = 'Agilent Technologies N5181A'
     	self.instruments = {
-                       'beta': DeviceConfiguration(gpib_device_id='yesr10 GPIB Bus - GPIB0::19',
-                                            def_state=True, 
-                                            def_frequency=101.5,
-                                            def_amplitude=6.),
-                       }
+                            'beta': DeviceConfiguration(
+                                                        gpib_device_id='yesr10 GPIB Bus - GPIB0::19',
+                                                        def_state=True, 
+                                                        def_frequency=101.5e6,
+                                                        def_amplitude=6.,
+                                                        frequency_range=(10e3, 200e6),
+							amplitude_range=(-20, 20),
+							)
+			    }

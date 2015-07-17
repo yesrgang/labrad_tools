@@ -106,12 +106,18 @@ class PRO8000Server(GPIBManagedServer):
     """Provides basic CW control for Thor Labs PRO 8000 laser diode controller"""
 #    name = '%LABRADNODE% PRO8000'
 #    deviceName = 'PROFILE PRO8000'
+    update_state = Signal(STATE_ID, "signal: update_state", '(sb)')
+    update_current = Signal(CURRENT_ID, "signal: update_current", '(sv)')
+    update_power = Signal(POWER_ID, "signal: update_power", '(sv)')
     deviceWrapper = PRO8000Wrapper
 
 
     def __init__(self, configuration_filename):
         self.configuration_filename = configuration_filename
         self.load_configuration()
+        self.update_state = Signal(self.state_id, "signal: update_state", '(sb)')
+        self.update_current = Signal(self.current_id, "signal: update_current", '(sv)')
+        self.update_power = Signal(self.power_id, "signal: update_power", '(sv)')
         GPIBManagedServer.__init__(self)
     
     def load_configuration(self):

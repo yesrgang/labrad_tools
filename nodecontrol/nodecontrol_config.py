@@ -11,6 +11,8 @@ node_dict = {
                             ],
              'node yesr10': [
                             'GPIB Bus',
+			    'N5181A',
+			    'E4432B',
                             #'Serial Server'
                             ],
              'node yesr9': [
