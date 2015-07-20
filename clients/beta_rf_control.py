@@ -7,7 +7,7 @@ class RFControlConfig(object):
         self.amplitude_id = 461015
         
         self.frequency_units = [(6, 'MHz')]
-        self.frequency_digits = 4
+        self.frequency_digits = 3
         self.amplitude_units = [(0, 'dBm')]
         self.amplitude_digits = 2
         self.update_time = 100

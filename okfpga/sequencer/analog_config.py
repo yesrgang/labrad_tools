@@ -3,7 +3,7 @@ import numpy as np
 class SequencerConfig(object):
     def __init__(self):
         self.okDeviceID = 'sr2 dac1'
-        self.bit_file = 'dac_trigger.bit'
+        self.bit_file = 'dac_trigger_synch.bit'
         self.sequencer_mode_num = {'idle': 0, 'load': 1, 'run': 2}
         self.sequencer_mode = 'idle'
 #        self.channel_mode_wires = [0x01, 0x03, 0x05, 0x07]
