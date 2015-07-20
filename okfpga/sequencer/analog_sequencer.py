@@ -90,6 +90,10 @@ class SequencerServer(LabradServer):
         voltage = sorted([-20, voltage, 20])[1]
         return int(voltage/20.*(2**16-1))
 
+    def voltage_to_unsigned(self, voltage):
+        voltage = sorted([-10., voltage, 10.])[1] + 10.
+	return int(voltage/20.*(2**16-1))
+
     def ramp_rate(self, voltage_diff, time):
         t = self.time_to_ticks(time)
         v = self.voltage_to_signed(voltage_diff)
@@ -182,9 +186,8 @@ class SequencerServer(LabradServer):
 
     def write_channel_modes(self): 
         cm_list = [d['mode'] for k, d in sorted(self.channels.items())]
-        bas = [sum([2**j for j, m in enumerate(cm_list[i:i+16]) if m == 'manual']) for i in range(0, 64, 16)]
-        for ba, wire in zip(bas, self.channel_mode_wires):
-            self.xem.SetWireInValue(wire, ba)
+        ba = sum([2**j for j, m in enumerate(cm_list) if m == 'manual'])
+        self.xem.SetWireInValue(self.channel_mode_wire, ba)
         self.xem.UpdateWireIns()
 
     @setting(04, 'channel mode', channel='s', mode='s')
@@ -192,31 +195,29 @@ class SequencerServer(LabradServer):
         if mode is not None:
             self.channels[self.name_to_key[channel]]['mode'] = mode
             self.write_channel_modes()
-            self.write_channel_stateinvs()
         return self.channels[self.name_to_key[channel]]['mode']
     
-    def write_channel_stateinvs(self): 
-        cm_list = [d['mode'] for k, d in sorted(self.channels.items())]
-        cs_list = [d['manual state'] for k, d in sorted(self.channels.items())]
-        ci_list = [d['invert'] for k, d in sorted(self.channels.items())]
-        bas = [sum([2**j for j, (m, s, i) in enumerate(zip(cm_list[i:i+16], cs_list[i:i+16], ci_list[i:i+16])) if (m=='manual' and s!=i) or (m=='auto' and i==True)]) for i in range(0, 64, 16)]
-        for ba, wire in zip(bas, self.channel_stateinv_wires):
-            self.xem.SetWireInValue(wire, ba)
+    def write_channel_manual_voltage(self, channel): 
+        key = self.name_to_key[channel]
+        voltage = self.voltage_to_unsigned(self.channels[key]['manual voltage'])
+	wire = self.manual_voltage_wires[sorted(self.channels).index(key)]
+        self.xem.SetWireInValue(wire, voltage)
         self.xem.UpdateWireIns()
 
-    @setting(05, 'channel manual state', channel='s', state='i')
-    def channel_manual_state(self, c, channel, state):
-        if state is not None:
-            self.channels[self.name_to_key[channel]]['manual state'] = state
-            self.write_channel_stateinvs()
-        return self.channels[self.name_to_key[channel]]['manual state']
+    @setting(05, 'channel manual voltage', channel='s', voltage='v')
+    def channel_manual_voltage(self, c, channel, voltage=None):
+        if voltage is not None:
+            voltage = sorted([-10, voltage, 10])[1]
+            self.channels[self.name_to_key[channel]]['manual voltage'] = voltage
+            self.write_channel_manual_voltage(channel)
+        return self.channels[self.name_to_key[channel]]['manual voltage']
 
-    @setting(06, 'channel invert', channel='s', invert='i')
-    def channel_invert(self, c, channel, invert=None):
-        if invert is not None:
-            self.channels[self.name_to_key[channel]]['invert'] = invert
-            self.write_channel_stateinvs()
-        return self.channels[self.name_to_key[channel]]['invert']
+#    @setting(06, 'channel invert', channel='s', invert='i')
+#    def channel_invert(self, c, channel, invert=None):
+#        if invert is not None:
+#            self.channels[self.name_to_key[channel]]['invert'] = invert
+#            self.write_channel_stateinvs()
+#        return self.channels[self.name_to_key[channel]]['invert']
 
 if __name__ == "__main__":
     config_name = 'analog_config'
