@@ -6,8 +6,8 @@ class SequencerConfig(object):
         self.bit_file = 'dac_trigger_synch.bit'
         self.sequencer_mode_num = {'idle': 0, 'load': 1, 'run': 2}
         self.sequencer_mode = 'idle'
-#        self.channel_mode_wires = [0x01, 0x03, 0x05, 0x07]
-#        self.channel_stateinv_wires = [0x02, 0x04, 0x06, 0x08]
+	self.channel_mode_wire = 0x09
+        self.manual_voltage_wires = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]
         self.clk_frequency = 10e6 / (8.*2. + 2.)
         self.ramps = {
                      'linear': linear_ramp,
@@ -25,10 +25,10 @@ class SequencerConfig(object):
         self.channels = {
                         'E00': {'name': 'Alpha Intensity', 'mode': 'auto', 'manual voltage': 0},
                         'E01': {'name': 'Beta Intensity', 'mode': 'auto', 'manual voltage': 0},
-                        'E02': {'name': 'DACA02', 'mode': 'auto', 'manual voltage': 0},
-                        'E03': {'name': 'DACA03', 'mode': 'auto', 'manual voltage': 0},
-                        'E04': {'name': 'DACA04', 'mode': 'auto', 'manual voltage': 0},
-                        'E05': {'name': 'DACA05', 'mode': 'auto', 'manual voltage': 0},
+                        'E02': {'name': 'x comp. coil', 'mode': 'auto', 'manual voltage': 0},
+                        'E03': {'name': 'y comp. coil', 'mode': 'auto', 'manual voltage': 0},
+                        'E04': {'name': 'broke', 'mode': 'auto', 'manual voltage': 0},
+                        'E05': {'name': 'z comp. coil', 'mode': 'auto', 'manual voltage': 0},
                         'E06': {'name': 'DACA06', 'mode': 'auto', 'manual voltage': 0},
                         'E07': {'name': 'DACA07', 'mode': 'auto', 'manual voltage': 0},
                         }
