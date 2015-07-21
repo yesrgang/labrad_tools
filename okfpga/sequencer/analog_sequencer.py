@@ -45,7 +45,8 @@ class SequencerServer(LabradServer):
     def initialize_board(self):
         connected = self.connect_board()
         if not connected:
-            raise Exception("sequencer board not found")
+            print "sequencer board not found"
+#            raise Exception("sequencer board not found")
         self.program_board()
 
     def connect_board(self):
@@ -68,7 +69,7 @@ class SequencerServer(LabradServer):
         self.xem.LoadDefaultPLLConfiguration() 
         prog = self.xem.ConfigureFPGA(self.bit_file)
         if prog:
-            raise "unable to program sequencer"
+           print "unable to program sequencer"
 
 
     def time_to_ticks(self, time):
