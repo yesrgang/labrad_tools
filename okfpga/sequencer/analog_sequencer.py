@@ -41,6 +41,9 @@ class SequencerServer(LabradServer):
 
     def initServer(self):
         self.initialize_board()
+	self.write_channel_modes()
+        for d in self.channels.values():
+            self.write_channel_manual_voltage(d['name']) 
 
     def initialize_board(self):
         connected = self.connect_board()
