@@ -38,8 +38,9 @@ class Agilent34980AWrapper(GPIBDeviceWrapper):
         for address, channel in self.channels.items():
             if channel.is_active: 
                 ans = yield self.query(channel.query_string + '(@{})'.format(str(address)))
+		value = channel.ans_to_value(ans)
                 values.append((channel.name, value))
-        return values
+        returnValue(values)
 
 
 #    @inlineCallbacks
@@ -104,7 +105,7 @@ class Agilent34980AServer(GPIBManagedServer):
 
     @setting(10, 'read active channels', returns='*(sv)')
     def read_active_channels(self, c):
-        dev = selectedDevice(c)
+        dev = self.selectedDevice(c)
         values = yield dev.read_active_channels()
         returnValue(values)
 
