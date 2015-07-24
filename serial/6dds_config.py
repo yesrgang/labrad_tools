@@ -29,19 +29,57 @@ class DDSConfig(object):
 
         self.update_id = 698017
         self.dds = {
-                     'dds0':              AD9854(address=0,
-                                          state=True,
-                                          frequency=80e6, # [Hz]
-                                          frequency_range=(1e3, 140e6), # [Hz]
-                                          amplitude=1,
-                                          amplitude_range=(0, 1),
-                                          sysclk=300e6),
-                     
-                     'dds1':              AD9854(address=1,
-                                          state=True,
-                                          frequency=80e6, # [Hz]
-                                          frequency_range=(1e3, 140e6), # [Hz]
-                                          amplitude=1,
-                                          amplitude_range=(0, 1),
-                                          sysclk=300e6),
-                     }
+            'dds0': AD9854(
+                address=0,
+                state=True,
+                frequency=80e6, # [Hz]
+                frequency_range=(1e3, 140e6), # [Hz]
+                amplitude=1,
+                amplitude_range=(0, 1),
+                sysclk=300e6),
+            
+            'dds1': AD9854(
+                address=1,
+                state=True,
+                frequency=80e6, # [Hz]
+                frequency_range=(1e3, 140e6), # [Hz]
+                amplitude=1,
+                amplitude_range=(0, 1),
+                sysclk=300e6),
+            
+            'dds2': AD9854(
+                address=2,
+                state=True,
+                frequency=80e6, # [Hz]
+                frequency_range=(1e3, 140e6), # [Hz]
+                amplitude=1,
+                amplitude_range=(0, 1),
+                sysclk=300e6),
+            
+            'dds3': AD9854(
+                address=3,
+                state=True,
+                frequency=80e6, # [Hz]
+                frequency_range=(1e3, 140e6), # [Hz]
+                amplitude=1,
+                amplitude_range=(0, 1),
+                sysclk=300e6),
+            
+            'dds4': AD9854(
+                address=4,
+                state=True,
+                frequency=80e6, # [Hz]
+                frequency_range=(1e3, 140e6), # [Hz]
+                amplitude=1,
+                amplitude_range=(0, 1),
+                sysclk=300e6),
+            
+            'dds5': AD9854(
+                address=5,
+                state=True,
+                frequency=80e6, # [Hz]
+                frequency_range=(1e3, 140e6), # [Hz]
+                amplitude=1,
+                amplitude_range=(0, 1),
+                sysclk=300e6),
+            }
