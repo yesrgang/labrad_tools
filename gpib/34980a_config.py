@@ -23,6 +23,7 @@ class ServerConfig(object):
     def __init__(self):
         self.name = '%LABRADNODE% 34980A'
         self.deviceName = 'Agilent Technologies 34980A'
+	self.measurement_period = 30
         self.instruments = {'srq monitor': Agilent349880AConfig(
                                                                 gpib_device_id='yesr20 GPIB Bus - GPIB0::9', 
                                                                 channels=srq_channels,
