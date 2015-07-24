@@ -28,6 +28,7 @@ node_dict = {
                             'GPIB Device Manager',
                             'GPIB Bus',
 			    'PRO8000',
+                            '34980A',
                             ],
              }
 
