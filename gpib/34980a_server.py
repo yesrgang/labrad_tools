@@ -19,7 +19,9 @@ timeout = 5
 import numpy as np
 from labrad.server import setting, Signal
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
+import labrad.types as T
 from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.task import LoopingCall
 from influxdb import InfluxDBClient
 
 
@@ -95,6 +97,7 @@ class Agilent34980AServer(GPIBManagedServer):
     @inlineCallbacks
     def initServer(self):
         yield GPIBManagedServer.initServer(self)
+        self.measurement_loop = LoopingCall(self.measure_active_channels)
 
     @setting(9, 'select device by name', name='s', returns='s')    
     def select_device_by_name(self, c, name):
@@ -105,14 +108,41 @@ class Agilent34980AServer(GPIBManagedServer):
 	dev.instrument_name = name
         returnValue(str(self.instruments[name].__dict__))
 
-    @setting(10, 'read active channels', returns='*(sv)')
-    def read_active_channels(self, c):
-        dev = self.selectedDevice(c)
+#    @setting(10, 'read active channels', returns='*(sv)')
+#    def read_active_channels(self, c):
+#        dev = self.selectedDevice(c)
+#        values = yield dev.read_active_channels()
+#        influx_client = InfluxDBClient(**self.db_parameters)
+#        points = [{"measurement": "DMM", "tags": {"channel": name}, "fields": {"value": value}} for name, value in values]
+#        influx_client.write_points(points)
+#        returnValue(values)
+
+    @inlineCallbacks
+    def _measure_active_channels(self, dev):
         values = yield dev.read_active_channels()
         influx_client = InfluxDBClient(**self.db_parameters)
         points = [{"measurement": "DMM", "tags": {"channel": name}, "fields": {"value": value}} for name, value in values]
         influx_client.write_points(points)
         returnValue(values)
+
+    @setting(11, 'measure active channels', returns='*(sv)')
+    def measure_active_channels(self, c=None):
+        if c is None: 
+            for dev in self.devices.values():
+                self._measure_active_channels(dev)
+        else:
+            dev = self.selectedDevice(c)
+            self._measure_active_channels(dev)
+
+    @setting(12, 'start measurement loop', period='v')
+    def start_measurement_loop(self, c, period=None):
+        if period is None:
+            period = self.measurement_period
+        self.measurement_loop.start(period)
+
+    @setting(13, 'stop measurement loop')
+    def stop_measurement_loop(self, c):
+        self.measurement_loop.stop()
 
 #    @setting(10, 'state', state='b', returns='b')
 #    def state(self, c, state=None):
