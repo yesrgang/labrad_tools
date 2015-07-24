@@ -44,6 +44,17 @@ class Agilent34980AWrapper(GPIBDeviceWrapper):
                 values.append((channel.name, value))
         returnValue(values)
 
+    @inlineCallbacks
+    def measure_channel(self, channel_name):
+#        name_to_address = {c.name: address for address, c in self.channels.items()}
+#        channel = self.channels[name_to_address[channel_name]]
+        for address, channel in self.channels.items():
+            if channel.name is channel_name:
+                ans = yield self.query(channel.query_string + '(@{})'.format(str(address)))
+		value = channel.a2v(ans)
+        returnValue(value)
+
+
 class Agilent34980AServer(GPIBManagedServer):
     """Provides basic control for Agilent 34980A Multimeter"""
     deviceWrapper = Agilent34980AWrapper
@@ -82,7 +93,7 @@ class Agilent34980AServer(GPIBManagedServer):
         influx_client.write_points(points)
         returnValue(values)
 
-    @setting(11, 'measure active channels', returns='*(sv)')
+    @setting(10, 'measure active channels', returns='*(sv)')
     def measure_active_channels(self, c=None):
         if c is None:
             devs = self.devices.values()
@@ -101,9 +112,6 @@ class Agilent34980AServer(GPIBManagedServer):
     @inlineCallbacks
     def _measure_active_channels(self, dev):
         values = yield dev.read_active_channels()
-#        influx_client = InfluxDBClient(**dev.db_parameters)
-#        points = [{"measurement": "DMM", "tags": {"channel": name}, "fields": {"value": value}} for name, value in values]
-#        influx_client.write_points(points)
         returnValue(values)
 
     @inlineCallbacks
@@ -112,14 +120,11 @@ class Agilent34980AServer(GPIBManagedServer):
         points = [{"measurement": "DMM", "tags": {"channel": name}, "fields": {"value": value}} for name, value in values]
         yield influx_client.write_points(points)
 
-#        
-#        if c is None: 
-#            for dev in self.devices.values():
-#                if hasattr(dev, 'configuration'):
-#                    self._measure_active_channels(dev)
-#        else:
-#            dev = self.selectedDevice(c)
-#            values = self._measure_active_channels(dev)
+    @setting(11, 'measure channel', channel_name='s', returns='v')
+    def measure_channel(self, c, channel_name):
+        dev = self.selectedDevice(c)
+        value = yield dev.measure_channel(channel_name)
+        returnValue(value)
 
     @setting(12, 'start measurement loop', period='v')
     def start_measurement_loop(self, c, period=None):
