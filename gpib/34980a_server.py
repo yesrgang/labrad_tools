@@ -91,8 +91,11 @@ class Agilent34980AServer(GPIBManagedServer):
         values = []
         for dev in devs:
             if hasattr(dev, 'configuration'):
-                values += self._measure_active_channels(dev)
-        self._update_database(values)
+                inst_values = yield self._measure_active_channels(dev)
+                influx_client = InfluxDBClient(**dev.db_parameters)
+                points = [{"measurement": "DMM", "tags": {"channel": name}, "fields": {"value": value}} for name, value in inst_values]
+                influx_client.write_points(points)
+		values.append(inst_values)
         returnValue(values)
     
     @inlineCallbacks
@@ -103,11 +106,11 @@ class Agilent34980AServer(GPIBManagedServer):
 #        influx_client.write_points(points)
         returnValue(values)
 
-#    @inlineCallbacks
-    def _update_database(self, values):
-        influx_client = InfluxDBClient(**dev.db_parameters)
+    @inlineCallbacks
+    def _update_database(self, db_parameters, values):
+        influx_client = yield InfluxDBClient(**db_parameters)
         points = [{"measurement": "DMM", "tags": {"channel": name}, "fields": {"value": value}} for name, value in values]
-        influx_client.write_points(points)
+        yield influx_client.write_points(points)
 
 #        
 #        if c is None: 
