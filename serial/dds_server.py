@@ -5,6 +5,7 @@ import labrad.types as T
 from twisted.internet import reactor
 from twisted.internet.defer import returnValue
 from twisted.internet.task import LoopingCall
+import json
 import time
 
 
@@ -15,7 +16,7 @@ class DDSServer(SerialDeviceServer):
         SerialDeviceServer.__init__(self)
         self.config_name = config_name
         self.load_configuration()
-        self.update_values = Signal(self.update_id, 'signal: update values', '(sbvvbv)')
+        self.update_values = Signal(self.update_id, 'signal: update values', '(s)')
     
     @inlineCallbacks
     def initServer(self):
@@ -42,7 +43,7 @@ class DDSServer(SerialDeviceServer):
     @inlineCallbacks
     def notify_listeners(self, name):
         d = self.dds[name]
-        yield self.update_values((name, d.state, d.frequency, d.amplitude, d.sweepstate, d.sweeprate))
+        yield self.update_values(json.dumps({'name': name, 'state': d.state, 'frequency': d.frequency, 'amplitude': d.amplitude}))
 
     @setting(1, 'select device by name', name='s')
     def select_device_by_name(self, c, name):
@@ -87,33 +88,33 @@ class DDSServer(SerialDeviceServer):
         yield self.notify_listeners(name)
         returnValue(amplitude)
 
-    @setting(5, 'sweepstate', name='s', state='b', returns='b')
-    def sweepstate(self, c, name, state=None):
-        if state is None:
-            state = self.dds[name].sweepstate
-        else:
-            self.dds[name].sweepstate = state
-        yield self.notify_listeners(name)
-        returnValue(state)
-
-    @setting(6, 'sweeprate', name='s', rate='v', returns='v')
-    def sweeprate(self, c, name, rate=None):
-        if rate is None:
-            rate = self.dds[name].sweeprate
-        else:
-            self.dds[name].sweeprate = rate
-            f = open(self.name.replace(' ', '_') + '_sweeps.txt', 'a')
-            f.write(str({name: [dds.frequency, dds.sweeprate, time.time()] for name, dds in self.dds.items()})+'\n')
-        yield self.notify_listeners(name)
-        returnValue(rate)
-
-    @inlineCallbacks
-    def _sweep(self):
-        for name in self.dds.keys():
-            if self.dds[name].sweepstate:
-                f = yield self.frequency(None, name)
-                f += self.dds[name].sweeprate*self.sweep_dwell
-                yield self.frequency(None, name, f)
+#    @setting(5, 'sweepstate', name='s', state='b', returns='b')
+#    def sweepstate(self, c, name, state=None):
+#        if state is None:
+#            state = self.dds[name].sweepstate
+#        else:
+#            self.dds[name].sweepstate = state
+#        yield self.notify_listeners(name)
+#        returnValue(state)
+#
+#    @setting(6, 'sweeprate', name='s', rate='v', returns='v')
+#    def sweeprate(self, c, name, rate=None):
+#        if rate is None:
+#            rate = self.dds[name].sweeprate
+#        else:
+#            self.dds[name].sweeprate = rate
+#            f = open(self.name.replace(' ', '_') + '_sweeps.txt', 'a')
+#            f.write(str({name: [dds.frequency, dds.sweeprate, time.time()] for name, dds in self.dds.items()})+'\n')
+#        yield self.notify_listeners(name)
+#        returnValue(rate)
+#
+#    @inlineCallbacks
+#    def _sweep(self):
+#        for name in self.dds.keys():
+#            if self.dds[name].sweepstate:
+#                f = yield self.frequency(None, name)
+#                f += self.dds[name].sweeprate*self.sweep_dwell
+#                yield self.frequency(None, name, f)
 
     @setting(7, 'request values', name='s')
     def request_values(self, c, name):
