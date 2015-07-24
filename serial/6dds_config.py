@@ -20,16 +20,14 @@ class AD9854(object):
 class DDSConfig(object):
     def __init__(self):
         self.name = '%LABRADNODE% 6DDS Server'
-        self.serial_server_name = 'vagabond_serial_server'
-        self.port = '/dev/ttyACM0'
+        self.serial_server_name = 'yesr13_serial_server'
+        self.port = 'COM17'
         self.timeout = T.Value(1, 's')
         self.baudrate = 9600
         self.stopbits=1
         self.bytesize=8
 
         self.update_id = 698017
-        self.sweep_dwell = 1 # [s]
-
         self.dds = {
                      'dds0':              AD9854(address=0,
                                           state=True,
@@ -37,9 +35,6 @@ class DDSConfig(object):
                                           frequency_range=(1e3, 140e6), # [Hz]
                                           amplitude=1,
                                           amplitude_range=(0, 1),
-                                          sweepstate=False,
-                                          sweeprate=1,  # [Hz/s]
-                                          sweeprate_range=(-1000, 1000), # [Hz/s]
                                           sysclk=300e6),
                      
                      'dds1':              AD9854(address=1,
@@ -48,8 +43,5 @@ class DDSConfig(object):
                                           frequency_range=(1e3, 140e6), # [Hz]
                                           amplitude=1,
                                           amplitude_range=(0, 1),
-                                          sweepstate=False,
-                                          sweeprate=1,  # [Hz/s]
-                                          sweeprate_range=(-1000, 1000), # [Hz/s]
                                           sysclk=300e6),
                      }

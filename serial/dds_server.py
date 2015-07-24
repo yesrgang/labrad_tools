@@ -21,8 +21,8 @@ class DDSServer(SerialDeviceServer):
     def initServer(self):
         try:
             yield self.init_serial(self.serial_server_name, self.port)
-            self.sweeping = LoopingCall(self._sweep)
-            self.sweeping.start(self.sweep_dwell)
+#            self.sweeping = LoopingCall(self._sweep)
+#            self.sweeping.start(self.sweep_dwell)
         except SerialConnectionError, e:
             self.serial_server = None
             if e.code == 0:
@@ -57,6 +57,7 @@ class DDSServer(SerialDeviceServer):
     def instruction_set(self, address, register, data):
         ins = [58, address, len(data)+1, register] + data
         ins.append(self.checksum(ins))
+#        return ''.join([chr(i) for i in ins])
         return [chr(i) for i in ins]
 
     @setting(2, 'state', name='s', state='b')
@@ -71,7 +72,7 @@ class DDSServer(SerialDeviceServer):
             self.dds[name].frequency = frequency
         for c in self.instruction_set(self.dds[name].address, self.dds[name].freg, self.dds[name].ftw()):
             yield self.serial_server.write(c)
-#        yield self.serial_server.write_lines(self.instruction_set(self.dds[name].address, self.dds[name].freg, self.dds[name].ftw()))
+#        yield self.serial_server.write(self.instruction_set(self.dds[name].address, self.dds[name].freg, self.dds[name].ftw()))
         yield self.notify_listeners(name)
         returnValue(frequency)
     
