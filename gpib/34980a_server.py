@@ -20,6 +20,8 @@ import numpy as np
 from labrad.server import setting, Signal
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from twisted.internet.defer import inlineCallbacks, returnValue
+from influxdb import InfluxDBClient
+
 
 class Agilent34980AWrapper(GPIBDeviceWrapper):
     def initialize(self):
@@ -107,6 +109,9 @@ class Agilent34980AServer(GPIBManagedServer):
     def read_active_channels(self, c):
         dev = self.selectedDevice(c)
         values = yield dev.read_active_channels()
+        influx_client = InfluxDBClient(**self.db_parameters)
+        points = [{"measurement": "DMM", "tags": {"channel": name}, "fields": {"value": value}} for name, value in values]
+        influx_client.write_points(points)
         returnValue(values)
 
 #    @setting(10, 'state', state='b', returns='b')
