@@ -84,13 +84,39 @@ class Agilent34980AServer(GPIBManagedServer):
 
     @setting(11, 'measure active channels', returns='*(sv)')
     def measure_active_channels(self, c=None):
-        if c is None: 
-            for dev in self.devices.values():
-                if hasattr(dev, 'configuration'):
-                    self._measure_active_channels(dev)
+        if c is None:
+            devs = self.devices.values()
         else:
-            dev = self.selectedDevice(c)
-            self._measure_active_channels(dev)
+            devs = [self.selectedDevice(c)]
+        values = []
+        for dev in devs:
+            if hasattr(dev, 'configuration'):
+                values += self._measure_active_channels(dev)
+        self._update_database(values)
+        returnValue(values)
+    
+    @inlineCallbacks
+    def _measure_active_channels(self, dev):
+        values = yield dev.read_active_channels()
+#        influx_client = InfluxDBClient(**dev.db_parameters)
+#        points = [{"measurement": "DMM", "tags": {"channel": name}, "fields": {"value": value}} for name, value in values]
+#        influx_client.write_points(points)
+        returnValue(values)
+
+#    @inlineCallbacks
+    def _update_database(self, values):
+        influx_client = InfluxDBClient(**dev.db_parameters)
+        points = [{"measurement": "DMM", "tags": {"channel": name}, "fields": {"value": value}} for name, value in values]
+        influx_client.write_points(points)
+
+#        
+#        if c is None: 
+#            for dev in self.devices.values():
+#                if hasattr(dev, 'configuration'):
+#                    self._measure_active_channels(dev)
+#        else:
+#            dev = self.selectedDevice(c)
+#            values = self._measure_active_channels(dev)
 
     @setting(12, 'start measurement loop', period='v')
     def start_measurement_loop(self, c, period=None):
