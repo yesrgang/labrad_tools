@@ -75,6 +75,7 @@ class Agilent34980AServer(GPIBManagedServer):
     def initServer(self):
         yield GPIBManagedServer.initServer(self)
         self.measurement_loop = LoopingCall(self.measure_active_channels)
+        self._load_device_configurations()
 
     @setting(9, 'select device by name', name='s', returns='s')    
     def select_device_by_name(self, c, name):
@@ -84,6 +85,11 @@ class Agilent34980AServer(GPIBManagedServer):
         dev.set_configuration(self.instruments[name])
 	dev.instrument_name = name
         returnValue(str(self.instruments[name].__dict__))
+
+    def _load_device_configurations(self):
+        for k, v in self.devices.items():
+            print k, v
+
 
     @inlineCallbacks
     def _measure_active_channels(self, dev):
