@@ -43,7 +43,7 @@ class Agilent34980AWrapper(GPIBDeviceWrapper):
 		value = channel.a2v(ans)
                 values.append((channel.name, value))
         returnValue(values)
-
+    
     @inlineCallbacks
     def measure_channel(self, channel_name):
 #        name_to_address = {c.name: address for address, c in self.channels.items()}
@@ -76,24 +76,24 @@ class Agilent34980AServer(GPIBManagedServer):
         yield GPIBManagedServer.initServer(self)
         self.measurement_loop = LoopingCall(self.measure_active_channels)
         self._load_device_configurations()
-	self.measurement_loop.start(self.measurement_period)
+        self.measurement_loop.start(self.measurement_period)
 
     @setting(9, 'select device by name', name='s', returns='s')    
     def select_device_by_name(self, c, name):
-	gpib_device_id = self.instruments[name].gpib_device_id
+        gpib_device_id = self.device_configurations[name].gpib_device_id
         yield self.select_device(c, gpib_device_id)
         dev = self.selectedDevice(c)
-        dev.set_configuration(self.instruments[name])
+        dev.set_configuration(self.device_configurations[name])
 	dev.instrument_name = name
-        returnValue(str(self.instruments[name].__dict__))
-
+        returnValue(str(self.device_configurations[name].__dict__))
+    
     def _load_device_configurations(self):
-        for name, config in self.instruments.items():
+        for name, config in self.device_configurations.items():
             for key, gpib_device_id in self.list_devices(None):
                 if config.gpib_device_id == gpib_device_id:
                     dev = self.devices[key]
-		    dev.set_configuration(config)
-		    dev.instrument_name = name
+                    dev.set_configuration(config)
+                    dev.instrument_name = name
 
     @inlineCallbacks
     def _measure_active_channels(self, dev):
