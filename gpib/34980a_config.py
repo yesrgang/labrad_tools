@@ -5,7 +5,7 @@ class DCVoltageConfig(object):
 
         self.query_string = 'meas? '
 	
-    def ans_to_value(self, ans):
+    def a2v(self, ans):
         return float(ans)
 
 srq_channels = {

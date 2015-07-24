@@ -36,47 +36,13 @@ class Agilent34980AWrapper(GPIBDeviceWrapper):
     
     @inlineCallbacks
     def read_active_channels(self):
-#        active_channels = {k: c for k, c in self.channels.items() if c.is_active}
-#        self.channels is {
         values = []
         for address, channel in self.channels.items():
             if channel.is_active: 
                 ans = yield self.query(channel.query_string + '(@{})'.format(str(address)))
-		value = channel.ans_to_value(ans)
+		value = channel.a2v(ans)
                 values.append((channel.name, value))
         returnValue(values)
-
-
-#    @inlineCallbacks
-#    def get_state(self):
-#        ans = yield self.query('OUTP:STAT?')
-#	self.state = bool(int(ans))
-#        returnValue(ans)
-#
-#    @inlineCallbacks
-#    def set_state(self, state):
-#        yield self.write('OUTP:STAT {}'.format(int(bool(state))))
-#
-#    @inlineCallbacks
-#    def get_frequency(self):
-#        ans = yield self.query('FREQ:CW?')
-#	self.frequency = float(ans)
-##        returnValue(float(ans)*1e-6) # keep things in MHz 
-#
-#    @inlineCallbacks
-#    def set_frequency(self, frequency):
-#        yield self.write('FREQ:CW {} Hz'.format(frequency))
-#
-#    @inlineCallbacks
-#    def get_amplitude(self):
-#        ans = yield self.query('POW:AMPL?')
-#	self.amplitude = float(ans)
-##        returnValue(float(ans))
-#
-#    @inlineCallbacks
-#    def set_amplitude(self, amplitude):
-#        yield self.write('POW:AMPL {} DBM'.format(amplitude))
-
 
 class Agilent34980AServer(GPIBManagedServer):
     """Provides basic control for Agilent 34980A Multimeter"""
@@ -108,15 +74,6 @@ class Agilent34980AServer(GPIBManagedServer):
 	dev.instrument_name = name
         returnValue(str(self.instruments[name].__dict__))
 
-#    @setting(10, 'read active channels', returns='*(sv)')
-#    def read_active_channels(self, c):
-#        dev = self.selectedDevice(c)
-#        values = yield dev.read_active_channels()
-#        influx_client = InfluxDBClient(**self.db_parameters)
-#        points = [{"measurement": "DMM", "tags": {"channel": name}, "fields": {"value": value}} for name, value in values]
-#        influx_client.write_points(points)
-#        returnValue(values)
-
     @inlineCallbacks
     def _measure_active_channels(self, dev):
         values = yield dev.read_active_channels()
@@ -129,7 +86,8 @@ class Agilent34980AServer(GPIBManagedServer):
     def measure_active_channels(self, c=None):
         if c is None: 
             for dev in self.devices.values():
-                self._measure_active_channels(dev)
+                if hasattr(dev, 'configuration'):
+                    self._measure_active_channels(dev)
         else:
             dev = self.selectedDevice(c)
             self._measure_active_channels(dev)
@@ -143,39 +101,6 @@ class Agilent34980AServer(GPIBManagedServer):
     @setting(13, 'stop measurement loop')
     def stop_measurement_loop(self, c):
         self.measurement_loop.stop()
-
-#    @setting(10, 'state', state='b', returns='b')
-#    def state(self, c, state=None):
-#        dev = self.selectedDevice(c)
-#        if state is not None:
-#            yield dev.set_state(state)
-#        yield dev.get_state()
-#        yield self.update_state((dev.instrument_name, dev.state))
-#        returnValue(dev.state)
-#
-#    @setting(11, 'frequency', frequency='v', returns='v')
-#    def frequency(self, c, frequency=None):
-#        dev = self.selectedDevice(c)
-#        if frequency is not None:
-#            yield dev.set_frequency(frequency)
-#        yield dev.get_frequency()
-#        yield self.update_frequency((dev.instrument_name, dev.frequency))
-#        returnValue(dev.frequency)
-#
-#    @setting(12, 'amplitude', amplitude='v', returns='v')
-#    def amplitude(self, c, amplitude=None):
-#        dev = self.selectedDevice(c)
-#        if amplitude is not None:
-#            yield dev.set_amplitude(amplitude)
-#        yield dev.get_amplitude()
-#        yield self.update_amplitude((dev.instrument_name, dev.amplitude))
-#        returnValue(dev.amplitude)
-#
-#    @setting(14, 'request values')
-#    def request_values(self, c):
-#        yield self.state(c)
-#        yield self.frequency(c)
-#        yield self.amplitude(c)
 
     @setting(15, 'get system configuration', returns='s')
     def get_system_configuration(self, c):
