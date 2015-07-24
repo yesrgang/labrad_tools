@@ -109,7 +109,7 @@ class Agilent34980AServer(GPIBManagedServer):
     def read_active_channels(self, c):
         dev = self.selectedDevice(c)
         values = yield dev.read_active_channels()
-        influx_client = InfluxDBClient(**self.db_parameters)
+        influx_client = InfluxDBClient(**dev.db_parameters)
         points = [{"measurement": "DMM", "tags": {"channel": name}, "fields": {"value": value}} for name, value in values]
         influx_client.write_points(points)
         returnValue(values)
