@@ -40,18 +40,16 @@ class Agilent34980AWrapper(GPIBDeviceWrapper):
         for address, channel in self.channels.items():
             if channel.is_active: 
                 ans = yield self.query(channel.query_string + '(@{})'.format(str(address)))
-		value = channel.a2v(ans)
+                value = channel.a2v(ans)
                 values.append((channel.name, value))
         returnValue(values)
     
     @inlineCallbacks
     def measure_channel(self, channel_name):
-#        name_to_address = {c.name: address for address, c in self.channels.items()}
-#        channel = self.channels[name_to_address[channel_name]]
         for address, channel in self.channels.items():
             if channel.name is channel_name:
                 ans = yield self.query(channel.query_string + '(@{})'.format(str(address)))
-		value = channel.a2v(ans)
+                value = channel.a2v(ans)
         returnValue(value)
 
 
@@ -62,7 +60,7 @@ class Agilent34980AServer(GPIBManagedServer):
     def __init__(self, configuration_filename):
         self.configuration_filename = configuration_filename
         self.configuration = self.load_configuration()
-	if self.configuration:
+        if self.configuration:
             GPIBManagedServer.__init__(self)
     
     def load_configuration(self):
@@ -84,7 +82,7 @@ class Agilent34980AServer(GPIBManagedServer):
         yield self.select_device(c, gpib_device_id)
         dev = self.selectedDevice(c)
         dev.set_configuration(self.device_configurations[name])
-	dev.instrument_name = name
+        dev.instrument_name = name
         returnValue(str(self.device_configurations[name].__dict__))
     
     def _load_device_configurations(self):
@@ -116,9 +114,9 @@ class Agilent34980AServer(GPIBManagedServer):
                 influx_client = InfluxDBClient(**dev.db_parameters)
                 points = [{"measurement": "DMM", "tags": {"channel": name}, "fields": {"value": value}} for name, value in inst_values]
                 influx_client.write_points(points)
-		values.append(inst_values)
+                values.append(inst_values)
         returnValue(values)
-    
+
     @inlineCallbacks
     def _measure_active_channels(self, dev):
         values = yield dev.read_active_channels()
