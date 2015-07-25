@@ -29,8 +29,8 @@ class ServerConfig(object):
                 channels=srq_channels,
                 db_parameters={'host': 'yesr12.colorado.edu',
                                'port': 8086,
-                               'username': 'srgang',
-                               'password': '698gang',
+                               'username': username,
+                               'password': password,
                                'database': 'srq'}
                 ),
             }
