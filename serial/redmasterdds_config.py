@@ -27,7 +27,7 @@ class DDSConfig(object):
         self.bytesize=8
 
         self.update_id = 698017
-        self.sweep_dwell = 60 # [s]
+        self.sweep_updateperiod = 60 # [s]
 
         self.dds = {
                      'red master': AD9915(address=0,
