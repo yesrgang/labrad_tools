@@ -27,7 +27,7 @@ class DDSConfig(object):
         self.bytesize=8
 
         self.update_id = 698017
-        self.sweep_updateperiod = 60 # [s]
+        self.drift_updateperiod = 60*5 # [s]
 
         self.dds = {
                      'red master': AD9915(address=0,
@@ -36,5 +36,9 @@ class DDSConfig(object):
                                           frequency_range=(1e3, 1e9), # [Hz]
                                           amplitude=1,
                                           amplitude_range=(0, 1),
-                                          sysclk=2.4e9),
+                                          sysclk=2.4e9,
+					  driftstate=True,
+					  driftrate_query_str="select driftrate from \"Red_Master_AOM\" ",
+					  detuning_query_str="select detuning from \"Red_Master_AOM\" ",
+					  ),
                      }

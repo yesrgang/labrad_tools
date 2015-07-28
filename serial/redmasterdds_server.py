@@ -18,7 +18,9 @@ timeout = 20
 import os
 import datetime
 from dds_server import DDSServer
-from twistd.internet.task import LoopingCall
+from labrad.server import setting, Signal
+from twisted.internet.task import LoopingCall
+from twisted.internet.defer import inlineCallbacks
 from influxdb import InfluxDBClient
 
 
@@ -26,43 +28,47 @@ class RMDDSServer(DDSServer):
     @inlineCallbacks
     def initServer(self):
         yield DDSServer.initServer(self)
-        self.sweep_call = LoopingCall(self._sweep)
-        self.sweep_call.start(self.sweep_updateperiod)
-        self.db_clinet = InfluxDBClient.from_DSN(os.envron.get('INFLUXDBDSN'))
+	dsn = os.getenv('INFLUXDBDSN')
+	print dsn
+        self.db_client = InfluxDBClient.from_DSN(dsn)
+        self.drift_call = LoopingCall(self._drift)
+        self.drift_call.start(self.drift_updateperiod)
     
-    @setting(5, 'sweepstate', name='s', state='b', returns='b')
-    def sweepstate(self, c, name, state=None):
+    @setting(5, 'driftstate', name='s', state='b', returns='b')
+    def driftstate(self, c, name, state=None):
         if state is None:
-            state = self.dds[name].sweepstate
+            state = self.dds[name].driftstate
         else:
-            self.dds[name].sweepstate = state
+            self.dds[name].driftstate = state
         yield self.notify_listeners(name)
         returnValue(state)
 
-    @setting(6, 'sweeprate', name='s', rate='v', returns='v')
-    def sweeprate(self, c, name, rate=None):
+    @setting(6, 'driftrate', name='s', rate='v', returns='v')
+    def driftrate(self, c, name, rate=None):
         if rate is None:
-            rate = self.dds[name].sweeprate
+            driftrate = self.db_client.query(self.dds[name].driftrate_query_str).raw['series'][0]['values'][-1][1]
         else:
-            self.dds[name].sweeprate = rate
+            to_write = 
+		to_write = [{"measurement": "Red_Master_AOM", "fields": {"driftrate": float(prev_driftrate)}}]
         yield self.notify_listeners(name)
         returnValue(rate)
 
     @inlineCallbacks
-    def _sweep(self):
+    def _drift(self):
         for name in self.dds.keys():
-            if self.dds[name].sweepstate:
-                offset_query_str = 
-                prev_time, prev_detuning = self.db_client.query(self.dds[name].detuning_query_str).raw['series'][0]['values'][0]
-                prev_ramprate = self.db_client.query(self.dds[name].ramprate_query_str).raw['series'][0]['values'][0][1]
-                f += self.dds[name].sweeprate*self.sweep_dwell
+            if self.dds[name].driftstate:
+                prev_time, prev_detuning = self.db_client.query(self.dds[name].detuning_query_str).raw['series'][0]['values'][-1]
+                prev_driftrate = self.db_client.query(self.dds[name].driftrate_query_str).raw['series'][0]['values'][-1][1]
                 dt = datetime.datetime.utcnow() - datetime.datetime.strptime(prev_time[:-4], '%Y-%m-%dT%H:%M:%S.%f')
-                next_detuning = prev_detuning + prev_ramprate*(dt
-                yield self.frequency(None, name, f)
+                next_detuning = prev_detuning + prev_driftrate*dt.total_seconds()
+		print prev_detuning, next_detuning
+                yield self.frequency(None, name, next_detuning)
+		to_write = [{"measurement": "Red_Master_AOM", "fields": {"detuning": next_detuning, "driftrate": float(prev_driftrate)}}]
+		self.db_client.write_points(to_write)
 
 
 config_name = 'redmasterdds_config'
-__server__ = DDSServer(config_name)
+__server__ = RMDDSServer(config_name)
 
 if __name__ == "__main__":
     from labrad import util
