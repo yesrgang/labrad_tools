@@ -48,10 +48,14 @@ class RMDDSServer(DDSServer):
         if rate is None:
             driftrate = self.db_client.query(self.dds[name].driftrate_query_str).raw['series'][0]['values'][-1][1]
         else:
-            to_write = 
-		to_write = [{"measurement": "Red_Master_AOM", "fields": {"driftrate": float(prev_driftrate)}}]
+            self.db_client.write_points(self.dds[name].driftrate_write(rate))
         yield self.notify_listeners(name)
         returnValue(rate)
+
+    def frequency(self, c, name, frequency=None):
+        frequency = yield  DDSServer.frequency(c, name, frequency)
+        self.db_client.write_points(self.dds[name].offset_write(frequency))
+        returnValue(frequency)
 
     @inlineCallbacks
     def _drift(self):
@@ -63,8 +67,9 @@ class RMDDSServer(DDSServer):
                 next_detuning = prev_detuning + prev_driftrate*dt.total_seconds()
 		print prev_detuning, next_detuning
                 yield self.frequency(None, name, next_detuning)
-		to_write = [{"measurement": "Red_Master_AOM", "fields": {"detuning": next_detuning, "driftrate": float(prev_driftrate)}}]
-		self.db_client.write_points(to_write)
+                yield self.driftrate(None, name, prev_driftrate)
+#		to_write = [{"measurement": "Red_Master_AOM", "fields": {"detuning": next_detuning, "driftrate": float(prev_driftrate)}}]
+#		self.db_client.write_points(to_write)
 
 
 config_name = 'redmasterdds_config'

@@ -28,17 +28,20 @@ class DDSConfig(object):
 
         self.update_id = 698017
         self.drift_updateperiod = 60*5 # [s]
-
+        
         self.dds = {
-                     'red master': AD9915(address=0,
-                                          state=True,
-                                          frequency=300e6, # [Hz]
-                                          frequency_range=(1e3, 1e9), # [Hz]
-                                          amplitude=1,
-                                          amplitude_range=(0, 1),
-                                          sysclk=2.4e9,
-					  driftstate=True,
-					  driftrate_query_str="select driftrate from \"Red_Master_AOM\" ",
-					  detuning_query_str="select detuning from \"Red_Master_AOM\" ",
-					  ),
-                     }
+            'red master': AD9915(
+                address=0,
+                state=1
+                frequency=300e6, # [Hz]
+                frequency_range=(1e3, 1e9), # [Hz]
+                amplitude=1,
+                amplitude_range=(0, 1),
+                sysclk=2.4e9,
+                driftstate=True,
+                driftrate_query_str="select \"driftrate\" from \"Red_Master_AOM\" where time > now() - 7d ",
+                detuning_query_str="select \"detuning\" from \"Red_Master_AOM\" where time > now() - 7d",
+                detuning_write=lambda det: [{"measurement": "Red_Master_AOM", "fields": {"detuning": float(det)}}]
+                driftrate_write=lambda drt: [{"measurement": "Red_Master_AOM", "fields": {"driftrate": float(drt)}}]
+                ),
+            }
