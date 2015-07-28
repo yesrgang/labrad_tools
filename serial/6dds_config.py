@@ -19,9 +19,9 @@ class AD9854(object):
 
 class DDSConfig(object):
     def __init__(self):
-        self.name = '%LABRADNODE% 6DDS Server'
-        self.serial_server_name = 'yesr13_serial_server'
-        self.port = 'COM17'
+        self.name = '%LABRADNODE% 6DDS'
+        self.serial_server_name = 'yesr20_serial_server'
+        self.port = 'COM6'
         self.timeout = T.Value(1, 's')
         self.baudrate = 9600
         self.stopbits=1

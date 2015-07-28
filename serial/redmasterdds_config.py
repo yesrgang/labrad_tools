@@ -19,8 +19,8 @@ class AD9915(object):
 class DDSConfig(object):
     def __init__(self):
         self.name = '%LABRADNODE% Red Master DDS'
-        self.serial_server_name = 'yesr12_serial_server'
-        self.port = '/dev/ttyACM0'
+        self.serial_server_name = 'yesr20_serial_server'
+        self.port = 'COM7'
         self.timeout = T.Value(1, 's')
         self.baudrate = 9600
         self.stopbits=1
@@ -36,8 +36,5 @@ class DDSConfig(object):
                                           frequency_range=(1e3, 1e9), # [Hz]
                                           amplitude=1,
                                           amplitude_range=(0, 1),
-                                          sweepstate=True,
-                                          sweeprate=1,  # [Hz/s]
-                                          sweeprate_range=(-1000, 1000), # [Hz/s]
                                           sysclk=2.4e9),
                      }

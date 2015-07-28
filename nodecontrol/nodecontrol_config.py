@@ -29,6 +29,8 @@ node_dict = {
                             'GPIB Bus',
 			    'PRO8000',
                             '34980A',
+			    'Serial Server',
+			    '6DDS',
                             ],
              }
 
