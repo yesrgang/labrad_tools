@@ -19,8 +19,8 @@ class AD9915(object):
 class DDSConfig(object):
     def __init__(self):
         self.name = '%LABRADNODE% Red Master DDS'
-        self.serial_server_name = 'yesr20_serial_server'
-        self.port = 'COM7'
+        self.serial_server_name = 'yesr10_serial_server'
+        self.port = 'COM9'
         self.timeout = T.Value(1, 's')
         self.baudrate = 9600
         self.stopbits=1
