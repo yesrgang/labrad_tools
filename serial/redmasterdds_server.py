@@ -18,7 +18,7 @@ timeout = 20
 import os
 import datetime
 from dds_server import DDSServer
-from labrad.server import setting, Signal
+from labrad.server import setting, Signal, returnValue
 from twisted.internet.task import LoopingCall
 from twisted.internet.defer import inlineCallbacks
 from influxdb import InfluxDBClient
@@ -29,7 +29,6 @@ class RMDDSServer(DDSServer):
     def initServer(self):
         yield DDSServer.initServer(self)
 	dsn = os.getenv('INFLUXDBDSN')
-	print dsn
         self.db_client = InfluxDBClient.from_DSN(dsn)
         self.drift_call = LoopingCall(self._drift)
         self.drift_call.start(self.drift_updateperiod)
@@ -52,10 +51,10 @@ class RMDDSServer(DDSServer):
         yield self.notify_listeners(name)
         returnValue(rate)
 
-    def frequency(self, c, name, frequency=None):
-        frequency = yield  DDSServer.frequency(c, name, frequency)
-        self.db_client.write_points(self.dds[name].offset_write(frequency))
-        returnValue(frequency)
+#    def frequency(self, c, name, frequency=None):
+#        frequency = yield  DDSServer.frequency(c, name, frequency)
+#        self.db_client.write_points(self.dds[name].offset_write(frequency))
+#        returnValue(frequency)
 
     @inlineCallbacks
     def _drift(self):
@@ -65,11 +64,9 @@ class RMDDSServer(DDSServer):
                 prev_driftrate = self.db_client.query(self.dds[name].driftrate_query_str).raw['series'][0]['values'][-1][1]
                 dt = datetime.datetime.utcnow() - datetime.datetime.strptime(prev_time[:-4], '%Y-%m-%dT%H:%M:%S.%f')
                 next_detuning = prev_detuning + prev_driftrate*dt.total_seconds()
-		print prev_detuning, next_detuning
                 yield self.frequency(None, name, next_detuning)
                 yield self.driftrate(None, name, prev_driftrate)
-#		to_write = [{"measurement": "Red_Master_AOM", "fields": {"detuning": next_detuning, "driftrate": float(prev_driftrate)}}]
-#		self.db_client.write_points(to_write)
+            	self.db_client.write_points(self.dds[name].detuning_write(next_detuning))
 
 
 config_name = 'redmasterdds_config'
