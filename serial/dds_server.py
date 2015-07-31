@@ -12,11 +12,10 @@ import time
 class DDSServer(SerialDeviceServer):
     name = '%LABRADNODE% DDS Server'
 
-    def __init__(self, config_name):
-        SerialDeviceServer.__init__(self)
-        self.config_name = config_name
-        self.load_configuration()
-        self.update_values = Signal(self.update_id, 'signal: update values', '(s)')
+    def __init__(self, configuration):
+        super(DDSServer, self).__init__()
+        self.load_configuration(configuration)
+        self.update = Signal(self.update_id, 'signal: update', '(s)')
     
     @inlineCallbacks
     def initServer(self):
@@ -35,15 +34,16 @@ class DDSServer(SerialDeviceServer):
             else: 
                 raise
     
-    def load_configuration(self):
-        config = __import__(self.config_name).DDSConfig()
-        for key, value in config.__dict__.items():
+    def load_configuration(self, configuration):
+        #config = __import__(self.config_name).DDSConfig()
+        for key, value in configuration.__dict__.items():
             setattr(self, key, value)
     
     @inlineCallbacks
     def notify_listeners(self, name):
         d = self.dds[name]
-        yield self.update_values(json.dumps({'name': name, 'state': d.state, 'frequency': d.frequency, 'amplitude': d.amplitude}))
+        values = dict([('name', name)] + [(param, getattr(d, param)) for param in d.update_parameters])
+        yield self.update(json.dumps(values))
 
     @setting(1, 'select device by name', name='s')
     def select_device_by_name(self, c, name):
@@ -58,12 +58,12 @@ class DDSServer(SerialDeviceServer):
     def instruction_set(self, address, register, data):
         ins = [58, address, len(data)+1, register] + data
         ins.append(self.checksum(ins))
-#        return ''.join([chr(i) for i in ins])
         return [chr(i) for i in ins]
 
     @setting(2, 'state', name='s', state='b')
     def state(self, c, name, state=None):
-        return True
+        yield self.notify_listeners(name)
+        returnValue(True)
 
     @setting(3, 'frequency', name='s', frequency='v', returns='v')
     def frequency(self, c, name, frequency=None):
@@ -73,7 +73,6 @@ class DDSServer(SerialDeviceServer):
             self.dds[name].frequency = frequency
         for c in self.instruction_set(self.dds[name].address, self.dds[name].freg, self.dds[name].ftw()):
             yield self.serial_server.write(c)
-#        yield self.serial_server.write(self.instruction_set(self.dds[name].address, self.dds[name].freg, self.dds[name].ftw()))
         yield self.notify_listeners(name)
         returnValue(frequency)
     
@@ -87,34 +86,6 @@ class DDSServer(SerialDeviceServer):
             self.serial_server.write(c)
         yield self.notify_listeners(name)
         returnValue(amplitude)
-
-#    @setting(5, 'sweepstate', name='s', state='b', returns='b')
-#    def sweepstate(self, c, name, state=None):
-#        if state is None:
-#            state = self.dds[name].sweepstate
-#        else:
-#            self.dds[name].sweepstate = state
-#        yield self.notify_listeners(name)
-#        returnValue(state)
-#
-#    @setting(6, 'sweeprate', name='s', rate='v', returns='v')
-#    def sweeprate(self, c, name, rate=None):
-#        if rate is None:
-#            rate = self.dds[name].sweeprate
-#        else:
-#            self.dds[name].sweeprate = rate
-#            f = open(self.name.replace(' ', '_') + '_sweeps.txt', 'a')
-#            f.write(str({name: [dds.frequency, dds.sweeprate, time.time()] for name, dds in self.dds.items()})+'\n')
-#        yield self.notify_listeners(name)
-#        returnValue(rate)
-#
-#    @inlineCallbacks
-#    def _sweep(self):
-#        for name in self.dds.keys():
-#            if self.dds[name].sweepstate:
-#                f = yield self.frequency(None, name)
-#                f += self.dds[name].sweeprate*self.sweep_dwell
-#                yield self.frequency(None, name, f)
 
     @setting(7, 'request values', name='s')
     def request_values(self, c, name):

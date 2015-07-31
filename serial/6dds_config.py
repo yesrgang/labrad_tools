@@ -36,7 +36,9 @@ class DDSConfig(object):
                 frequency_range=(1e3, 140e6), # [Hz]
                 amplitude=1,
                 amplitude_range=(0, 1),
-                sysclk=300e6),
+                sysclk=300e6,
+                update_parameters=['state', 'frequency', 'amplitude']
+                ),
             
             'dds1': AD9854(
                 address=1,
@@ -54,7 +56,9 @@ class DDSConfig(object):
                 frequency_range=(1e3, 140e6), # [Hz]
                 amplitude=1,
                 amplitude_range=(0, 1),
-                sysclk=300e6),
+                sysclk=300e6,
+                update_parameters=['state', 'frequency', 'amplitude'],
+                ),
             
             'dds3': AD9854(
                 address=3,
@@ -63,7 +67,9 @@ class DDSConfig(object):
                 frequency_range=(1e3, 140e6), # [Hz]
                 amplitude=1,
                 amplitude_range=(0, 1),
-                sysclk=300e6),
+                sysclk=300e6
+                update_parameters=['state', 'frequency', 'amplitude'],
+                ),
             
             'dds4': AD9854(
                 address=4,
@@ -72,7 +78,9 @@ class DDSConfig(object):
                 frequency_range=(1e3, 140e6), # [Hz]
                 amplitude=1,
                 amplitude_range=(0, 1),
-                sysclk=300e6),
+                sysclk=300e6,
+                update_parameters=['state', 'frequency', 'amplitude'],
+                ),
             
             'dds5': AD9854(
                 address=5,
@@ -81,5 +89,7 @@ class DDSConfig(object):
                 frequency_range=(1e3, 140e6), # [Hz]
                 amplitude=1,
                 amplitude_range=(0, 1),
-                sysclk=300e6),
+                sysclk=300e6,
+                update_parameters=['state', 'frequency', 'amplitude'],
+                ),
             }
