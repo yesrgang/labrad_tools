@@ -1150,6 +1150,9 @@ class Sequencer(QtGui.QWidget):
             if c.key() == QtCore.Qt.Key_S:
                 self.save_sequence()
                 self.run_sequence(c)
+
+    def closeEvent(self, x):
+        self.reactor.stop()
         
 digital_channels = {
                     'A00': {'name': '3D MOT AOM', 'mode': 'auto', 'manual state': 0, 'invert': 1},
