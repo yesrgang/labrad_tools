@@ -1,5 +1,5 @@
 from PyQt4 import QtGui, QtCore, Qt
-from PyQt4.QtCore import pyqtSignal 
+from PyQt4.QtCore import pyqtSignal
 from connection import connection
 from twisted.internet.defer import inlineCallbacks
 import numpy as np
@@ -15,7 +15,7 @@ class TLB6700Control(QtGui.QGroupBox):
     def __init__(self, configuration, reactor, cxn=None):
         QtGui.QDialog.__init__(self)
         self.reactor = reactor
-        self.cxn = cxn 
+        self.cxn = cxn
         self.load_control_configuration(configuration)
         self.connect()
 
@@ -44,16 +44,18 @@ class TLB6700Control(QtGui.QGroupBox):
         serverconf_str = yield server.get_configuration()
         for key, value in json.loads(serverconf_str).items():
             setattr(self, key, value)
-    
+
     def populateGUI(self):
         self.state_button = QtGui.QPushButton()
         self.state_button.setCheckable(1)
         self.state_button.setFixedWidth(self.spinbox_width)
-        
-        self.piezo_voltage_box = SuperSpinBox(self.piezo_voltage_range, self.piezo_voltage_units, self.piezo_voltage_digits)
+
+        self.piezo_voltage_box = SuperSpinBox(self.piezo_voltage_range,
+                                              self.piezo_voltage_units,
+                                              self.piezo_voltage_digits)
         self.piezo_voltage_box.setFixedWidth(self.spinbox_width)
         self.piezo_voltage_box.display(0)
-        
+
         self.diode_current_box = SuperSpinBox(self.diode_current_range, self.diode_current_units, self.diode_current_digits)
         self.diode_current_box.setFixedWidth(self.spinbox_width)
         self.diode_current_box.display(0)
@@ -132,7 +134,7 @@ class TLB6700Control(QtGui.QGroupBox):
     def onNewPiezoVoltage(self):
         if self.free:
             self.hasNewPiezoVoltage = True
-   
+
     def onNewPower(self):
         if self.free:
             self.hasNewDiodeCurrent = True
@@ -142,7 +144,7 @@ class TLB6700Control(QtGui.QGroupBox):
 #            w = self.layout.itemAt(i).widget()
 #            self.layout.removeWidget(w)
 #            w.close()
-                
+
     @inlineCallbacks
     def reinitialize(self):
         yield self.get_configuration()
@@ -170,7 +172,7 @@ class ControlConfig(object):
 
 if __name__ == '__main__':
     a = QtGui.QApplication([])
-    import qt4reactor 
+    import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     widget = TLB6700Control(ControlConfig(), reactor)
