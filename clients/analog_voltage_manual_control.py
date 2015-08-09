@@ -1,5 +1,5 @@
 from PyQt4 import QtGui, QtCore, Qt
-from PyQt4.QtCore import pyqtSignal 
+from PyQt4.QtCore import pyqtSignal
 from connection import connection
 from twisted.internet.defer import inlineCallbacks
 import numpy as np
@@ -14,7 +14,7 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
     def __init__(self, configuration, reactor, cxn=None):
         QtGui.QDialog.__init__(self)
         self.reactor = reactor
-        self.cxn = cxn 
+        self.cxn = cxn
         self.load_control_configuration(configuration)
         self.connect()
 
@@ -41,26 +41,25 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
     def get_server_configuration(self):
         self.voltage_range = (-10., 10.)
         yield None
-#        server = yield self.cxn.get_server(self.servername)
-#        serverconf_str = yield server.get_configuration()
-#        for key, value in json.loads(serverconf_str).items():
-#            setattr(self, key, value)
-    
+
     def populateGUI(self):
         self.mode_button = QtGui.QPushButton()
         self.mode_button.setCheckable(1)
         self.mode_button.setFixedWidth(self.spinbox_width)
-        
-        self.voltage_box = SuperSpinBox(self.voltage_range, self.voltage_units, self.voltage_digits)
+
+        self.voltage_box = SuperSpinBox(self.voltage_range, self.voltage_units,
+                                        self.voltage_digits)
         self.voltage_box.setFixedWidth(self.spinbox_width)
         self.voltage_box.display(0)
 
         if self.layout is None:
             self.layout = QtGui.QGridLayout()
 
-        self.layout.addWidget(QtGui.QLabel('<b>'+self.name+'</b>'), 1, 0, 1, 1, QtCore.Qt.AlignHCenter)
+        self.layout.addWidget(QtGui.QLabel('<b>'+self.name+'</b>'), 1, 0, 1, 1,
+                              QtCore.Qt.AlignHCenter)
         self.layout.addWidget(self.mode_button, 1, 1)
-        self.layout.addWidget(QtGui.QLabel('Voltage: '), 2, 0, 1, 1, QtCore.Qt.AlignRight)
+        self.layout.addWidget(QtGui.QLabel('Voltage: '), 2, 0, 1, 1,
+                              QtCore.Qt.AlignRight)
         self.layout.addWidget(self.voltage_box, 2, 1)
         self.setLayout(self.layout)
         self.setFixedSize(100 + self.spinbox_width, 70)
@@ -69,7 +68,8 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
     def connectSignals(self):
         server = yield self.cxn.get_server(self.servername)
         yield server.signal__update(self.update_id)
-        yield server.addListener(listener=self.receive_update, source=None, ID=self.update_id)
+        yield server.addListener(listener=self.receive_update, source=None,
+                                 ID=self.update_id)
         yield self.cxn.add_on_connect(self.servername, self.reinitialize)
         yield self.cxn.add_on_disconnect(self.servername, self.disable)
 
@@ -122,13 +122,14 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
     def writeValues(self):
         if self.hasNewVoltage:
             server = yield self.cxn.get_server(self.servername)
-            yield server.channel_manual_voltage(self.name, self.voltage_box.value())
+            yield server.channel_manual_voltage(self.name,
+                                                self.voltage_box.value())
             self.hasNewVoltage = False
-    
+
     def onNewVoltage(self):
         if self.free:
             self.hasNewVoltage = True
-                
+
     @inlineCallbacks
     def reinitialize(self):
         pass
@@ -152,7 +153,7 @@ class ControlConfig(object):
 
 if __name__ == '__main__':
     a = QtGui.QApplication([])
-    import qt4reactor 
+    import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     widget = AnalogVoltageManualControl(ControlConfig(), reactor)
