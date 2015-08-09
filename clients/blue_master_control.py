@@ -56,18 +56,23 @@ class TLB6700Control(QtGui.QGroupBox):
         self.piezo_voltage_box.setFixedWidth(self.spinbox_width)
         self.piezo_voltage_box.display(0)
 
-        self.diode_current_box = SuperSpinBox(self.diode_current_range, self.diode_current_units, self.diode_current_digits)
+        self.diode_current_box = SuperSpinBox(self.diode_current_range,
+                                              self.diode_current_units,
+                                              self.diode_current_digits)
         self.diode_current_box.setFixedWidth(self.spinbox_width)
         self.diode_current_box.display(0)
 
         if self.layout is None:
             self.layout = QtGui.QGridLayout()
 
-        self.layout.addWidget(QtGui.QLabel('<b>'+self.name+'</b>'), 1, 0, 1, 1, QtCore.Qt.AlignHCenter)
+        self.layout.addWidget(QtGui.QLabel('<b>'+self.name+'</b>'), 1, 0, 1, 1,
+                              QtCore.Qt.AlignHCenter)
         self.layout.addWidget(self.state_button, 1, 1)
-        self.layout.addWidget(QtGui.QLabel('Piezo Voltage: '), 2, 0, 1, 1, QtCore.Qt.AlignRight)
+        self.layout.addWidget(QtGui.QLabel('Piezo Voltage: '), 2, 0, 1, 1,
+                              QtCore.Qt.AlignRight)
         self.layout.addWidget(self.piezo_voltage_box, 2, 1)
-        self.layout.addWidget(QtGui.QLabel('Diode Curent: '), 3, 0, 1, 1, QtCore.Qt.AlignRight)
+        self.layout.addWidget(QtGui.QLabel('Diode Curent: '), 3, 0, 1, 1,
+                              QtCore.Qt.AlignRight)
         self.layout.addWidget(self.diode_current_box, 3, 1)
         self.setLayout(self.layout)
         self.setFixedSize(120 + self.spinbox_width, 100)
@@ -76,7 +81,8 @@ class TLB6700Control(QtGui.QGroupBox):
     def connectSignals(self):
         server = yield self.cxn.get_server(self.servername)
         yield server.signal__update(self.update_id)
-        yield server.addListener(listener=self.receive_update, source=None, ID=self.update_id)
+        yield server.addListener(listener=self.receive_update, source=None,
+                                 ID=self.update_id)
         yield self.cxn.add_on_connect(self.servername, self.reinitialize)
         yield self.cxn.add_on_disconnect(self.servername, self.disable)
 
