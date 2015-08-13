@@ -140,6 +140,36 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
     def closeEvent(self, x):
         self.reactor.stop()
 
+class ManyChannels(QtGui.QWidget):
+    def __init__(self, reactor, cxn=None):
+        QtGui.QDialog.__init__(self)
+        self.channels = ['X Comp. Coil', 'Y Comp. Coil', 'Z Comp. Coil']
+        self.reactor = reactor
+        self.cxn = cxn
+        self.connect()
+
+    @inlineCallbacks
+    def connect(self):
+        if self.cxn is None:
+            self.cxn = connection()
+            yield self.cxn.connect()
+        self.context = yield self.cxn.context()
+        try:
+            self.populateGUI()
+        except Exception, e:
+            print e
+            self.setDisabled(True)
+
+    def populateGUI(self):
+        self.layout = QtGui.QHBoxLayout()
+        for c in self.channels:
+            conf = ControlConfig()
+            conf.name = c
+            w = AnalogVoltageManualControl(conf, reactor, self.cxn)
+            self.layout.addWidget(w)
+        self.setLayout(self.layout)
+
+
 class ControlConfig(object):
     def __init__(self):
         self.name = 'MOT Coil'
@@ -156,6 +186,7 @@ if __name__ == '__main__':
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-    widget = AnalogVoltageManualControl(ControlConfig(), reactor)
+#    widget = AnalogVoltageManualControl(ControlConfig(), reactor)
+    widget = ManyChannels(reactor)
     widget.show()
     reactor.run()
