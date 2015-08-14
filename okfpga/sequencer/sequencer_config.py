@@ -1,6 +1,7 @@
 class SequencerConfig(object):
     def __init__(self):
         self.bit_file = 'sequencer.bit'
+	self.update_id = 698024
         self.sequencer_mode_num = {'idle': 0, 'load': 1, 'run': 2}
         self.sequencer_mode = 'idle'
         self.channel_mode_wires = [0x01, 0x03, 0x05, 0x07]
@@ -26,14 +27,14 @@ class SequencerConfig(object):
                         'A05': {'name': 'Abs. Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 1},
                         'A06': {'name': '2D Mot Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 1},
                         'A07': {'name': 'Zeeman Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 1},
-                        'A08': {'name': 'TTLA08', 'mode': 'auto', 'manual state': 0, 'invert': 0},
-                        'A09': {'name': 'TTLA09', 'mode': 'auto', 'manual state': 0, 'invert': 0},
+                        'A08': {'name': 'AH Enable', 'mode': 'auto', 'manual state': 0, 'invert': 0},
+                        'A09': {'name': 'AH Bottom Enable', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'A10': {'name': 'TTLA10', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'A11': {'name': 'TTLA11', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'A12': {'name': 'TTLA12', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'A13': {'name': 'TTLA13', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'A14': {'name': 'TTLA14', 'mode': 'auto', 'manual state': 0, 'invert': 0},
-                        'A15': {'name': 'TTLA15', 'mode': 'auto', 'manual state': 0, 'invert': 0},
+                        'A15': {'name': 'Spec. Lock Enable', 'mode': 'manual', 'manual state': 0, 'invert': 1},
 
                         'B00': {'name': 'TTLB00', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'B01': {'name': 'TTLB01', 'mode': 'auto', 'manual state': 0, 'invert': 0},

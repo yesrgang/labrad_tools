@@ -4,7 +4,7 @@ from time import sleep
 npdll = c.WinDLL('C:\Program Files (x86)\Newport\Newport USB Driver\Bin\usbdll.dll')
 
 npdll.newp_usb_init_system()
-Buffer = c.create_string_buffer(100)
+Buffer = c.create_string_buffer(64)
 npdll.newp_usb_get_device_info(c.byref(Buffer))
 print Buffer.value
 

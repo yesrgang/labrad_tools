@@ -4,4 +4,11 @@ class ServerConfig(object):
         self.update_id = 698022
         self.dll_filename = 'usbdll.dll'
         self.max_buffer_length = 64
+	
+	self.current_range = (0., 160.)
+	self.default_current = 158.0
+	self.ramp_duration = 3.0
+	self.ramp_points = 30
+	
+	self.voltage_range = (0., 100.)
 

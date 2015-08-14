@@ -32,6 +32,7 @@ node_dict = {
                             '34980A',
 			    'Serial Server',
 			    '6DDS',
+			    'TLB-6700',
                             ],
              }
 

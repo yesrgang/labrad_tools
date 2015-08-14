@@ -30,6 +30,7 @@ class DigitalSequencer(LabradServer):
         LabradServer.__init__(self)
         self.config_name = config_name
         self.load_configuration()
+	self.update = Signal(self.update_id, 'signal: update', 's')
 
     def load_configuration(self):
         config = __import__(self.config_name).SequencerConfig()
@@ -129,6 +130,7 @@ class DigitalSequencer(LabradServer):
             self.channels[self.name_to_key[channel]]['mode'] = mode
             self.write_channel_modes()
             self.write_channel_stateinvs()
+        self.notify_listeners(c)
         return self.channels[self.name_to_key[channel]]['mode']
     
     def write_channel_stateinvs(self): 
@@ -141,10 +143,11 @@ class DigitalSequencer(LabradServer):
         self.xem.UpdateWireIns()
 
     @setting(05, 'channel manual state', channel='s', state='i')
-    def channel_manual_state(self, c, channel, state):
+    def channel_manual_state(self, c, channel, state=None):
         if state is not None:
             self.channels[self.name_to_key[channel]]['manual state'] = state
             self.write_channel_stateinvs()
+	self.notify_listeners(c)
         return self.channels[self.name_to_key[channel]]['manual state']
 
     @setting(06, 'channel invert', channel='s', invert='i')
@@ -154,8 +157,12 @@ class DigitalSequencer(LabradServer):
             self.write_channel_stateinvs()
         return self.channels[self.name_to_key[channel]]['invert']
 
+    @setting(10, 'notify listeners')
+    def notify_listeners(self, c):
+        self.update(json.dumps(self.channels))
+
 if __name__ == "__main__":
-    config_name = 'sequencer_config'
+    config_name = 'digital_config'
     __server__ = DigitalSequencer(config_name)
     from labrad import util
     util.runServer(__server__)
