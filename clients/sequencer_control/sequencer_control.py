@@ -1051,6 +1051,10 @@ class Sequencer(QtGui.QWidget):
             dialog.ui = widget
             dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             widget.show()
+            pos = QtGui.QCursor().pos()
+            print pos
+            pos = pos - QtCore.QPoint(100, 50)
+            widget.move(pos)
         return odm
 
 
