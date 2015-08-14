@@ -22,6 +22,7 @@ drheight = 20
 pps = 1001
 
 max_columns = 100
+colors = ['#ff0000', '#ff7700', '#00ff00', '#0000ff', '#8a2be2', '#c77df3']
 
 def merge_dicts(*dictionaries):
     merged_dictionary = {}
@@ -57,6 +58,8 @@ class SequencerButton(QtGui.QFrame):
         super(SequencerButton, self).__init__(None)
         self.setFrameShape(2)
         self.setLineWidth(1)
+        self.on_color = '#ff69b4'
+        self.off_color = '#ffffff'
         if initial_state:
             self.setChecked(1)
         else:
@@ -65,11 +68,11 @@ class SequencerButton(QtGui.QFrame):
     def setChecked(self, state):
         if state:
             self.setFrameShadow(0x0030)
-            self.setStyleSheet('QWidget {background-color: #c9c9c9}')
+            self.setStyleSheet('QWidget {background-color: %s}' % self.on_color)
             self.is_checked = True
         else:
             self.setFrameShadow(0x0020)
-            self.setStyleSheet('QWidget {background-color: #ffffff}')
+            self.setStyleSheet('QWidget {background-color: %s}' % self.off_color)
             self.is_checked = False
 
     def isChecked(self):
@@ -101,6 +104,7 @@ class DigitalColumn(QtGui.QWidget):
             if not i%16 and i != 0:
                 self.layout.addWidget(Spacer(sbheight/2, sbwidth))
             self.layout.addWidget(self.buttons[n])
+            self.buttons[n].on_color = colors[i%len(colors)]
         self.layout.addWidget(QtGui.QWidget())
         self.setLayout(self.layout)
         height = 0
@@ -867,10 +871,8 @@ class AnalogVoltageEditor(QtGui.QDialog):
 
 
 class Sequencer(QtGui.QWidget):
-    def __init__(self, digital_channels, analog_channels, cxn=None):
+    def __init__(self, cxn=None):
         super(Sequencer, self).__init__(None)
-        #self.digital_channels = digital_channels
-        #self.analog_channels = analog_channels
         self.digital_servername = 'yesr20_digital_sequencer'
         self.analog_servername = 'yesr20_analog_sequencer'
         self.cxn = cxn
@@ -1250,6 +1252,6 @@ if __name__ == '__main__':
     import qt4reactor 
     qt4reactor.install()
     from twisted.internet import reactor
-    widget = Sequencer(digital_channels, analog_channels)
+    widget = Sequencer()
     widget.show()
     reactor.run()
