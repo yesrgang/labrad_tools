@@ -43,5 +43,6 @@ class DDSConfig(object):
                 detuning_query_str="select \"detuning\" from \"Red_Master_AOM\" where time > now() - 1d",
                 detuning_write=lambda det: [{"measurement": "Red_Master_AOM", "fields": {"detuning": float(det)}}],
                 driftrate_write=lambda drt: [{"measurement": "Red_Master_AOM", "fields": {"driftrate": float(drt)}}],
+                signal_parameters=['state', 'frequency', 'amplitude', 'driftstate', 'driftrate'],
                 ),
             }

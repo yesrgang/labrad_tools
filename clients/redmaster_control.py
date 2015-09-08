@@ -1,6 +1,5 @@
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
-from client_tools import SuperSpinBox
 from connection import connection
 from twisted.internet.defer import inlineCallbacks
 import numpy as np
@@ -11,6 +10,7 @@ class CWControl(QtGui.QGroupBox):
     hasNewAmplitude = False
     hasNewSweepState = False
     hasNewSweepRate = False
+#    mouseHover = pyqtSignal(bool)
     layout = None
 
     def __init__(self, widget_config, reactor, cxn=None):
@@ -48,24 +48,32 @@ class CWControl(QtGui.QGroupBox):
         self.state_button = QtGui.QPushButton()
         self.state_button.setCheckable(1)
         
-        self.frequency_box = SuperSpinBox(self.frequency_range, 3, 1e-6)
+        self.frequency_box = QtGui.QDoubleSpinBox()
+        self.frequency_box.setKeyboardTracking(False)
+        self.frequency_range = tuple([x/self.frequency_units for x in self.frequency_range])
+        self.frequency_box.setRange(*self.frequency_range)
+        self.frequency_box.setSingleStep(self.frequency_stepsize)
+        self.frequency_box.setDecimals(abs(int(np.floor(np.log10(self.frequency_stepsize*self.frequency_units)))))
+        self.frequency_box.setAccelerated(True)
         self.frequency_box.setFixedWidth(self.spinbox_width)
         
-        self.amplitude_box = SuperSpinBox(self.amplitude_range, 2)
+        self.amplitude_box = QtGui.QDoubleSpinBox()
+        self.amplitude_box.setKeyboardTracking(False)
+        self.amplitude_box.setRange(*self.amplitude_range)
+        self.amplitude_box.setSingleStep(self.amplitude_stepsize)
+        self.amplitude_box.setDecimals(abs(int(np.floor(np.log10(self.amplitude_stepsize)))))
+        self.amplitude_box.setAccelerated(True)
         self.amplitude_box.setFixedWidth(self.spinbox_width)
         
         self.sweepstate_button = QtGui.QPushButton()
         self.sweepstate_button.setCheckable(1)
         
-        #self.sweeprate_box = QtGui.QDoubleSpinBox()
-        #self.sweeprate_box.setKeyboardTracking(False)
-        #self.sweeprate_box.setRange(*self.sweeprate_range)
-        #self.sweeprate_box.setSingleStep(self.sweeprate_stepsize)
-        #self.sweeprate_box.setDecimals(abs(int(np.floor(np.log10(self.sweeprate_stepsize)))))
-        #self.sweeprate_box.setAccelerated(True)
-        #self.sweeprate_box.setFixedWidth(self.spinbox_width)
-
-        self.sweeprate_box = SuperSpinBox(self.sweeprate_range, 2)
+        self.sweeprate_box = QtGui.QDoubleSpinBox()
+        self.sweeprate_box.setKeyboardTracking(False)
+        self.sweeprate_box.setRange(*self.sweeprate_range)
+        self.sweeprate_box.setSingleStep(self.sweeprate_stepsize)
+        self.sweeprate_box.setDecimals(abs(int(np.floor(np.log10(self.sweeprate_stepsize)))))
+        self.sweeprate_box.setAccelerated(True)
         self.sweeprate_box.setFixedWidth(self.spinbox_width)
 
         if self.layout is None:
@@ -89,15 +97,22 @@ class CWControl(QtGui.QGroupBox):
         server = yield self.cxn.get_server(self.server_name)
         yield server.signal__update_values(self.update_id)
         yield server.addListener(listener=self.receive_values, source=None, ID=self.update_id)
+#        yield server.signal__update_state(self.state_id)
+#        yield server.addListener(listener=self.receive_state, source=None, ID=self.state_id)
+#        yield server.signal__update_frequency(self.frequency_id)
+#        yield server.addListener(listener=self.receive_frequency, source=None, ID=self.frequency_id)
+#        yield server.signal__update_amplitude(self.amplitude_id)
+#        yield server.addListener(listener=self.receive_amplitude, source=None, ID=self.amplitude_id)
         yield self.cxn.add_on_connect(self.server_name, self.reinitialize)
         yield self.cxn.add_on_disconnect(self.server_name, self.disable)
 
-        self.state_button.toggled.connect(self.onNewState)
-        self.frequency_box.returnPressed.connect(self.onNewFrequency)
-        self.amplitude_box.returnPressed.connect(self.onNewAmplitude)
-        self.sweepstate_button.toggled.connect(self.onNewSweepState)
-        self.sweeprate_box.returnPressed.connect(self.onNewSweepRate)
+        self.state_button.released.connect(self.onNewState)
+        self.frequency_box.valueChanged.connect(self.onNewFrequency)
+        self.amplitude_box.valueChanged.connect(self.onNewAmplitude)
+        self.sweepstate_button.released.connect(self.onNewSweepState)
+        self.sweeprate_box.editingFinished.connect(self.onNewSweepRate)
         self.setMouseTracking(True)
+#        self.mouseHover.connect(self.requestValues)
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.writeValues)
         self.timer.start(self.update_time)
@@ -109,6 +124,38 @@ class CWControl(QtGui.QGroupBox):
         server = yield self.cxn.get_server(self.server_name)
         yield server.request_values(self.name)
  
+#    def receive_state(self, c, signal):
+#        name, state = signal
+#        if name = self.name:
+#            self.free = False
+#            if state:
+#                self.state_button.setChecked(1)
+#                self.state_button.setText('On')
+#            else:
+#                self.state_button.setChecked(0)
+#                self.state_button.setText('Off')
+#            self.free = True
+#
+#    def receive_frequency(self, c, signal):
+#        name, frequency = signal
+#        if name = self.name:
+#            self.free = False
+#            self.frequency_box.setValue(frequency)
+#            self.free = True
+#
+#    def receive_amplitude(self, c, signal):
+#        name, amplitude = signal
+#        if name = self.name:
+#            self.free = False
+#            self.amplitude_box.setValue(amplitude)
+#            self.free = True
+    
+#    def enterEvent(self, c):
+#        self.mouseHover.emit(True)
+#
+#    def leaveEvent(self, c):
+#        self.mouseHover.emit(True)
+
     def receive_values(self, c, signal):
         name, state, frequency, amplitude, sweepstate, sweeprate = signal
         if name == self.name:
@@ -120,9 +167,9 @@ class CWControl(QtGui.QGroupBox):
                 self.state_button.setChecked(0)
                 self.state_button.setText('Off')
             if not self.frequency_box.hasFocus():
-                self.frequency_box.display(frequency)
+                self.frequency_box.setValue(frequency/self.frequency_units)
             if not self.amplitude_box.hasFocus():
-                self.amplitude_box.display(amplitude)
+                self.amplitude_box.setValue(amplitude)
             if sweepstate:
                 self.sweepstate_button.setChecked(1)
                 self.sweepstate_button.setText('On')
@@ -130,18 +177,18 @@ class CWControl(QtGui.QGroupBox):
                 self.sweepstate_button.setChecked(0)
                 self.sweepstate_button.setText('Off')
             if not self.sweeprate_box.hasFocus():
-                self.sweeprate_box.display(sweeprate)
+                self.sweeprate_box.setValue(sweeprate)
             self.free = True
 
     def onNewState(self):
         if self.free:
             self.hasNewState = True
 
-    def onNewFrequency(self):
+    def onNewFrequency(self, c):
         if self.free:
             self.hasNewFrequency = True
    
-    def onNewAmplitude(self):
+    def onNewAmplitude(self, c):
         if self.free:
             self.hasNewAmplitude = True
 
@@ -157,12 +204,12 @@ class CWControl(QtGui.QGroupBox):
     def writeValues(self):
         if  self.hasNewState:
             server = yield self.cxn.get_server(self.server_name)
-            state = self.state_button.isChecked() #yield server.state(self.name)
-            yield server.state(self.name, state)
+            is_on = yield server.state(self.name)
+            yield server.state(self.name, not is_on)
             self.hasNewState = False
         elif self.hasNewFrequency:
             server = yield self.cxn.get_server(self.server_name)
-            yield server.frequency(self.name, self.frequency_box.value())
+            yield server.frequency(self.name, self.frequency_box.value()*self.frequency_units)
             self.hasNewFrequency = False
         elif self.hasNewAmplitude:
             server = yield self.cxn.get_server(self.server_name)
@@ -170,26 +217,17 @@ class CWControl(QtGui.QGroupBox):
             self.hasNewAmplitude = False
         elif self.hasNewSweepState:
             server = yield self.cxn.get_server(self.server_name)
-            state = self.sweepstate_button.isChecked() #yield server.sweepstate(self.name)
-            yield server.sweepstate(self.name, state)
+            is_on = yield server.sweepstate(self.name)
+            yield server.sweepstate(self.name, not is_on)
             self.hasNewSweepState = False
         elif self.hasNewSweepRate:
             server = yield self.cxn.get_server(self.server_name)
             yield server.sweeprate(self.name, self.sweeprate_box.value())
             self.hasNewSweepRate = False
-
-#    def removeWidgets(self):
-#        for i in reversed(range(self.layout.count())):
-#            w = self.layout.itemAt(i).widget()
-#            self.layout.removeWidget(w)
-#            w.close()
                 
     @inlineCallbacks
     def reinitialize(self):
         yield self.get_configuration()
-#        self.removeWidgets()
-#        self.setDisabled(False)
-#        yield self.connect()
 
     def disable(self):
         self.setDisabled(True)

@@ -33,6 +33,7 @@ class SequencerServer(LabradServer):
         LabradServer.__init__(self)
         self.config_name = config_name
         self.load_configuration()
+        self.update = Signal(self.update_id, 'signal: update', 's')
 
     def load_configuration(self):
         config = __import__(self.config_name).SequencerConfig()
@@ -41,7 +42,7 @@ class SequencerServer(LabradServer):
 
     def initServer(self):
         self.initialize_board()
-	self.write_channel_modes()
+        self.write_channel_modes()
         for d in self.channels.values():
             self.write_channel_manual_voltage(d['name']) 
 
@@ -96,7 +97,7 @@ class SequencerServer(LabradServer):
 
     def voltage_to_unsigned(self, voltage):
         voltage = sorted([-10., voltage, 10.])[1] + 10.
-	return int(voltage/20.*(2**16-1))
+        return int(voltage/20.*(2**16-1))
 
     def ramp_rate(self, voltage_diff, time):
         t = self.time_to_ticks(time)
@@ -199,12 +200,13 @@ class SequencerServer(LabradServer):
         if mode is not None:
             self.channels[self.name_to_key[channel]]['mode'] = mode
             self.write_channel_modes()
+        self.notify_listeners(c)
         return self.channels[self.name_to_key[channel]]['mode']
     
     def write_channel_manual_voltage(self, channel): 
         key = self.name_to_key[channel]
         voltage = self.voltage_to_unsigned(self.channels[key]['manual voltage'])
-	wire = self.manual_voltage_wires[sorted(self.channels).index(key)]
+        wire = self.manual_voltage_wires[sorted(self.channels).index(key)]
         self.xem.SetWireInValue(wire, voltage)
         self.xem.UpdateWireIns()
 
@@ -214,7 +216,18 @@ class SequencerServer(LabradServer):
             voltage = sorted([-10, voltage, 10])[1]
             self.channels[self.name_to_key[channel]]['manual voltage'] = voltage
             self.write_channel_manual_voltage(channel)
+        self.notify_listeners(c)
         return self.channels[self.name_to_key[channel]]['manual voltage']
+
+    @setting(06, 'get channel configuration', channel='s', returns='s')
+    def get_channel_configuration(self, c, channel):
+        yield None
+        key = self.name_to_key(channel)
+        returnValue(json.dumps(self.channels[key]))
+
+    @setting(10, 'notify listeners')
+    def notify_listeners(self, c):
+        self.update(json.dumps(self.channels))
 
 #    @setting(06, 'channel invert', channel='s', invert='i')
 #    def channel_invert(self, c, channel, invert=None):

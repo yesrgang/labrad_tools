@@ -6,7 +6,7 @@ from client_tools import SuperSpinBox
 import numpy as np
 
 update_time = 100 # [ms]
-servername = 'yesr13 PRO8000'
+#servername = 'yesr13 PRO8000'
 
 class LDC80xxClient(QtGui.QGroupBox):
     state_id = 461001

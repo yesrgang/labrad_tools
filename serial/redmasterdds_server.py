@@ -51,11 +51,6 @@ class RMDDSServer(DDSServer):
         yield self.notify_listeners(name)
         returnValue(rate)
 
-#    def frequency(self, c, name, frequency=None):
-#        frequency = yield  DDSServer.frequency(c, name, frequency)
-#        self.db_client.write_points(self.dds[name].offset_write(frequency))
-#        returnValue(frequency)
-
     @inlineCallbacks
     def _drift(self):
         for name in self.dds.keys():

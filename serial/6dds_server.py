@@ -18,8 +18,10 @@ timeout = 20
 from dds_server import DDSServer
 
 
-config_name = '6dds_config'
+configuration_name = '6dds_config'
+
 if __name__ == "__main__":
     from labrad import util
-    util.runServer(DDSServer(config_name))
+    configuration = __import__(configuration_name).DDSConfig()
+    util.runServer(DDSServer(configuration))
 
