@@ -1,1 +1,1 @@
-python nodecontrol\nodecontrol_start.py
+python C:\Python27\Scripts\twistd.py -n labradnode
