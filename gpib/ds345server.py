@@ -36,7 +36,7 @@ class DS345Wrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def amplitude(self, new_amplitude):
         if new_amplitude is not None:
-            yield self.write('AMPL {}{}'.format(new_amplitude, amplitude_units)
+            yield self.write('AMPL {}{}'.format(new_amplitude, amplitude_units))
         updated_amplitude = yield self.query('AMPL?')
         returnValue(float(updated_amplitude[:-2]))
 
@@ -58,7 +58,7 @@ class DS345Server(GPIBManagedServer):
         updated_amplitude = yield dev.amplitude(new_amplitude)
         returnValue(updated_amplitude)
 
-__server__ = PRO8000Server()
+__server__ = DS345Server()
 
 if __name__ == '__main__':
     from labrad import util

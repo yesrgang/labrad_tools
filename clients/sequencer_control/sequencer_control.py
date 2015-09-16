@@ -963,6 +963,9 @@ class Sequencer(QtGui.QWidget):
         self.layout.addWidget(self.southeast, 3, 2, 2, 1)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
+
+        self.setWindowTitle('sequencer control')
+
         self.setLayout(self.layout)
         self.set_sizes()
         self.connect_widgets()

@@ -4,12 +4,12 @@ class SequencerConfig(object):
     def __init__(self):
         self.update_id = 698023
         self.okDeviceID = 'sr2 dac1'
-        self.bit_file = 'dac_glitchfix2.bit'
+        self.bit_file = 'dac_glitchfix3.bit'
         self.sequencer_mode_num = {'idle': 0, 'load': 1, 'run': 2}
         self.sequencer_mode = 'idle'
 	self.channel_mode_wire = 0x09
         self.manual_voltage_wires = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]
-        self.clk_frequency = 10e6 / (8.*2. + 2.)
+        self.clk_frequency = 48e6 / (8.*2. + 2.)
         self.ramps = {
                      'linear': linear_ramp,
                      'exp': exp_ramp,
