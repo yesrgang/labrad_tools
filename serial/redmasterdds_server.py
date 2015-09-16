@@ -62,6 +62,7 @@ class RMDDSServer(DDSServer):
                 yield self.frequency(None, name, next_detuning)
                 yield self.driftrate(None, name, prev_driftrate)
             	self.db_client.write_points(self.dds[name].detuning_write(next_detuning))
+		print next_detuning
 
 
 config_name = 'redmasterdds_config'
