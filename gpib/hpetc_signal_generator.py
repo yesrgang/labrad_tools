@@ -76,6 +76,8 @@ class HPSignalGeneratorServer(GPIBManagedServer):
         self.update_state = Signal(self.state_id, "signal: update_state", '(sb)')
         self.update_frequency = Signal(self.frequency_id, "signal: update_frequency", '(sv)')
         self.update_amplitude = Signal(self.amplitude_id, "signal: update_amplitude", '(sv)')
+	dsn = os.getenv('INFLUXDBDSN')
+	self.dbclient = InfluxDBClient.from_DSN(dsn)
 	if self.configuration:
             GPIBManagedServer.__init__(self)
     
@@ -115,6 +117,7 @@ class HPSignalGeneratorServer(GPIBManagedServer):
             yield dev.set_frequency(frequency)
         yield dev.get_frequency()
         yield self.update_frequency((dev.instrument_name, dev.frequency))
+	self.dbclient.write_points(dev.db_point(frequency))
         returnValue(dev.frequency)
 
     @setting(12, 'amplitude', amplitude='v', returns='v')
