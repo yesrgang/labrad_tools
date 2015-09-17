@@ -43,8 +43,12 @@ class CWControl(QtGui.QGroupBox):
     def select_device(self):
         server = yield self.cxn.get_server(self.servername)
         serverconf_str = yield server.select_device_by_name(self.name)
+	print serverconf_str
         for key, value in eval(serverconf_str).iteritems():
-            setattr(self, key, value)
+	    try:
+            	setattr(self, key, value)
+            except:
+                print "could not set attribute {}".format(key)
 
     
     def populateGUI(self):

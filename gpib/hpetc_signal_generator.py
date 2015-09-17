@@ -16,11 +16,12 @@ message = 987654321
 timeout = 5
 ### END NODE INFO
 """
-
+import os
 import numpy as np
 from labrad.server import setting, Signal
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from twisted.internet.defer import inlineCallbacks, returnValue
+from influxdb import InfluxDBClient
 
 #STATE_ID = 698013
 #FREQUENCY_ID = 698014
@@ -99,7 +100,10 @@ class HPSignalGeneratorServer(GPIBManagedServer):
         dev = self.selectedDevice(c)
         dev.set_configuration(self.instruments[name])
 	dev.instrument_name = name
-        returnValue(str(self.instruments[name].__dict__))
+	confd = self.instruments[name].__dict__
+	if confd.has_key('dbpoint'):
+            confd['dbpoint'] = None
+        returnValue(str(confd))
 
     @setting(10, 'state', state='b', returns='b')
     def state(self, c, state=None):
@@ -117,7 +121,7 @@ class HPSignalGeneratorServer(GPIBManagedServer):
             yield dev.set_frequency(frequency)
         yield dev.get_frequency()
         yield self.update_frequency((dev.instrument_name, dev.frequency))
-	self.dbclient.write_points(dev.db_point(frequency))
+	self.dbclient.write_points(dev.dbpoint(dev.frequency))
         returnValue(dev.frequency)
 
     @setting(12, 'amplitude', amplitude='v', returns='v')

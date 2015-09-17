@@ -22,8 +22,10 @@ class ServerConfig(object):
 							 detuning='alpha phase lock offset',
                                                         )
                            }
-        for inst in self.instruments:
+        for inst in self.instruments.values():
             if hasattr(inst, 'measurement'):
-		    inst.db_point = lambda f: [{"measurement": inst.measurement, tags={'detuning': inst.detuning}, "fields": {"value": f}}]
+		    inst.dbpoint = lambda f: [{"measurement": inst.measurement, 
+                                                "tags": {'detuning': inst.detuning}, 
+                                                "fields": {"value": f}}]
 
 
