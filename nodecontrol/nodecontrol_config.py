@@ -11,10 +11,10 @@ node_dict = {
                             ],
              'node yesr10': [
                             'GPIB Bus',
-			    'N5181A',
-			    'E4432B',
+			    #'N5181A',
+			    #'E4432B',
                             'Serial Server',
-			    'Red Master DDS',
+			    #'Red Master DDS',
                             ],
              'node yesr9': [
                             'GPIB Bus'
@@ -33,6 +33,9 @@ node_dict = {
 			    'Serial Server',
 			    '6DDS',
 			    'TLB-6700',
+			    'DS345',
+			    'E4432B',
+			    'N5181A',
                             ],
              }
 

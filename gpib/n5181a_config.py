@@ -18,5 +18,13 @@ class ServerConfig(object):
                                                         def_amplitude=6.,
                                                         frequency_range=(10e3, 200e6),
 							amplitude_range=(-20, 20),
+                                                        measurement='red MOT detunings',
+							detuning='beta phase lock offset',
 							)
 			    }
+        
+	for inst in self.instruments.values():
+            if hasattr(inst, 'measurement'):
+		    inst.dbpoint = lambda f: [{"measurement": inst.measurement, 
+                                                "tags": {'detuning': inst.detuning}, 
+                                                "fields": {"value": f}}]

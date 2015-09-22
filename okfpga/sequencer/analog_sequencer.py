@@ -150,6 +150,7 @@ class SequencerServer(LabradServer):
                     ba += [int(eval(hex(self.ramp_rate(dv, t))) >> i & 0xff) for i in range(0, 16, 8)]
                     ba += [int(eval(hex(self.time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)]
         ba += [0]*12
+	print 'writing ', len(ba), ' bytes...'
         return ba
     
     def _program_sequence(self, sequence):

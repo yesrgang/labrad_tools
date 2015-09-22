@@ -43,8 +43,12 @@ class CWControl(QtGui.QGroupBox):
     def select_device(self):
         server = yield self.cxn.get_server(self.servername)
         serverconf_str = yield server.select_device_by_name(self.name)
+	print serverconf_str
         for key, value in eval(serverconf_str).iteritems():
-            setattr(self, key, value)
+	    try:
+            	setattr(self, key, value)
+            except:
+                print "could not set attribute {}".format(key)
 
     
     def populateGUI(self):
@@ -80,6 +84,8 @@ class CWControl(QtGui.QGroupBox):
         self.layout.addWidget(self.frequency_box, 2, 1)
         self.layout.addWidget(QtGui.QLabel('Amplitude: '), 3, 0, 1, 1, QtCore.Qt.AlignRight)
         self.layout.addWidget(self.amplitude_box, 3, 1)
+
+	self.setWindowTitle(self.name + ' control')
         self.setLayout(self.layout)
         self.setFixedSize(100 + self.spinbox_width, 100)
 
@@ -185,8 +191,8 @@ class CWControl(QtGui.QGroupBox):
     def disable(self):
         self.setDisabled(True)
 
-#    def closeEvent(self, x):
-#        self.reactor.stop()
+    def closeEvent(self, x):
+        self.reactor.stop()
 
 #if __name__ == '__main__':
 #    a = QtGui.QApplication([])

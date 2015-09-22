@@ -1,15 +1,15 @@
 class RFControlConfig(object):
     def __init__(self):
-        self.servername = 'yesr20_e4432b'
-        self.name = 'alpha'
-        self.state_id = 461013
-        self.frequency_id = 461014
-        self.amplitude_id = 461015
+        self.servername = 'yesr20_ds345'
+        self.name = 'Spin Pol. AOM'
+        self.state_id = 461017
+        self.frequency_id = 461018
+        self.amplitude_id = 461019
 
-        self.frequency_units = [(9, 'GHz')]
-        self.frequency_digits = 6
+        self.frequency_units = [(6, 'MHz')]
+        self.frequency_digits = 4 # really digits after decimal
         self.amplitude_units = [(0, 'dBm')]
-        self.amplitude_digits = 2
+        self.amplitude_digits = 2 # again, digits after decimal
         self.update_time = 100
 
         # widget sizes
@@ -23,6 +23,6 @@ if __name__ == '__main__':
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-    widget = CWControl('alpha_rf_control', reactor)
+    widget = CWControl('spin_aom_control', reactor)
     widget.show()
     reactor.run()

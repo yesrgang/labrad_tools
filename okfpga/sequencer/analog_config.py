@@ -9,7 +9,7 @@ class SequencerConfig(object):
         self.sequencer_mode = 'idle'
 	self.channel_mode_wire = 0x09
         self.manual_voltage_wires = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]
-        self.clk_frequency = 10e6 / (8.*2. + 2.)
+        self.clk_frequency = 48e6 / (8.*2. + 2.)
         self.ramps = {
                      'linear': linear_ramp,
                      'exp': exp_ramp,

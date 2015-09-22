@@ -1,33 +1,9 @@
-
-"""
-### BEGIN NODE INFO
-[info]
-name = HP Signal Generator
-version = 1.0
-description = 
-instancename = %LABRADNODE% HP Signal Generator
-
-[startup]
-cmdline = %PYTHON% %FILE%
-timeout = 20
-
-[shutdown]
-message = 987654321
-timeout = 5
-### END NODE INFO
-"""
-import os
 import numpy as np
 from labrad.server import setting, Signal
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from twisted.internet.defer import inlineCallbacks, returnValue
-from influxdb import InfluxDBClient
 
-#STATE_ID = 698013
-#FREQUENCY_ID = 698014
-#POWER_ID = 698015
-#
-class HPSignalGeneratorWrapper(GPIBDeviceWrapper):
+class SRSSignalGeneratorWrapper(GPIBDeviceWrapper):
     def initialize(self):
         pass
 
@@ -37,39 +13,29 @@ class HPSignalGeneratorWrapper(GPIBDeviceWrapper):
             setattr(self, key, value)
 
     @inlineCallbacks
-    def get_state(self):
-        ans = yield self.query('OUTP:STAT?')
-	self.state = bool(int(ans))
-        returnValue(ans)
-
-    @inlineCallbacks
-    def set_state(self, state):
-        yield self.write('OUTP:STAT {}'.format(int(bool(state))))
-
-    @inlineCallbacks
     def get_frequency(self):
-        ans = yield self.query('FREQ:CW?')
+        ans = yield self.query('FREQ?')
 	self.frequency = float(ans)
 #        returnValue(float(ans)*1e-6) # keep things in MHz 
 
     @inlineCallbacks
     def set_frequency(self, frequency):
-        yield self.write('FREQ:CW {} Hz'.format(frequency))
+        yield self.write('FREQ {}'.format(frequency))
 
     @inlineCallbacks
     def get_amplitude(self):
-        ans = yield self.query('POW:AMPL?')
-	self.amplitude = float(ans)
+        ans = yield self.query('AMPL?')
+	self.amplitude = float(ans[:-2])
 #        returnValue(float(ans))
 
     @inlineCallbacks
     def set_amplitude(self, amplitude):
-        yield self.write('POW:AMPL {} DBM'.format(amplitude))
+        yield self.write('AMPL {}DB'.format(amplitude))
 
 
-class HPSignalGeneratorServer(GPIBManagedServer):
-    """Provides basic control for HP signal generators"""
-    deviceWrapper = HPSignalGeneratorWrapper
+class SRSSignalGeneratorServer(GPIBManagedServer):
+    """Provides basic control for SRS signal generators"""
+    deviceWrapper = SRSSignalGeneratorWrapper
     
     def __init__(self, configuration_filename):
         self.configuration_filename = configuration_filename
@@ -77,8 +43,6 @@ class HPSignalGeneratorServer(GPIBManagedServer):
         self.update_state = Signal(self.state_id, "signal: update_state", '(sb)')
         self.update_frequency = Signal(self.frequency_id, "signal: update_frequency", '(sv)')
         self.update_amplitude = Signal(self.amplitude_id, "signal: update_amplitude", '(sv)')
-	dsn = os.getenv('INFLUXDBDSN')
-	self.dbclient = InfluxDBClient.from_DSN(dsn)
 	if self.configuration:
             GPIBManagedServer.__init__(self)
     
@@ -100,17 +64,12 @@ class HPSignalGeneratorServer(GPIBManagedServer):
         dev = self.selectedDevice(c)
         dev.set_configuration(self.instruments[name])
 	dev.instrument_name = name
-	confd = self.instruments[name].__dict__
-	if confd.has_key('dbpoint'):
-            confd['dbpoint'] = None
-        returnValue(str(confd))
+        returnValue(str(self.instruments[name].__dict__))
 
     @setting(10, 'state', state='b', returns='b')
     def state(self, c, state=None):
         dev = self.selectedDevice(c)
-        if state is not None:
-            yield dev.set_state(state)
-        yield dev.get_state()
+	dev.state = True
         yield self.update_state((dev.instrument_name, dev.state))
         returnValue(dev.state)
 
@@ -121,7 +80,6 @@ class HPSignalGeneratorServer(GPIBManagedServer):
             yield dev.set_frequency(frequency)
         yield dev.get_frequency()
         yield self.update_frequency((dev.instrument_name, dev.frequency))
-	self.dbclient.write_points(dev.dbpoint(dev.frequency))
         returnValue(dev.frequency)
 
     @setting(12, 'amplitude', amplitude='v', returns='v')
@@ -147,6 +105,6 @@ class HPSignalGeneratorServer(GPIBManagedServer):
 
 #if __name__ == '__main__':
 #    configuration_name = 'hpetc_signal_generator_config'
-#    __server__ = HPSignalGeneratorServer(configuration_name)
+#    __server__ = SRSSignalGeneratorServer(configuration_name)
 #    from labrad import util
 #    util.runServer(__server__)

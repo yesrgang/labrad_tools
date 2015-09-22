@@ -75,6 +75,7 @@ class TLB6700Control(QtGui.QGroupBox):
                               QtCore.Qt.AlignRight)
         self.layout.addWidget(self.diode_current_box, 3, 1)
         self.setLayout(self.layout)
+	self.setWindowTitle(self.servername + ' control')
         self.setFixedSize(120 + self.spinbox_width, 100)
 
     @inlineCallbacks
