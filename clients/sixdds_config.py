@@ -1,7 +1,7 @@
 class SixDDSConfig(object):
     def __init__(self):
         self.name = 'dds0'
-        self.server_name = 'vagabond_6dds_server'
+        self.server_name = 'yers20_6dds'
         self.update_id = 461017 
 
         self.frequency_stepsize = 1e-2
