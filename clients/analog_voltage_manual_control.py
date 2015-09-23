@@ -143,7 +143,7 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
 class ManyChannels(QtGui.QWidget):
     def __init__(self, reactor, cxn=None):
         QtGui.QDialog.__init__(self)
-        self.channels = ['X Comp. Coil', 'Y Comp. Coil', 'Z Comp. Coil', 'MOT Coil']
+        self.channels = ['Alpha Intensity', 'Beta Intensity', 'X Comp. Coil', 'Y Comp. Coil', 'Z Comp. Coil', 'MOT Coil', 'DACE06', 'DACE07']
         self.reactor = reactor
         self.cxn = cxn
         self.connect()

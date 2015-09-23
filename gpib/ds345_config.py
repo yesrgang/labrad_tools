@@ -18,6 +18,15 @@ class ServerConfig(object):
                                                          def_amplitude=5,
                                                          frequency_range=(10e6, 30e6),
 							 amplitude_range=(-36, 10),
-                                                        )
+                                                        ),
+                            
+			    'ODT Tickle': DeviceConfiguration(
+				                         gpib_device_id='yesr20 GPIB Bus - GPIB0::24',
+                                                         def_state=True, 
+                                                         def_frequency=20.06e6,
+                                                         def_amplitude=0,
+                                                         frequency_range=(1, 30e6),
+							 amplitude_range=(-36, 10),
+                                                        ),
                            }
                        
