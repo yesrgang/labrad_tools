@@ -26,7 +26,7 @@ class ServerConfig(object):
                                                          def_frequency=20.06e6,
                                                          def_amplitude=0,
                                                          frequency_range=(1, 30e6),
-							 amplitude_range=(-36, 10),
+							 amplitude_range=(-36, 20),
                                                         ),
                            }
                        

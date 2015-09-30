@@ -30,8 +30,8 @@ class SequencerConfig(object):
                         'E03': {'name': 'Y Comp. Coil', 'mode': 'auto', 'manual voltage': 0},
                         'E04': {'name': 'Z Comp. Coil', 'mode': 'auto', 'manual voltage': 0},
                         'E05': {'name': 'MOT Coil', 'mode': 'auto', 'manual voltage': 0},
-                        'E06': {'name': 'DACE06', 'mode': 'auto', 'manual voltage': 0},
-                        'E07': {'name': 'DACE07', 'mode': 'auto', 'manual voltage': 0},
+                        'E06': {'name': 'DACE06', 'mode': 'manual', 'manual voltage': -10},
+                        'E07': {'name': 'DACE07', 'mode': 'manual', 'manual voltage': -10},
                         }
 
         self.name_to_key = {d['name']: k for k, d in self.channels.items()}

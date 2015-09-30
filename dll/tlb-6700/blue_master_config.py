@@ -6,7 +6,7 @@ class ServerConfig(object):
         self.max_buffer_length = 64
 	
 	self.current_range = (0., 160.)
-	self.default_current = 158.0
+	self.default_current = 157.0
 	self.ramp_duration = 3.0
 	self.ramp_points = 30
 	
