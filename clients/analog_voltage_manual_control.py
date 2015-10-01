@@ -92,7 +92,7 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
         for s in signal:
             if signal[s]['name'] == self.name:
                 update = signal[s]
-        print update
+        #print update
         if update['mode'] == 'manual':
             self.mode_button.setChecked(1)
             self.mode_button.setText('Manual')
@@ -167,7 +167,15 @@ class ManyChannels(QtGui.QWidget):
             conf.name = c
             w = AnalogVoltageManualControl(conf, reactor, self.cxn)
             self.layout.addWidget(w)
+	    h = w.height()
+	    wid = w.width()
+	print h, wid
+	self.setFixedSize(wid*len(self.channels)+5, h+20)
+	#self.layout.setSpacing(0)
         self.setLayout(self.layout)
+    
+    def closeEvent(self, x):
+        self.reactor.stop()
 
 
 class ControlConfig(object):
