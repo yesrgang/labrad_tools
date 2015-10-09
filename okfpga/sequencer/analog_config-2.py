@@ -24,7 +24,7 @@ class SequencerConfig(object):
             'manual voltage' is number in Volts [-10, 10]
         """
         self.channels = {
-                        'E08': {'name': 'DACE08', 'mode': 'auto', 'manual voltage': 0},
+                        'E08': {'name': 'DACE08', 'mode': 'manual', 'manual voltage': -.5},
                         'E09': {'name': 'DACE09', 'mode': 'auto', 'manual voltage': 0},
                         'E10': {'name': 'DACE10', 'mode': 'auto', 'manual voltage': 0},
                         'E11': {'name': 'DACE11', 'mode': 'auto', 'manual voltage': 0},

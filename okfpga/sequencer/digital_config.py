@@ -68,7 +68,7 @@ class SequencerConfig(object):
                         'C12': {'name': 'TTLC12', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'C13': {'name': 'TTLC13', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'C14': {'name': 'TTLC14', 'mode': 'auto', 'manual state': 0, 'invert': 0},
-                        'C15': {'name': 'TTLC15', 'mode': 'auto', 'manual state': 0, 'invert': 0},
+                        'C15': {'name': 'TTLC15', 'mode': 'manual', 'manual state': 1, 'invert': 0},
 
                         'D00': {'name': 'Alpha AOM', 'mode': 'auto', 'manual state': 0, 'invert': 0},
                         'D01': {'name': 'Alpha Shutter', 'mode': 'auto', 'manual state': 0, 'invert': 0},

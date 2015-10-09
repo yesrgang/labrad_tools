@@ -32,6 +32,10 @@ class DDSServer(SerialDeviceServer):
                 print 'Check set up and restart serial server'
             else: 
                 raise
+#        if self.serial_server is not None:
+#            for name in self.dds.keys():
+#                f = yield self.frequency(0, name)    
+#		print f
     
     def load_configuration(self, configuration):
         for key, value in configuration.__dict__.items():
@@ -70,8 +74,8 @@ class DDSServer(SerialDeviceServer):
             frequency = self.dds[name].frequency
         else:
             self.dds[name].frequency = frequency
-        for c in self.instruction_set(self.dds[name].address, self.dds[name].freg, self.dds[name].ftw()):
-            yield self.serial_server.write(c)
+        for b in self.instruction_set(self.dds[name].address, self.dds[name].freg, self.dds[name].ftw()):
+            yield self.serial_server.write(b)
         yield self.notify_listeners(name)
         returnValue(frequency)
     

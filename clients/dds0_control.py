@@ -1,7 +1,7 @@
 class RFControlConfig(object):
     def __init__(self):
         self.servername = 'yesr20_6dds'
-        self.name = 'dds0'
+        self.name = 'HODT AOM'
         self.update_id = 461100
         
         self.frequency_units = [(6, 'MHz')]

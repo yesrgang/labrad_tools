@@ -108,11 +108,57 @@ class SequencerServer(LabradServer):
         else:
             return signed_ramp_rate + 2**16
 
+#    def _make_sequence(self, sequence):
+#        """ sequence is list of tuples [(duration, {name: logic}), ...] """
+#        # remove unnecessary ramps -> get all the ramp rates. if consequtive ramprates are same, combine!!!
+#        # write necessary ramps in correct order. Q
+#        ba = []
+#        for k, d in sorted(self.channels.items()):
+#            dv = sequence[0][1][d['name']]['v'] 
+#            if dv == 0:
+#                t = sequence[0][0]
+#                n = 0
+#                while sequence[n+1][1][d['name']]['v'] == sequence[n][1][d['name']]['v']:
+#                    t += sequence[n+1][0]
+#                    if n < len(sequence)-2:
+#                        n += 1
+#                    else:
+#                        break
+#                ba += [int(eval(hex(self.ramp_rate(dv, t))) >> i & 0xff) for i in range(0, 16, 8)]
+#                ba += [int(eval(hex(self.time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)]
+#            else:
+#                t = sequence[0][0]
+#                ba += [int(eval(hex(self.ramp_rate(dv, t))) >> i & 0xff) for i in range(0, 16, 8)]
+#                ba += [int(eval(hex(self.time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)]
+#        for m in range(1, len(sequence)):
+#            for k, d in sorted(self.channels.items()):
+#                if float(sequence[m][1][d['name']]['v']) != float(sequence[m-1][1][d['name']]['v']): # we need to change voltage
+#                    dv = sequence[m][1][d['name']]['v'] - sequence[m-1][1][d['name']]['v']
+#                    t = sequence[m][0]
+#                    ba += [int(eval(hex(self.ramp_rate(dv, t))) >> i & 0xff) for i in range(0, 16, 8)]
+#                    ba += [int(eval(hex(self.time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)]
+#                elif sequence[m-1][1][d['name']]['v'] != sequence[m-2][1][d['name']]['v']: # we need to keep voltage
+#                    dv = 0
+#                    t = 0
+#                    n = 0
+#                    while sequence[m+n][1][d['name']]['v'] == sequence[m+n-1][1][d['name']]['v']:
+#                        t += sequence[m+n][0]
+#                        if m + n < len(sequence)-1:
+#                            n += 1
+#                        else:
+#                            break
+#                    ba += [int(eval(hex(self.ramp_rate(dv, t))) >> i & 0xff) for i in range(0, 16, 8)]
+#                    ba += [int(eval(hex(self.time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)]
+#        ba += [0]*12
+#	print 'writing ', len(ba), ' bytes...'
+#        return ba
+    
     def _make_sequence(self, sequence):
         """ sequence is list of tuples [(duration, {name: logic}), ...] """
         # remove unnecessary ramps -> get all the ramp rates. if consequtive ramprates are same, combine!!!
         # write necessary ramps in correct order. Q
         ba = []
+	pts = 0
         for k, d in sorted(self.channels.items()):
             dv = sequence[0][1][d['name']]['v'] 
             if dv == 0:
@@ -131,12 +177,41 @@ class SequencerServer(LabradServer):
                 ba += [int(eval(hex(self.ramp_rate(dv, t))) >> i & 0xff) for i in range(0, 16, 8)]
                 ba += [int(eval(hex(self.time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)]
         for m in range(1, len(sequence)):
-            for k, d in sorted(self.channels.items()):
+            ba_buffer = {}
+            for k, d in sorted(self.channels.items()): # add counter l for multiple linear ramps
                 if float(sequence[m][1][d['name']]['v']) != float(sequence[m-1][1][d['name']]['v']): # we need to change voltage
-                    dv = sequence[m][1][d['name']]['v'] - sequence[m-1][1][d['name']]['v']
-                    t = sequence[m][0]
-                    ba += [int(eval(hex(self.ramp_rate(dv, t))) >> i & 0xff) for i in range(0, 16, 8)]
-                    ba += [int(eval(hex(self.time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)]
+                    if sequence[m][1][d['name']]['type'] == 'linear':
+                        dv = sequence[m][1][d['name']]['v'] - sequence[m-1][1][d['name']]['v']
+                        t = sequence[m][0]
+                        ba += [int(eval(hex(self.ramp_rate(dv, t))) >> i & 0xff) for i in range(0, 16, 8)]
+                        ba += [int(eval(hex(self.time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)]
+                    elif sequence[m][1][d['name']]['type'] == 'exp': 
+                        vi = float(sequence[m-1][1][d['name']]['v'])
+			vf = float(sequence[m][1][d['name']]['v'])
+			t_tot = float(sequence[m][0])
+			pts = int(sequence[m][1][d['name']]['pts'])
+			tau = float(sequence[m][1][d['name']]['tau'])
+			a = (vf - vi) / (np.exp(-t_tot/tau) - 1)
+			c = vi - a
+			continuous = lambda t: a*np.exp(-t/tau) + c
+			T = np.linspace(0, t_tot, pts+1)
+			dT = [t_tot/float(pts-1)]*pts
+			V = continuous(T)
+			print 'points', V
+			dV = [V[i+1]-V[i] for i in range(pts)][:-1]
+			print 'dVs', dV
+			ba += [int(eval(hex(self.ramp_rate(dV[0], dT[0]))) >> i & 0xff) for i in range(0, 16, 8)]
+			ba += [int(eval(hex(self.time_to_ticks(dT[0]))) >> i & 0xff) for i in range(0, 32, 8)]
+			ba_buffer[d['name']] = []
+
+                        total_ticks = self.time_to_ticks(t_tot)
+			dT_ticks = [self.time_to_ticks(dt) for dt in dT]
+			dT_ticks[-1] += total_ticks - pts*dT_ticks[0]
+			print 'len', len(dV)
+
+			for dt, dt_t, dv in zip(dT[1:], dT_ticks[1:], dV[1:]):
+                            ba_buffer[d['name']] += [int(eval(hex(self.ramp_rate(dv, dt))) >> i & 0xff) for i in range(0, 16, 8)]
+                            ba_buffer[d['name']] += [int(eval(hex(dt_t)) >> i & 0xff) for i in range(0, 32, 8)]
                 elif sequence[m-1][1][d['name']]['v'] != sequence[m-2][1][d['name']]['v']: # we need to keep voltage
                     dv = 0
                     t = 0
@@ -149,7 +224,12 @@ class SequencerServer(LabradServer):
                             break
                     ba += [int(eval(hex(self.ramp_rate(dv, t))) >> i & 0xff) for i in range(0, 16, 8)]
                     ba += [int(eval(hex(self.time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)]
-        ba += [0]*12
+	    cont = True
+	    for i in range(pts-1):
+	    	for k in sorted(ba_buffer.keys()):
+                    ba += ba_buffer[k][6*i:6*(i+1)]
+		    print k, ba_buffer[k][6*i:6*(i+1)]
+        ba += [0]*24
 	print 'writing ', len(ba), ' bytes...'
         return ba
     

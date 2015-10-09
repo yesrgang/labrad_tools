@@ -36,7 +36,7 @@ class DDSConfig(object):
 
         self.update_id = 698017
         self.dds = {
-            'dds0': AD9854(
+            '813 x AOM': AD9854(
                 address=0,
                 state=True,
                 frequency=80e6, # [Hz]
@@ -47,16 +47,18 @@ class DDSConfig(object):
                 update_parameters=['state', 'frequency', 'amplitude']
                 ),
             
-            'dds1': AD9854(
+            '813 y AOM': AD9854(
                 address=1,
                 state=True,
                 frequency=80e6, # [Hz]
                 frequency_range=(1e3, 140e6), # [Hz]
                 amplitude=1,
                 amplitude_range=(0, 1),
-                sysclk=300e6),
+                sysclk=300e6,
+                update_parameters=['state', 'frequency', 'amplitude'],
+		),
             
-            'dds2': AD9854(
+            '813 z AOM': AD9854(
                 address=2,
                 state=True,
                 frequency=80e6, # [Hz]
@@ -67,10 +69,10 @@ class DDSConfig(object):
                 update_parameters=['state', 'frequency', 'amplitude'],
                 ),
             
-            'dds3': AD9854(
+            'HODT AOM': AD9854(
                 address=3,
                 state=True,
-                frequency=80e6, # [Hz]
+                frequency=30e6, # [Hz]
                 frequency_range=(1e3, 140e6), # [Hz]
                 amplitude=1,
                 amplitude_range=(0, 1),
@@ -78,10 +80,10 @@ class DDSConfig(object):
                 update_parameters=['state', 'frequency', 'amplitude'],
                 ),
             
-            'dds4': AD9854(
+            'VODT AOM': AD9854(
                 address=4,
                 state=True,
-                frequency=80e6, # [Hz]
+                frequency=30.2e6, # [Hz]
                 frequency_range=(1e3, 140e6), # [Hz]
                 amplitude=1,
                 amplitude_range=(0, 1),
@@ -89,10 +91,10 @@ class DDSConfig(object):
                 update_parameters=['state', 'frequency', 'amplitude'],
                 ),
             
-            'dds5': AD9854(
+            'dimple AOM': AD9854(
                 address=5,
                 state=True,
-                frequency=80e6, # [Hz]
+                frequency=25.6e6, # [Hz]
                 frequency_range=(1e3, 140e6), # [Hz]
                 amplitude=1,
                 amplitude_range=(0, 1),
