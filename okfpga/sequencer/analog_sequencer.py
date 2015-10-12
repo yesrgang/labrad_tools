@@ -121,14 +121,30 @@ class AnalogSequencerServer(LabradServer):
             return signed_ramp_rate + 2**16
 
     def make_sequence(self, board, sequence):
-        """ sequence is list of tuples [(duration, {name: logic}), ...] """
+        """ sequence is list of tuples [(duration, {iden: {ramp_info}}), ...] """
         # remove unnecessary ramps -> get all the ramp rates. if consequtive ramprates are same, combine!!!
         # write necessary ramps in correct order. 
 
         # peel away unnecessary channels
         for s in sequence:
+            peeled_d = {}
             d = s[1]
-            peeled_cd = {c.key: d[c.key] for c in board.channels.values()}
+            for iden, ramp_d in d:
+                channel = self.id2channel(iden)
+                if channel:
+                    peeled_d[channel.key] = ramp_d
+            s[1] = peeled_d
+
+        # make list [(time, {name: {dt, vi, vf, ...}})]
+        T = 0
+        for s in sequence:
+            s[0] = T
+            T += s[0]
+            for  r in s[1].values():
+                r['dt'] = s[0]
+
+        # ramps take {dt, vi, vf, type, params} to [
+
 
         # make list of linear ramps [(time, {id, dt, dv})]
 
