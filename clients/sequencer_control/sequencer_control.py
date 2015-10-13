@@ -363,9 +363,9 @@ class ExpRamp(object):
     def set_parameters(self, p):
         self.p = p
         if p is not None:
-            self.A = (p['vf'] - p['vi'])/(np.exp(p['t']/p['tau']) - 1)
+            self.A = (p['vf'] - p['vi'])/(np.exp(-p['t']/p['tau']) - 1)
             self.C = p['vi'] - self.A
-            self.continuous = lambda t: G(0, p['t'])(t)*(self.A * np.exp(t/p['tau']) + self.C)
+            self.continuous = lambda t: G(0, p['t'])(t)*(self.A * np.exp(-t/p['tau']) + self.C)
 
     def get_points(self):
         num_points = int(self.p['pts'])
@@ -427,9 +427,9 @@ class AnalogArray(FigureCanvas):
         elif p['type'] == 'linear2':
             return lambda t: G2(0-1e-9, p['t']+1e-9)(t)*(p['vi']+(p['vf']-p['vi'])/p['t']*t)
         elif p['type'] == 'exp':
-            A = (p['vf'] - p['vi'])/(np.exp(p['t']/p['tau']) - 1)
+            A = (p['vf'] - p['vi'])/(np.exp(-p['t']/p['tau']) - 1)
             C = p['vi'] - A
-            continuous = lambda t: G(0-1e-9, p['t']+1e-9)(t)*(A * np.exp(t/p['tau']) + C)
+            continuous = lambda t: G(0-1e-9, p['t']+1e-9)(t)*(A * np.exp(-t/p['tau']) + C)
             T = np.linspace(0, p['t'], p['pts'])
             V = continuous(T)
             lp2 = [{'vf': V[i+1], 'vi': V[i], 't': p['t']/float(p['pts']-1), 'type': 'linear'} for i in range(int(p['pts'])-1)]
@@ -530,9 +530,9 @@ class ExpRamp(object):
     def set_parameters(self, p):
         self.p = p
         if p is not None:
-            self.A = (p['vf'] - p['vi'])/(np.exp(p['t']/p['tau']) - 1)
+            self.A = (p['vf'] - p['vi'])/(np.exp(-p['t']/p['tau']) - 1)
             self.C = p['vi'] - self.A
-            self.continuous = lambda t: G(0, p['t'])(t)*(self.A * np.exp(t/p['tau']) + self.C)
+            self.continuous = lambda t: G(0, p['t'])(t)*(self.A * np.exp(-t/p['tau']) + self.C)
 
     def get_points(self):
         num_points = int(self.p['pts'])
@@ -969,6 +969,7 @@ class Sequencer(QtGui.QWidget):
         self.setLayout(self.layout)
         self.set_sizes()
         self.connect_widgets()
+#        self.setStyleSheet('QWidget {background-color: yellow}')
 
 
     def set_sizes(self):
