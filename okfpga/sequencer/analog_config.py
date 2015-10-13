@@ -20,9 +20,9 @@ class DACChannel(object):
     def __init__(self, **kwargs):
         for kw in kwargs:
             setattr(self, kw, kwargs[kw])
-	self.key = name+'@'+loc
+	self.key = self.name+'@'+self.loc
 
-class SequencerConfig(object):
+class AnalogSequencerConfig(object):
     def __init__(self):
         self.update_id = 698023
 	self.mode = 'idle'
@@ -36,8 +36,8 @@ class SequencerConfig(object):
                     DACChannel(loc='E03', name='Y Comp. Coil', mode='auto', manual_voltage=0),
                     DACChannel(loc='E04', name='Z Comp. Coil', mode='auto', manual_voltage=0),
                     DACChannel(loc='E05', name='MOT Coil', mode='auto', manual_voltage=0),
-                    DACChannel(loc='E06', name='HODT', mode='auto', manual_voltage=-10),
-                    DACChannel(loc='E07', name='dimple', mode='auto', manual_voltage=-10),
+                    DACChannel(loc='E06', name='DACE06', mode='auto', manual_voltage=-10),
+                    DACChannel(loc='E07', name='DACE07', mode='auto', manual_voltage=-10),
 		    ],
                  ),
             'D': DACBoard(
@@ -55,7 +55,7 @@ class SequencerConfig(object):
                 ),
             }
 
-        self.ramps = {'lin': lin_ramp, 'exp', exp_ramp}
+	self.ramps = {'lin': lin_ramp, 'exp': exp_ramp}
 
 def lin_ramp(s):
     T, loc, p = s

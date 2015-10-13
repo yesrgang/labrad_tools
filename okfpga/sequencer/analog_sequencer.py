@@ -43,9 +43,9 @@ class AnalogSequencerServer(LabradServer):
             setattr(self, key, value)
 
     def initServer(self):
-        for board in self.boards:
+        for board in self.boards.values():
             success = self.initialize_board(board)
-	        if not success:
+            if not success:
                 self.boards.pop(board)
         self.initialize_outputs()
 
@@ -65,14 +65,14 @@ class AnalogSequencerServer(LabradServer):
                 prog = board.xem.ConfigureFPGA(board.bit_file)
                 if prog:
                    print "unable to program sequencer"
-				   return False
+                   return False
                 return True
         return False
 
     def initialize_outputs(self):
-        for b in self.boards:
+        for b in self.boards.values():
             self.write_channel_modes(b)
-            for c in b.channels:
+            for c in b.channels.values():
                 self.write_manual_voltage(c)
 
     def id2channel(self, channel_id):
@@ -176,7 +176,7 @@ class AnalogSequencerServer(LabradServer):
                 channels[k] = c.__dict__
         return str(channels)
 
-    @setting(07, 'program sequence', sequence='s')
+    @setting(07, 'run sequence', sequence='s')
     def run_sequence(self, c, sequence):
         sequence = json.loads(sequence)
         self.program_sequence(sequence)
@@ -235,7 +235,11 @@ class AnalogSequencerServer(LabradServer):
 
     @setting(10, 'notify listeners')
     def notify_listeners(self, c):
-        self.update(json.dumps(self.channels))
+        d = {}
+	for b in self.boards.values():
+            for c in b.channels.values():
+                d[c.name] = c.__dict__
+        self.update(json.dumps(d))
 
 if __name__ == "__main__":
     config_name = 'analog_config'
