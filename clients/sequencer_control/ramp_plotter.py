@@ -17,8 +17,8 @@ import matplotlib.pyplot as plt
 # start with sequence 
 seq = [{'type': 'exp', 'dt': 1.0, 'vi': 2.0, 'vf': 5, 'tau': .5, 'pts': 50}, 
        {'type': 'exp', 'dt': 1.0, 'vf': 0, 'tau': -.5, 'pts': 50},
-       {'type': 'sub', 'seq': [{'type': 'exp', 'dt': 1.0, 'vf': 5, 'tau': .5, 'pts': 50}, 
-                                {'type': 'exp', 'dt': 1.0, 'vf': 2, 'tau': -.5, 'pts': 50}]},
+#       {'type': 'sub', 'seq': [{'type': 'exp', 'dt': 1.0, 'vf': 5, 'tau': .5, 'pts': 50}, 
+#                                {'type': 'exp', 'dt': 1.0, 'vf': 2, 'tau': -.5, 'pts': 50}]},
       ]
 
 class RampMaker(object):
@@ -102,7 +102,9 @@ class ParameterWidget(QtGui.QWidget):
         self.layout = QtGui.QGridLayout()
         self.pboxes = {}
         if self.ramp_type is 'sub':
-            label, self.pboxes['dt'] = self.make_pbox(*dict(self.parameters)['dt'])
+            print dict(self.parameters)['dt']
+            r, s, n = dict(self.parameters)['dt']
+            label, self.pboxes['dt'] = self.make_pbox('dt', r, s, n)
             self.subbox = QtGui.QTextEdit()
             self.subbox.setLineWrapMode(0)
             self.subbox.setFixedWidth(80+30+2)
@@ -139,6 +141,7 @@ class ParameterWidget(QtGui.QWidget):
         self.setLayout(self.layout)
 
     def make_pbox(self, p, r, s, n):
+        print p, r, s, n
         pbox = SuperSpinBox(r, s, n)
         pbox.display(1)
         label = QtGui.QLabel(p+': ')
@@ -146,6 +149,7 @@ class ParameterWidget(QtGui.QWidget):
         label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         pbox.setFixedWidth(80)
         pbox.setFixedHeight(20)
+        return p, pbox
 
 
 class RampColumn(QtGui.QGroupBox):

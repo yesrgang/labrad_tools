@@ -14,10 +14,7 @@ class DACBoard(object):
         """ non-defaults """
         for kw in kwargs:
             setattr(self, kw, kwargs[kw])
-
 	self.channels = {c.key: c for c in self.channels}
-        
-	self.name_to_key = {d['name']: k for k, d in self.channels.items()}
 
 class DACChannel(object):
     def __init__(self, **kwargs):
@@ -57,6 +54,25 @@ class SequencerConfig(object):
 		    ],
                 ),
             }
+
+        self.ramps = {'lin': lin_ramp, 'exp', exp_ramp}
+
+def lin_ramp(s):
+    T, loc, p = s
+    dv = p['vf'] - p['vi']
+    return [(T, loc, {'dv': dv, 'dt': p['dt']})]
+
+def exp_ramp(s):
+    T, loc, p = s
+    a = (p['vf'] - p['vi']) / (np.exp(-p['dt']/p['tau']) - 1)
+    c = p['vi'] - a
+    continuous = lambda t: a*np.exp(-t/p['tau']) + c
+    t_pts = np.linspace(0, p['dt'], p['pts']+1)
+    dt = p['dt']/float(p['pts'])
+    V = continuous(t_pts)
+    dV = [V[i+1]-V[i] for i in range(p['pts'])]
+    return [(T+tp, loc, {'dv': dv, 'dt': dt}) for tp, dv in zip(t_pts[:-1], dV)]
+
 	
 #	self.channels = {}
 #	for b in self.boards:
