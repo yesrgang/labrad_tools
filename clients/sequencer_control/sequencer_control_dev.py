@@ -31,12 +31,12 @@ def merge_dicts(*dictionaries):
         merged_dictionary.update(d)
     return merged_dictionary
 
-class Spacer(QtGui.QFrame):
-    def __init__(self, height, width):
-        super(Spacer, self).__init__(None)
-        self.setFixedSize(width, height)
-        self.setFrameShape(1)
-        self.setLineWidth(0)
+#class Spacer(QtGui.QFrame):
+#    def __init__(self, height, width):
+#        super(Spacer, self).__init__(None)
+#        self.setFixedSize(width, height)
+#        self.setFrameShape(1)
+#        self.setLineWidth(0)
 
 class BrowseAndSave(QtGui.QWidget):
     def __init__(self):
@@ -54,125 +54,125 @@ class BrowseAndSave(QtGui.QWidget):
         self.layout.addWidget(self.save_button)
         self.setLayout(self.layout)
 
-class SequencerButton(QtGui.QFrame):
-    def __init__(self, initial_state):
-        super(SequencerButton, self).__init__(None)
-        self.setFrameShape(2)
-        self.setLineWidth(1)
-        self.on_color = '#ff69b4'
-        self.off_color = '#ffffff'
-        if initial_state:
-            self.setChecked(1)
-        else:
-            self.setChecked(0)
-    
-    def setChecked(self, state):
-        if state:
-            self.setFrameShadow(0x0030)
-            self.setStyleSheet('QWidget {background-color: %s}' % self.on_color)
-            self.is_checked = True
-        else:
-            self.setFrameShadow(0x0020)
-            self.setStyleSheet('QWidget {background-color: %s}' % self.off_color)
-            self.is_checked = False
-
-    def isChecked(self):
-        if self.is_checked:
-            return True
-        else:
-            return False
-
-    def mousePressEvent(self, x):
-        if self.is_checked:
-            self.setChecked(False)
-        else:
-            self.setChecked(True)
-
-class DigitalColumn(QtGui.QWidget):
-    def __init__(self, channels):
-        super(DigitalColumn, self).__init__(None)
-        self.channels = channels
-        self.populate()
-
-    def populate(self):
-        units =  [(0, 's'), (-3, 'ms'), (-6, 'us'), (-9, 'ns')]
-        self.buttons = {n: SequencerButton(0) for n in self.channels.values()}
-
-        self.layout = QtGui.QVBoxLayout()
-        self.layout.setSpacing(0)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        for i, (c, n) in enumerate(sorted(self.channels.items())):
-            if not i%16 and i != 0:
-                self.layout.addWidget(Spacer(sbheight/2, sbwidth))
-            self.layout.addWidget(self.buttons[n])
-            self.buttons[n].on_color = colors[i%len(colors)]
-        self.layout.addWidget(QtGui.QWidget())
-        self.setLayout(self.layout)
-        height = 0
-        for i in range(self.layout.count()):
-            height += self.layout.itemAt(i).widget().height()
-
-    def get_logic(self):
-        return {n: int(self.buttons[n].isChecked()) for n in self.channels.values()}
-
-    def set_logic(self, logic):
-        for name, state in logic.items():
-            if name in self.channels.values():
-                self.buttons[name].setChecked(state)
-
-class DigitalArray(QtGui.QWidget):
-    def __init__(self, channels):
-        super(DigitalArray, self).__init__(None)
-        self.channels = channels
-        self.populate()
-
-    def populate(self):
-        self.columns = [DigitalColumn(self.channels) for i in range(max_columns)]
-        self.layout = QtGui.QHBoxLayout()
-        for lc in self.columns:
-            self.layout.addWidget(lc)
-        self.layout.setSpacing(0)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(self.layout)
-        height = self.columns[0].height()
-        width = self.columns[0].width()*10
-
-    def display_sequence(self, sequence): 
-        for c in self.columns[::-1]:
-            c.hide()
-        for (t, s), c in zip(sequence, self.columns):
-            c.show()
-            c.set_logic(s)
-
-class NameBox(QtGui.QLabel):
-    clicked = QtCore.pyqtSignal()
-    def __init__(self, name):
-        super(NameBox, self).__init__(None)
-        self.setText(name)
-        self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter  )
-        self.name = name.split(': ')[1]
-
-    def mousePressEvent(self, x):
-        self.clicked.emit()
-
-class DigitalNameColumn(QtGui.QWidget):
-    def __init__(self, channels):
-        super(DigitalNameColumn, self).__init__(None)
-        self.channels = channels
-        self.populate()
-
-    def populate(self):
-        self.labels = {n: NameBox(c+': '+n) for c, n in self.channels.items()}
-        self.layout = QtGui.QVBoxLayout()
-        self.layout.setSpacing(0)
-        self.layout.setContentsMargins(10, 0, 0, 0)
-
-        for i, (c, n) in enumerate(sorted(self.channels.items())):
-            if not i%16 and i != 0:
-                self.layout.addWidget(Spacer(sbheight/2, nlwidth))
-            self.layout.addWidget(self.labels[n])
-        self.layout.addWidget(QtGui.QWidget())
-        self.setLayout(self.layout)
+#class SequencerButton(QtGui.QFrame):
+#    def __init__(self, initial_state):
+#        super(SequencerButton, self).__init__(None)
+#        self.setFrameShape(2)
+#        self.setLineWidth(1)
+#        self.on_color = '#ff69b4'
+#        self.off_color = '#ffffff'
+#        if initial_state:
+#            self.setChecked(1)
+#        else:
+#            self.setChecked(0)
+#    
+#    def setChecked(self, state):
+#        if state:
+#            self.setFrameShadow(0x0030)
+#            self.setStyleSheet('QWidget {background-color: %s}' % self.on_color)
+#            self.is_checked = True
+#        else:
+#            self.setFrameShadow(0x0020)
+#            self.setStyleSheet('QWidget {background-color: %s}' % self.off_color)
+#            self.is_checked = False
+#
+#    def isChecked(self):
+#        if self.is_checked:
+#            return True
+#        else:
+#            return False
+#
+#    def mousePressEvent(self, x):
+#        if self.is_checked:
+#            self.setChecked(False)
+#        else:
+#            self.setChecked(True)
+#
+#class DigitalColumn(QtGui.QWidget):
+#    def __init__(self, channels):
+#        super(DigitalColumn, self).__init__(None)
+#        self.channels = channels
+#        self.populate()
+#
+#    def populate(self):
+#        units =  [(0, 's'), (-3, 'ms'), (-6, 'us'), (-9, 'ns')]
+#        self.buttons = {n: SequencerButton(0) for n in self.channels.values()}
+#
+#        self.layout = QtGui.QVBoxLayout()
+#        self.layout.setSpacing(0)
+#        self.layout.setContentsMargins(0, 0, 0, 0)
+#        for i, (c, n) in enumerate(sorted(self.channels.items())):
+#            if not i%16 and i != 0:
+#                self.layout.addWidget(Spacer(sbheight/2, sbwidth))
+#            self.layout.addWidget(self.buttons[n])
+#            self.buttons[n].on_color = colors[i%len(colors)]
+#        self.layout.addWidget(QtGui.QWidget())
+#        self.setLayout(self.layout)
+#        height = 0
+#        for i in range(self.layout.count()):
+#            height += self.layout.itemAt(i).widget().height()
+#
+#    def get_logic(self):
+#        return {n: int(self.buttons[n].isChecked()) for n in self.channels.values()}
+#
+#    def set_logic(self, logic):
+#        for name, state in logic.items():
+#            if name in self.channels.values():
+#                self.buttons[name].setChecked(state)
+#
+#class DigitalArray(QtGui.QWidget):
+#    def __init__(self, channels):
+#        super(DigitalArray, self).__init__(None)
+#        self.channels = channels
+#        self.populate()
+#
+#    def populate(self):
+#        self.columns = [DigitalColumn(self.channels) for i in range(max_columns)]
+#        self.layout = QtGui.QHBoxLayout()
+#        for lc in self.columns:
+#            self.layout.addWidget(lc)
+#        self.layout.setSpacing(0)
+#        self.layout.setContentsMargins(0, 0, 0, 0)
+#        self.setLayout(self.layout)
+#        height = self.columns[0].height()
+#        width = self.columns[0].width()*10
+#
+#    def display_sequence(self, sequence): 
+#        for c in self.columns[::-1]:
+#            c.hide()
+#        for (t, s), c in zip(sequence, self.columns):
+#            c.show()
+#            c.set_logic(s)
+#
+#class NameBox(QtGui.QLabel):
+#    clicked = QtCore.pyqtSignal()
+#    def __init__(self, name):
+#        super(NameBox, self).__init__(None)
+#        self.setText(name)
+#        self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter  )
+#        self.name = name.split(': ')[1]
+#
+#    def mousePressEvent(self, x):
+#        self.clicked.emit()
+#
+#class DigitalNameColumn(QtGui.QWidget):
+#    def __init__(self, channels):
+#        super(DigitalNameColumn, self).__init__(None)
+#        self.channels = channels
+#        self.populate()
+#
+#    def populate(self):
+#        self.labels = {n: NameBox(c+': '+n) for c, n in self.channels.items()}
+#        self.layout = QtGui.QVBoxLayout()
+#        self.layout.setSpacing(0)
+#        self.layout.setContentsMargins(10, 0, 0, 0)
+#
+#        for i, (c, n) in enumerate(sorted(self.channels.items())):
+#            if not i%16 and i != 0:
+#                self.layout.addWidget(Spacer(sbheight/2, nlwidth))
+#            self.layout.addWidget(self.labels[n])
+#        self.layout.addWidget(QtGui.QWidget())
+#        self.setLayout(self.layout)
 
 class DurationRow(QtGui.QWidget):
     def __init__(self):
@@ -231,67 +231,67 @@ class AddDltRow(QtGui.QWidget):
         for (t, s), b in zip(sequence, self.buttons):
             b.show()
 
-class DigitalSequencer(QtGui.QWidget):
-    def __init__(self, channels):
-        super(DigitalSequencer, self).__init__(None)
-        self.channels = channels
-        self.populate()
-
-    def populate(self):
-        self.name_column = DigitalNameColumn(self.channels)
-        self.name_column.scroll_area = QtGui.QScrollArea()
-        self.name_column.scroll_area.setWidget(self.name_column)
-        self.name_column.scroll_area.setWidgetResizable(True)
-        self.name_column.scroll_area.setHorizontalScrollBarPolicy(1)
-        self.name_column.scroll_area.setVerticalScrollBarPolicy(1)
-        self.name_column.scroll_area.setFrameShape(0)
-
-        self.array = DigitalArray(self.channels)
-        self.array.scroll_area = QtGui.QScrollArea()
-        self.array.scroll_area.setWidget(self.array)
-        self.array.scroll_area.setWidgetResizable(True)
-        self.array.scroll_area.setHorizontalScrollBarPolicy(1)
-        self.array.scroll_area.setVerticalScrollBarPolicy(1)
-        self.array.scroll_area.setFrameShape(0)
-
-        self.vscroll = QtGui.QScrollArea()
-        self.vscroll.setWidget(QtGui.QWidget())
-        self.vscroll.setHorizontalScrollBarPolicy(1)
-        self.vscroll.setVerticalScrollBarPolicy(2)
-        self.vscroll.setFrameShape(0)
-        
-        self.layout = QtGui.QHBoxLayout()
-        self.layout.addWidget(self.name_column.scroll_area)
-        self.layout.addWidget(self.array.scroll_area)
-        self.layout.addWidget(self.vscroll)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.setSpacing(0)
-        self.setLayout(self.layout)
-
-        self.connect_widgets()
-
-    def display_sequence(self, sequence):
-        self.array.display_sequence(sequence)
-
-#    def connect_widgets(self):
-#        self.vscroll.verticalScrollBar().valueChanged.connect(self.adjust_for_vscroll)
+#class DigitalSequencer(QtGui.QWidget):
+#    def __init__(self, channels):
+#        super(DigitalSequencer, self).__init__(None)
+#        self.channels = channels
+#        self.populate()
 #
-#    def adjust_for_vscroll(self):
-#        val = self.vscroll.verticalScrollBar().value()
-#        self.array.scroll_area.verticalScrollBar().setValue(val)
-#        self.name_column.scroll_area.verticalScrollBar().setValue(val)
-    
-    def connect_widgets(self):
-        self.vscrolls = [self.name_column.scroll_area.verticalScrollBar(), self.array.scroll_area.verticalScrollBar(), self.vscroll.verticalScrollBar()]
-        for vs in self.vscrolls:
-            vs.valueChanged.connect(self.adjust_for_vscroll(vs))
-
-    def adjust_for_vscroll(self, scrolled):
-        def afv():
-            val = scrolled.value()
-            for vs in self.vscrolls:
-                vs.setValue(val)
-        return afv
+#    def populate(self):
+#        self.name_column = DigitalNameColumn(self.channels)
+#        self.name_column.scroll_area = QtGui.QScrollArea()
+#        self.name_column.scroll_area.setWidget(self.name_column)
+#        self.name_column.scroll_area.setWidgetResizable(True)
+#        self.name_column.scroll_area.setHorizontalScrollBarPolicy(1)
+#        self.name_column.scroll_area.setVerticalScrollBarPolicy(1)
+#        self.name_column.scroll_area.setFrameShape(0)
+#
+#        self.array = DigitalArray(self.channels)
+#        self.array.scroll_area = QtGui.QScrollArea()
+#        self.array.scroll_area.setWidget(self.array)
+#        self.array.scroll_area.setWidgetResizable(True)
+#        self.array.scroll_area.setHorizontalScrollBarPolicy(1)
+#        self.array.scroll_area.setVerticalScrollBarPolicy(1)
+#        self.array.scroll_area.setFrameShape(0)
+#
+#        self.vscroll = QtGui.QScrollArea()
+#        self.vscroll.setWidget(QtGui.QWidget())
+#        self.vscroll.setHorizontalScrollBarPolicy(1)
+#        self.vscroll.setVerticalScrollBarPolicy(2)
+#        self.vscroll.setFrameShape(0)
+#        
+#        self.layout = QtGui.QHBoxLayout()
+#        self.layout.addWidget(self.name_column.scroll_area)
+#        self.layout.addWidget(self.array.scroll_area)
+#        self.layout.addWidget(self.vscroll)
+#        self.layout.setContentsMargins(0, 0, 0, 0)
+#        self.layout.setSpacing(0)
+#        self.setLayout(self.layout)
+#
+#        self.connect_widgets()
+#
+#    def display_sequence(self, sequence):
+#        self.array.display_sequence(sequence)
+#
+##    def connect_widgets(self):
+##        self.vscroll.verticalScrollBar().valueChanged.connect(self.adjust_for_vscroll)
+##
+##    def adjust_for_vscroll(self):
+##        val = self.vscroll.verticalScrollBar().value()
+##        self.array.scroll_area.verticalScrollBar().setValue(val)
+##        self.name_column.scroll_area.verticalScrollBar().setValue(val)
+#    
+#    def connect_widgets(self):
+#        self.vscrolls = [self.name_column.scroll_area.verticalScrollBar(), self.array.scroll_area.verticalScrollBar(), self.vscroll.verticalScrollBar()]
+#        for vs in self.vscrolls:
+#            vs.valueChanged.connect(self.adjust_for_vscroll(vs))
+#
+#    def adjust_for_vscroll(self, scrolled):
+#        def afv():
+#            val = scrolled.value()
+#            for vs in self.vscrolls:
+#                vs.setValue(val)
+#        return afv
 
 def H(x):
     return 0.5*(np.sign(x)+1)
