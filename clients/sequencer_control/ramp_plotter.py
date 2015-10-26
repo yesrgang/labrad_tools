@@ -15,10 +15,10 @@ from matplotlib.figure import Figure
 import numpy as np
 import matplotlib.pyplot as plt
 # start with sequence 
-seq = [{'type': 'exp', 'dt': 1.0, 'vi': 2.0, 'vf': 5, 'tau': .5, 'pts': 50}, 
-       {'type': 'exp', 'dt': 1.0, 'vf': 0, 'tau': -.5, 'pts': 50},
-#       {'type': 'sub', 'seq': [{'type': 'exp', 'dt': 1.0, 'vf': 5, 'tau': .5, 'pts': 50}, 
-#                                {'type': 'exp', 'dt': 1.0, 'vf': 2, 'tau': -.5, 'pts': 50}]},
+seq = [{'type': 'exp', 'dt': 1.0, 'vi': 2.0, 'vf': 5, 'tau': .5, 'pts': 5}, 
+       {'type': 'exp', 'dt': 1.0, 'vf': 0, 'tau': -.5, 'pts': 5},
+       {'type': 'sub', 'seq': [{'type': 'exp', 'dt': 1.0, 'vf': 5, 'tau': .5, 'pts': 5}, 
+                                {'type': 'exp', 'dt': 1.0, 'vf': 2, 'tau': -.5, 'pts': 5}]},
       ]
 
 class RampMaker(object):
@@ -79,10 +79,10 @@ class ExpRamp(object):
         sseq = [{'type': 'lin', 'ti': ti, 'tf': tf, 'vi': vi, 'vf': vf} for ti, tf, vi, vf in zip(t_pts[:-1], t_pts[1:], v_pts[:-1], v_pts[1:])]
         self.v = lambda t: sum([LinRamp(ss).v(t) for ss in sseq])
 
-#
-#ramp = RampMaker(seq)
-#plt.plot(*ramp.get_points())
-#plt.show()
+
+ramp = RampMaker(seq)
+plt.plot(*ramp.get_points())
+plt.show()
 
 """ 
 Work on analog voltage editor
@@ -102,7 +102,6 @@ class ParameterWidget(QtGui.QWidget):
         self.layout = QtGui.QGridLayout()
         self.pboxes = {}
         if self.ramp_type is 'sub':
-            print dict(self.parameters)['dt']
             r, s, n = dict(self.parameters)['dt']
             label, self.pboxes['dt'] = self.make_pbox('dt', r, s, n)
             self.subbox = QtGui.QTextEdit()
@@ -111,29 +110,17 @@ class ParameterWidget(QtGui.QWidget):
             self.subbox.setFixedHeight(4*20)
             self.subbox.setHorizontalScrollBarPolicy(1)
             self.subbox.setVerticalScrollBarPolicy(1)
-            self.subbox.setText()
+            self.subbox.setText('')
             self.edit_button = QtGui.QPushButton('Edit')
             self.layout.addWidget(self.subbox)
             self.layout.addWidget(self.edit_button)
 
         else:
-            for i, (p, r, s, n) in enumerate(self.parameters):
+            for i, (p,( r, s, n)) in enumerate(self.parameters):
                 label, self.pboxes[p] = self.make_pbox(*(p, r, s, n))
-                self.layout.addWidget(label, i, 0)
+                self.layout.addWidget(QtGui.QLabel(label), i, 0)
                 self.layout.addWidget(self.pboxes[p], i, 1)
         self.setFixedWidth(80+30+4)
-
-#        if not len(self.parameters): # if ramp is 'subom'
-#            self.subbox = QtGui.QTextEdit()
-#            self.subbox.setLineWrapMode(0)
-#            self.subbox.setFixedWidth(80+30+2)
-#            self.subbox.setFixedHeight(4*20)
-#            self.subbox.setHorizontalScrollBarPolicy(1)
-#            self.subbox.setVerticalScrollBarPolicy(1)
-#            self.subbox.setText()
-#            self.edit_button = QtGui.QPushButton('Edit')
-#            self.layout.addWidget(self.subbox)
-#            self.layout.addWidget(self.edit_button)
 
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -141,7 +128,6 @@ class ParameterWidget(QtGui.QWidget):
         self.setLayout(self.layout)
 
     def make_pbox(self, p, r, s, n):
-        print p, r, s, n
         pbox = SuperSpinBox(r, s, n)
         pbox.display(1)
         label = QtGui.QLabel(p+': ')
@@ -220,8 +206,13 @@ class RampColumn(QtGui.QGroupBox):
         self.ramp_select.setCurrentIndex(rs_def_index)
 
     def select_from_stack(self):
-        ramp_type = str(self.ramp_select.currentText())
-        self.stack.setCurrentWidget(self.parameter_widgets[ramp_type])
+#        prev_ramp_type = self.ramp_type
+        self.ramp_type = str(self.ramp_select.currentText())
+#        for p in self.parameter_widgets[prev_ramp_type].parameters:
+#            try:
+#                self.parameterwidgets[self.ramp_type].
+
+        self.stack.setCurrentWidget(self.parameter_widgets[self.ramp_type])
         print self.get_ramp()
 
     def get_ramp(self):
@@ -248,6 +239,39 @@ class RampTable(QtGui.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
 
         self.setLayout(self.layout)
+        
+available_ramps = {
+                   's': [
+                        ('vf', ([-10, 10], [(0, 'V'), (-3, 'mV')], 3)),
+                        ('dt', ([1e-6, 50], [(0, 's'), (-3, 'ms'), (-6, 'us')], 1)), 
+                        ],
+                   'lin': [
+                        ('vf', ([-10, 10], [(0, 'V'), (-3, 'mV')], 3)),
+                        ('dt', ([1e-6, 50], [(0, 's'), (-3, 'ms'), (-6, 'us')], 1)), 
+                        ],
+                   'slin': [
+                        ('vi', ([-10, 10], [(0, 'V'), (-3, 'mV')], 3)),
+                        ('vf', ([-10, 10], [(0, 'V'), (-3, 'mV')], 3)),
+                        ('dt', ([1e-6, 50], [(0, 's'), (-3, 'ms'), (-6, 'us')], 1)), 
+                        ],
+                   'exp': [
+                        ('vf', ([-10, 10], [(0, 'V')], 3)),
+                        ('dt', ([1e-6, 50], [(0, 's'), (-3, 'ms'), (-6, 'us')], 1)), 
+                        ('tau', ([-1e2, 1e2], [(0, 's'), (-3, 'ms'), (-6, 'us'), (-9, 'ns')], 1)),
+                        ('pts', ([1, 10], [(0, 'na')], 0)),
+                        ],
+                   'sexp': [
+                        ('vi', ([-10, 10], [(0, 'V'), (-3, 'mV')], 3)),
+                        ('vf', ([-10, 10], [(0, 'V'), (-3, 'mV')], 3)),
+                        ('dt', ([1e-6, 50], [(0, 's'), (-3, 'ms'), (-6, 'us')], 1)), 
+                        ('tau', ([-1e2, 1e2], [(0, 's'), (-3, 'ms'), (-6, 'us'), (-9, 'ns')], 1)),
+                        ('pts', ([1, 10], [(0, 'na')], 0)),
+                        ],
+                   'sub': [
+                        ('dt', ([1e-6, 50], [(0, 's'), (-3, 'ms'), (-6, 'us')], 1)),
+                        ('seq', ([{'type': 'lin', 'vf': 0.0, 'dt': 1.0}])),
+                        ]
+                   }
 
 
 if __name__ == '__main__':
@@ -255,7 +279,7 @@ if __name__ == '__main__':
     import qt4reactor 
     qt4reactor.install()
     from twisted.internet import reactor
-#    widget = ParameterWidget(available_ramps['sub'])
+#    widget = ParameterWidget('s', available_ramps['s'])
     widget = RampTable()
     widget.show()
     reactor.run()
