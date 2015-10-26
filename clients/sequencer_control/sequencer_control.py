@@ -23,7 +23,7 @@ drheight = 20
 pps = 1001
 
 max_columns = 100
-colors = ['#ff0000', '#ff7700', '#00ff00', '#0000ff', '#8a2be2', '#c77df3']
+colors = ['#ff0000', '#ff7700', '#00ff00', '#0000ff', '#ffff00', '#8a2be2']
 
 def merge_dicts(*dictionaries):
     merged_dictionary = {}
@@ -181,7 +181,7 @@ class DurationRow(QtGui.QWidget):
 
     def populate(self):
         units =  [(0, 's'), (-3, 'ms'), (-6, 'us'), (-9, 'ns')]
-        self.boxes = [SuperSpinBox([500e-9, 10], units) for i in range(max_columns)]
+        self.boxes = [SuperSpinBox([500e-9, 30], units) for i in range(max_columns)]
         self.layout = QtGui.QHBoxLayout()
         for db in self.boxes:
             self.layout.addWidget(db)
