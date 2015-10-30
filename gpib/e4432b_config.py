@@ -8,7 +8,7 @@ class ServerConfig(object):
         self.state_id = 698013 
 	self.frequency_id = 698014
 	self.amplitude_id = 698015
-        self.name = '%LABRADNODE% E4432B'
+        self.name = 'E4432B'
         self.deviceName = 'Hewlett-Packard ESG-D3000B'
     	self.instruments = {
                             'alpha': DeviceConfiguration(

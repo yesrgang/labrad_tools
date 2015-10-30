@@ -8,7 +8,7 @@ class ServerConfig(object):
         self.state_id = 698016 
 	self.frequency_id = 698017
 	self.amplitude_id = 698018
-        self.name = '%LABRADNODE% DS345'
+        self.name = 'DS345'
         self.deviceName = 'StanfordResearchSystems DS345'
     	self.instruments = {
                             'Spin Pol. AOM': DeviceConfiguration(

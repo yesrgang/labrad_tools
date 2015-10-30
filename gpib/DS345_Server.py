@@ -4,7 +4,7 @@
 name = DS345
 version = 1.0
 description = 
-instancename = %LABRADNODE% DS345
+instancename = DS345
 
 [startup]
 cmdline = %PYTHON% %FILE%

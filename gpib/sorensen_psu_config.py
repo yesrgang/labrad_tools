@@ -7,7 +7,7 @@ class DHP(object):
     
 class SorensenPSUConfig(object):
     def __init__(self):
-        self.name = '%LABRADNODE% Sorensen PSU'
+        self.name = 'Sorensen PSU'
 
         self.update_id = 698020
 

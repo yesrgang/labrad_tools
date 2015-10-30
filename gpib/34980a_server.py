@@ -4,7 +4,7 @@
 name = 34980A
 version = 1.0
 description = 
-instancename = %LABRADNODE% 34980A
+instancename = 34980A
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -17,6 +17,7 @@ timeout = 5
 """
 
 import numpy as np
+from pyvisa import visa_exceptions
 from labrad.server import setting, Signal
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 import labrad.types as T
@@ -37,12 +38,28 @@ class Agilent34980AWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def read_active_channels(self):
         values = []
-        for address, channel in self.channels.items():
-            if channel.is_active: 
-                ans = yield self.query(channel.query_string + '(@{})'.format(str(address)))
-                value = channel.a2v(ans)
-                values.append((channel.name, value))
-        returnValue(values)
+	active_channels = [address for address, channel in sorted(self.channels.items()) if channel.is_active]
+	ac_str = str(active_channels)[1:-1].replace("'", "").replace(' ', '')
+	print ac_str
+	try:
+            ans = yield self.query('meas? ' + '(@{})'.format(ac_str))
+        except T.Error as e:
+            print e.message
+	    ans = ''
+        print 'answer: ', ans
+	ans_list = eval('['+ans+']')
+	values = [float(a) for a in ans_list]
+#        for address, channel in self.channels.items():
+#            if channel.is_active:
+#                try:
+#                    ans = yield self.query(channel.query_string + '(@{})'.format(str(address)))
+#                except T.Error as e:
+#                    print 'timeout error. can we just ignore this?'
+#		    print e.message
+#		    returnValue([])
+#                value = channel.a2v(ans)
+#                values.append((channel.name, value))
+        returnValue(zip(sorted(self.channels.keys()), values))
     
     @inlineCallbacks
     def measure_channel(self, channel_name):
@@ -73,20 +90,21 @@ class Agilent34980AServer(GPIBManagedServer):
     def initServer(self):
         yield GPIBManagedServer.initServer(self)
         self.measurement_loop = LoopingCall(self.measure_active_channels)
-        self._load_device_configurations()
+        self._load_instruments()
         self.measurement_loop.start(self.measurement_period)
 
     @setting(9, 'select device by name', name='s', returns='s')    
     def select_device_by_name(self, c, name):
-        gpib_device_id = self.device_configurations[name].gpib_device_id
+        gpib_device_id = self.instruments[name].gpib_device_id
         yield self.select_device(c, gpib_device_id)
         dev = self.selectedDevice(c)
-        dev.set_configuration(self.device_configurations[name])
+        dev.set_configuration(self.instruments[name])
         dev.instrument_name = name
-        returnValue(str(self.device_configurations[name].__dict__))
+	dev.timeout = T.Value(10, 's')
+        returnValue(str(self.instruments[name].__dict__))
     
-    def _load_device_configurations(self):
-        for name, config in self.device_configurations.items():
+    def _load_instruments(self):
+        for name, config in self.instruments.items():
             for key, gpib_device_id in self.list_devices(None):
                 if config.gpib_device_id == gpib_device_id:
                     dev = self.devices[key]
@@ -111,6 +129,7 @@ class Agilent34980AServer(GPIBManagedServer):
         for dev in devs:
             if hasattr(dev, 'configuration'):
                 inst_values = yield self._measure_active_channels(dev)
+		print inst_values
                 influx_client = InfluxDBClient(**dev.db_parameters)
                 points = [{"measurement": "DMM", "tags": {"channel": name}, "fields": {"value": value}} for name, value in inst_values]
                 influx_client.write_points(points)

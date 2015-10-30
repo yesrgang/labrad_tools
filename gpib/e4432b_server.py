@@ -4,7 +4,7 @@
 name = E4432B
 version = 1.0
 description = 
-instancename = %LABRADNODE% E4432B
+instancename = E4432B
 
 [startup]
 cmdline = %PYTHON% %FILE%

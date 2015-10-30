@@ -8,7 +8,7 @@ class ServerConfig(object):
         self.state_id = 698013 
 	self.frequency_id = 698014
 	self.amplitude_id = 698015
-        self.name = '%LABRADNODE% N5181A'
+        self.name = 'N5181A'
         self.deviceName = 'Agilent Technologies N5181A'
     	self.instruments = {
                             'beta': DeviceConfiguration(

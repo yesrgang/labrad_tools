@@ -4,7 +4,7 @@
 name = N5181A
 version = 1.0
 description = 
-instancename = %LABRADNODE% N5181A
+instancename = N5181A
 
 [startup]
 cmdline = %PYTHON% %FILE%

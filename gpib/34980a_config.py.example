@@ -14,7 +14,7 @@ class Agilent349880AConfig(object):
         
 class ServerConfig(object):
     def __init__(self):
-        self.name = '%LABRADNODE% 34980A'
+        self.name = '34980A'
         self.deviceName = 'Agilent Technologies 34980A'
         self.measurement_period = 30 # [s]
         
@@ -23,14 +23,14 @@ class ServerConfig(object):
             '1002': DCVoltageConfig(name='1002', is_active=True),
             }
        
-        self.device_configurations = {
+        self.instruments = {
             'srq monitor': Agilent349880AConfig(
-                gpib_device_id='yesr20 GPIB Bus - GPIB0::9', 
+                gpib_device_id='yesr20 GPIB Bus - GPIB0::7', 
                 channels=srq_channels,
                 db_parameters={'host': 'yesr12.colorado.edu',
                                'port': 8086,
-                               'username': username,
-                               'password': password,
+                               'username': 'srgang',
+                               'password': '698gang',
                                'database': 'srq'}
                 ),
             }

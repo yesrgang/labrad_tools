@@ -1,6 +1,6 @@
 class RFControlConfig(object):
     def __init__(self):
-        self.servername = 'yesr20_e4432b'
+        self.servername = 'e4432b'
         self.name = 'alpha'
         self.state_id = 461013
         self.frequency_id = 461014

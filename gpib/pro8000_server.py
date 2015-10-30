@@ -4,7 +4,7 @@
 name = PRO8000
 version = 1.0
 description = 
-instancename = %LABRADNODE% PRO8000
+instancename = PRO8000
 
 [startup]
 cmdline = %PYTHON% %FILE%
