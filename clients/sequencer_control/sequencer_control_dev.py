@@ -497,10 +497,10 @@ class AnalogSequencer(QtGui.QWidget):
         
 
 """ begin analog voltage editor """
-class AnalogVoltageEditor(QtGui.QDialog):
-    def __init__(self, sequence, parent=None):
-        super(AnalogVoltageEditor, self).__init__(parent)
-        self.sequence = sequence
+#class AnalogVoltageEditor(QtGui.QDialog):
+#    def __init__(self, sequence, parent=None):
+#        super(AnalogVoltageEditor, self).__init__(parent)
+#        self.sequence = sequence
 def H(x):
     return 0.5*(np.sign(x)+1)
 
