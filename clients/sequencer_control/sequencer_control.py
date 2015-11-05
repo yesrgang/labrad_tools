@@ -23,7 +23,7 @@ drheight = 20
 pps = 1001
 
 max_columns = 100
-colors = ['#ff0000', '#ff7700', '#00ff00', '#0000ff', '#ffff00', '#8a2be2']
+colors = ['#ff0000', '#ff7700', '#ffff00', '#00ff00', '#0000ff', '#8a2be2']
 
 def merge_dicts(*dictionaries):
     merged_dictionary = {}

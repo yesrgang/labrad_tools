@@ -29,7 +29,7 @@ node_dict = {
                             'GPIB Device Manager',
                             'GPIB Bus',
 			    'PRO8000',
-                            '34980A',
+                            #'34980A',
 			    'Serial Server',
 			    '6DDS',
 			    'TLB-6700',

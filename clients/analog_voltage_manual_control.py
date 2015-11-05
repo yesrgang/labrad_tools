@@ -70,13 +70,13 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
         yield server.signal__update(self.update_id)
         yield server.addListener(listener=self.receive_update, source=None,
                                  ID=self.update_id)
-        yield self.cxn.add_on_connect(self.servername, self.reinitialize)
-        yield self.cxn.add_on_disconnect(self.servername, self.disable)
+        yield self.cxn.add_on_connect(self.servername_alt, self.reinit)
+        yield self.cxn.add_on_disconnect(self.servername_alt, self.disable)
 
         self.mode_button.released.connect(self.onNewMode)
         self.voltage_box.returnPressed.connect(self.onNewVoltage)
         self.setMouseTracking(True)
-        self.mouseHover.connect(self.requestValues)
+        #self.mouseHover.connect(self.requestValues)
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.writeValues)
         self.timer.start(self.update_time)
@@ -129,12 +129,19 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
     def onNewVoltage(self):
         if self.free:
             self.hasNewVoltage = True
+    @inlineCallbacks	
+    def reinit(self): 
+        print '?'
+        self.setDisabled(False)
+        server = yield self.cxn.get_server(self.servername)
+        yield server.signal__update(self.update_id, context=self.context)
+        yield server.addListener(listener=self.receive_update, source=None,
+                                 ID=self.update_id, context=self.context)
+	yield server.notify_listeners()
 
-    @inlineCallbacks
-    def reinitialize(self):
-        pass
 
     def disable(self):
+        print 'oh no!'
         self.setDisabled(True)
 
     def closeEvent(self, x):
@@ -182,6 +189,7 @@ class ControlConfig(object):
     def __init__(self):
         self.name = 'MOT Coil'
         self.servername = 'yesr20_analog_sequencer'
+        self.servername_alt = 'yesr20 Analog Sequencer'
         self.update_id = 461023
         self.update_time = 100 # [ms]
 
