@@ -28,9 +28,7 @@ from twisted.internet.threads import deferToThread
 from analog_errors import *
 
 class AnalogSequencerServer(LabradServer):
-    name = '%LABRADNODE% Analog Sequencer'
     mode='idle'
-
     def __init__(self, config_name):
         LabradServer.__init__(self)
         self.config_name = config_name

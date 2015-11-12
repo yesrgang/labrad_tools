@@ -1,16 +1,16 @@
+import json
+import numpy as np
+
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
-from client_tools import SuperSpinBox
-from connection import connection
 from twisted.internet.defer import inlineCallbacks
-import numpy as np
-import json
-#import matplotlib
-#matplotlib.use('Qt4Agg')
-#from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-#from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
-#from matplotlib.figure import Figure
+
 import digital_channel_control as dcc
+from connection import connection
+from client_tools import SuperSpinBox
+from digital_widgets import DigitalSequencer
+from analog_widgets import AnalogSequencer
+from analog_editor import AnalogVoltageEditor
 
 def merge_dicts(*dictionaries):
     merged_dictionary = {}
@@ -35,13 +35,14 @@ class BrowseAndSave(QtGui.QWidget):
         self.setLayout(self.layout)
 
 class DurationRow(QtGui.QWidget):
-    def __init__(self):
+    def __init__(self, config):
         super(DurationRow, self).__init__(None)
+        self.config = config
         self.populate()
 
     def populate(self):
         units =  [(0, 's'), (-3, 'ms'), (-6, 'us'), (-9, 'ns')]
-        self.boxes = [SuperSpinBox([500e-9, 10], units) for i in range(max_columns)]
+        self.boxes = [SuperSpinBox([500e-9, 10], units) for i in range(self.config.max_columns)]
         self.layout = QtGui.QHBoxLayout()
         for db in self.boxes:
             self.layout.addWidget(db)
@@ -71,12 +72,13 @@ class AddDltButton(QtGui.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
 
 class AddDltRow(QtGui.QWidget):
-    def __init__(self):
+    def __init__(self, config):
         super(AddDltRow, self).__init__(None)
+        self.config = config
         self.populate()
 
     def populate(self):
-        self.buttons = [AddDltButton() for i in range(max_columns)]
+        self.buttons = [AddDltButton() for i in range(self.config.max_columns)]
         self.layout = QtGui.QHBoxLayout()
         for ad in self.buttons:
             self.layout.addWidget(ad)
@@ -113,16 +115,18 @@ class LoadAndSave(QtGui.QWidget):
 
 
 class Sequencer(QtGui.QWidget):
-    def __init__(self, reactor=None, cxn=None):
+    def __init__(self, config, reactor=None, cxn=None):
         super(Sequencer, self).__init__(None)
-        self.digital_servername = 'yesr20_digital_sequencer'
-        self.analog_servername = 'yesr20_analog_sequencer'
+        self.config = config
+        self.digital_servername = config.digital_servername #'yesr20_digital_sequencer'
+        self.analog_servername = config.analog_servername #'yesr20_analog_sequencer'
+        self.config = config
         self.cxn = cxn
         self.reactor = reactor
         self.connect()
 
-        self.sequence_history = []
-        self.sequence_history_index = 0
+#        self.sequence_history = []
+#        self.sequence_history_index = 0
 
     @inlineCallbacks
     def connect(self):
@@ -137,7 +141,9 @@ class Sequencer(QtGui.QWidget):
             aserver = yield self.cxn.get_server(self.analog_servername)
             ac = yield aserver.get_channels()
             self.analog_channels = eval(ac)
+            print '!!!'
             self.populate()
+            print '???'
             self.default_sequence = [(1, dict([(name, {'type': 'linear', 'v': 0, 'length': (1, 1)}) for name in self.analog_channels.values()] + [(name, 0) for name in self.digital_channels.values()]), )]
             self.set_sequence(self.default_sequence)
         except Exception, e:
@@ -148,7 +154,7 @@ class Sequencer(QtGui.QWidget):
     def populate(self):
         self.browse_and_save = BrowseAndSave()
 
-        self.add_dlt_row = AddDltRow()
+        self.add_dlt_row = AddDltRow(self.config)
         self.add_dlt_row.scroll_area = QtGui.QScrollArea()
         self.add_dlt_row.scroll_area.setWidget(self.add_dlt_row)
         self.add_dlt_row.scroll_area.setWidgetResizable(True)
@@ -156,16 +162,17 @@ class Sequencer(QtGui.QWidget):
         self.add_dlt_row.scroll_area.setVerticalScrollBarPolicy(1)
         self.add_dlt_row.scroll_area.setFrameShape(0)
 
-        self.duration_row = DurationRow()
+        self.duration_row = DurationRow(self.config)
         self.duration_row.scroll_area = QtGui.QScrollArea()
         self.duration_row.scroll_area.setWidget(self.duration_row)
         self.duration_row.scroll_area.setWidgetResizable(True)
         self.duration_row.scroll_area.setHorizontalScrollBarPolicy(1)
         self.duration_row.scroll_area.setVerticalScrollBarPolicy(1)
         self.duration_row.scroll_area.setFrameShape(0)
-        
-        self.digital_sequencer = DigitalSequencer(self.digital_channels)
-        self.analog_sequencer = AnalogSequencer(self.analog_channels)
+
+       
+        self.digital_sequencer = DigitalSequencer(self.digital_channels, self.config)
+        self.analog_sequencer = AnalogSequencer(self.analog_channels, self.config)
 
         self.hscroll_array = QtGui.QScrollArea()
         self.hscroll_array.setWidget(QtGui.QWidget())
@@ -355,21 +362,21 @@ class Sequencer(QtGui.QWidget):
         self.set_sequence(sequence)
 
     def set_sequence(self, sequence):
-        self.sequence_history.insert(0, sequence)
-        if len(self.sequence_history) > 20:
-            self.sequence_history.pop(-1)
-        for i in range(self.sequence_history_index):
-            self.sequence_history.pop(i)
-        self.sequence_history_index = 0
+#        self.sequence_history.insert(0, sequence)
+#        if len(self.sequence_history) > 20:
+#            self.sequence_history.pop(-1)
+#        for i in range(self.sequence_history_index):
+#            self.sequence_history.pop(i)
+#        self.sequence_history_index = 0
 
         self.display_sequence()
 
 
     def display_sequence(self):
-        self.sequence_history_index = sorted([0, self.sequence_history_index, 20])[1]
-        sequence = self.sequence_history[self.sequence_history_index]
-        
-        self.sequence_history.append(sequence)
+#        self.sequence_history_index = sorted([0, self.sequence_history_index, 20])[1]
+#        sequence = self.sequence_history[self.sequence_history_index]
+#        self.sequence_history.append(sequence)
+
         self.analog_sequencer.display_sequence(sequence)
         self.digital_sequencer.display_sequence(sequence)
         self.duration_row.display_sequence(sequence)
@@ -398,11 +405,11 @@ class Sequencer(QtGui.QWidget):
         return dc
 
     def undo(self):
-        self.sequence_history_index += 1
+#        self.sequence_history_index += 1
         self.display_sequence()
 
     def redo(self):
-        self.sequence_history_index -= 1
+#        self.sequence_history_index -= 1
         self.display_sequence()
 
     def keyPressEvent(self, c):
@@ -419,8 +426,10 @@ class Sequencer(QtGui.QWidget):
     def closeEvent(self, x):
         self.reactor.stop()
 
-def SequencerConfig(object):
+class SequencerConfig(object):
     def __init__(self):
+        self.digital_servername = 'yesr20_digital_sequencer'
+        self.analog_servername = 'yesr20_analog_sequencer'
         self.spacer_width = 65
         self.spacer_height = 15
         self.max_columns = 100
@@ -431,6 +440,6 @@ if __name__ == '__main__':
     import qt4reactor 
     qt4reactor.install()
     from twisted.internet import reactor
-    widget = Sequencer(reactor)
+    widget = Sequencer(SequencerConfig(), reactor)
     widget.show()
     reactor.run()
