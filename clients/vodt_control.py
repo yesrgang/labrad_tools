@@ -4,6 +4,7 @@ class ControlConfig(object):
     def __init__(self):
         self.name = 'DACE08'
         self.servername = 'yesr20_analog_sequencer_2'
+        self.servername_alt = 'yesr20 Analog Sequencer 2'
         self.update_id = 461023
         self.update_time = 100 # [ms]
 

@@ -187,7 +187,7 @@ class SequencerServer(LabradServer):
         # write necessary ramps in correct order. Q
         ba = []
 	pts = 0
-        for k, d in sorted(self.channels.items()):
+        for i, (k, d) in enumerate(sorted(self.channels.items())):
             dv = sequence[0][1][d['name']]['v'] 
             if dv == 0:
                 t = sequence[0][0]
@@ -199,11 +199,11 @@ class SequencerServer(LabradServer):
                     else:
                         break
                 ba += [int(eval(hex(self.ramp_rate(dv, t))) >> i & 0xff) for i in range(0, 16, 8)]
-                ba += [int(eval(hex(self.time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)]
+                ba += [int(eval(hex(self.time_to_ticks(t)+i)) >> i & 0xff) for i in range(0, 32, 8)]
             else:
                 t = sequence[0][0]
                 ba += [int(eval(hex(self.ramp_rate(dv, t))) >> i & 0xff) for i in range(0, 16, 8)]
-                ba += [int(eval(hex(self.time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)]
+                ba += [int(eval(hex(self.time_to_ticks(t)+i)) >> i & 0xff) for i in range(0, 32, 8)]
         for m in range(1, len(sequence)):
             ba_buffer = {}
             for k, d in sorted(self.channels.items()): # add counter l for multiple linear ramps
