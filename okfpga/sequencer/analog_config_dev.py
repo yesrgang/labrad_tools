@@ -24,6 +24,7 @@ class DACChannel(object):
 
 class AnalogSequencerConfig(object):
     def __init__(self):
+        self.name = '%LABRADNODE% Analog Sequencer'
         self.update_id = 698023
 	self.mode = 'idle'
         self.boards = {
@@ -73,8 +74,3 @@ def exp_ramp(s):
     dV = [V[i+1]-V[i] for i in range(p['pts'])]
     return [(T+tp, loc, {'dv': dv, 'dt': dt}) for tp, dv in zip(t_pts[:-1], dV)]
 
-	
-#	self.channels = {}
-#	for b in self.boards:
-#            for k, c in b.channels.items():
-#                self.channels[k] = c
