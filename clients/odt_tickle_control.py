@@ -1,6 +1,6 @@
 class RFControlConfig(object):
     def __init__(self):
-        self.servername = 'yesr20_ds345'
+        self.servername = 'ds345'
         self.name = 'ODT Tickle'
         self.state_id = 461017
         self.frequency_id = 461018
