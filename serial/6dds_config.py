@@ -39,7 +39,7 @@ class DDSConfig(object):
             '813 x AOM': AD9854(
                 address=0,
                 state=True,
-                frequency=80e6, # [Hz]
+                frequency=115e6, # [Hz]
                 frequency_range=(1e3, 140e6), # [Hz]
                 amplitude=1,
                 amplitude_range=(0, 1),
@@ -50,7 +50,7 @@ class DDSConfig(object):
             '813 y AOM': AD9854(
                 address=1,
                 state=True,
-                frequency=80e6, # [Hz]
+                frequency=115e6, # [Hz]
                 frequency_range=(1e3, 140e6), # [Hz]
                 amplitude=1,
                 amplitude_range=(0, 1),
@@ -61,7 +61,7 @@ class DDSConfig(object):
             '813 z AOM': AD9854(
                 address=2,
                 state=True,
-                frequency=80e6, # [Hz]
+                frequency=110e6, # [Hz]
                 frequency_range=(1e3, 140e6), # [Hz]
                 amplitude=1,
                 amplitude_range=(0, 1),
