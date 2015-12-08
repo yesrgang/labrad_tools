@@ -287,13 +287,16 @@ class AnalogVoltageEditor(QtGui.QDialog):
         else:
             QtGui.QWidget().keyPressEvent(c)
 
+    def accept(self):
+        sequence = self.ramp_table.get_channel_sequence()
+        print self.ramp_maker(sequence).get_programable()
+
 if __name__ == '__main__':
     a = QtGui.QApplication([])
     import qt4reactor 
     qt4reactor.install()
     from twisted.internet import reactor
-    from analog_ramps import RampMaker
-#    widget = ParameterWidget('s', available_ramps['s'])
+    from okfpga.sequencer.analog_ramps import RampMaker
     widget = RampTable(RampMaker)
     widget = AnalogVoltageEditor('a', sequence, RampMaker)
     widget.show()

@@ -1,9 +1,15 @@
 import numpy as np
 
 def H(x):
+    """
+    step function
+    """
     return 0.5*(np.sign(x-1e-9)+1)
 
 def G(t1, t2):
+    """
+    pulse
+    """
     return lambda t: H(t2-t) - H(t1-t) 
 
 def lin_ramp(p):
@@ -13,7 +19,7 @@ def lin_ramp(p):
     """
     return lambda t: G(p['ti'], p['tf'])(t)*(p['vi'] + (p['vf']-p['vi'])/(p['tf']-p['ti'])*(t-p['ti']))
 
-def exp_ramp(p):
+def exp_ramp(p, ret_seq=False):
     """
     returns continuous finction defined over ['ti', 'tf'].
     values are determined by connecting 'vi' to 'vf' with an exponential function.
@@ -26,7 +32,10 @@ def exp_ramp(p):
     v_pts = v_ideal(t_pts)
     sseq = [{'type': 'lin', 'ti': ti, 'tf': tf, 'vi': vi, 'vf': vf} 
             for ti, tf, vi, vf in zip(t_pts[:-1], t_pts[1:], v_pts[:-1], v_pts[1:])]
-    return lambda t: sum([lin_ramp(ss)(t) for ss in sseq])
+    if ret_seq:
+        return sseq
+    else:
+        return lambda t: sum([lin_ramp(ss)(t) for ss in sseq])
 
 class SRamp(object):
     required_parameters = [
@@ -34,14 +43,17 @@ class SRamp(object):
         ('dt', ([1e-6, 50], [(0, 's'), (-3, 'ms'), (-6, 'us')], 1)), 
         ]
     def __init__(self, p=None):
-        self.required_parameters = [
-            ('vf', ([-10, 10], [(0, 'V'), (-3, 'mV')], 3)),
-            ('dt', ([1e-6, 50], [(0, 's'), (-3, 'ms'), (-6, 'us')], 1)), 
-            ]
-
+        self.p = p
         if p is not None:
             p['vi'] = p['vf']
             self.v = lin_ramp(p)
+
+    def to_lin(self):
+        """
+        to list of linear ramps [{dt, dv}]
+        """
+        p = self.p
+        return [{'dt': 1e-6, 'dv': p['vf'] - p['_vi']}, {'dt': p['dt']-1e-6, 'dv': 0}]
 
 class LinRamp(object):
     required_parameters = [
@@ -49,9 +61,16 @@ class LinRamp(object):
         ('dt', ([1e-6, 50], [(0, 's'), (-3, 'ms'), (-6, 'us')], 1)), 
         ]
     def __init__(self, p=None):
-
+        self.p = p
         if p is not None:
             self.v = lin_ramp(p)
+
+    def to_lin(self):
+        """
+        to list of linear ramps [{dt, dv}]
+        """
+        p = self.p
+        return [{'dt': p['dt'], 'dv': p['vf']-p['_vi']}]
 
 class SLinRamp(object):
     required_parameters = [
@@ -62,7 +81,15 @@ class SLinRamp(object):
     def __init__(self, p=None):
 
         if p is not None:
+            self.p = p
             self.v = lin_ramp(p)
+
+    def to_lin(self):
+        """
+        to list of linear ramps [{dt, dv}]
+        """
+        p = self.p
+        return [{'dt': 1e-6, 'dv': p['vi'] - p['_vi']}, {'dt': p['dt']-1e-6, 'dv': p['vf']-p['vi']}]
 
 class ExpRamp(object):
     required_parameters = [
@@ -72,9 +99,17 @@ class ExpRamp(object):
         ('pts', ([1, 10], [(0, 'na')], 0)),
         ]
     def __init__(self, p=None):
-
+        self.p = p
         if p is not None:
             self.v = exp_ramp(p)
+
+    def to_lin(self):
+        """
+        to list of linear ramps [{dt, dv}]
+        """
+        p = self.p
+        seq = exp_ramp(p, ret_seq=True)
+        return [{'dt': s['tf']-s['ti'], 'dv': s['vf']-s['vi']} for s in seq]
 
 class SExpRamp(object):
     required_parameters = [
@@ -85,9 +120,17 @@ class SExpRamp(object):
         ('pts', ([1, 10], [(0, 'na')], 0)),
         ]
     def __init__(self, p=None):
-
+        self.p = p
         if p is not None:
             self.v = exp_ramp(p)
+    
+    def to_lin(self):
+        """
+        to list of linear ramps [{dt, dv}]
+        """
+        p = self.p
+        seq = exp_ramp(p, ret_seq=True)
+        return [{'dt': 1e-6, 'dv': p['vi']-p['_vi']}] + [{'dt': s['tf']-s['ti'], 'dv': s['vf']-s['vi']} for s in seq]
 
 class RampMaker(object):
     available_ramps = {
@@ -97,31 +140,29 @@ class RampMaker(object):
         'exp': ExpRamp,
         'sexp': SExpRamp,
         }
-    def __init__(self, sequence=None):
+    def __init__(self, sequence):
 
-        if sequence is not None:
-            j=0
-            for i, s in enumerate(sequence):
-                if s['type'] is 'sub':
-                    seq = sequence.pop(i+j)['seq']
-                    for ss in s['seq']:
-                        sequence.insert(i+j, ss)
-                        j += 1
+        j=0
+        for i, s in enumerate(sequence):
+            if s['type'] is 'sub':
+                seq = sequence.pop(i+j)['seq']
+                for ss in s['seq']:
+                    sequence.insert(i+j, ss)
+                    j += 1
+        
+        sequence[0]['_vi'] = 0
+        for i in range(len(sequence)-1):
+            sequence[i+1]['_vi'] = sequence[i]['vf']
+        for i in range(len(sequence)):
+            if not sequence[i].has_key('vi'):
+                sequence[i]['vi'] = sequence[i]['_vi']
     
-            if not sequence[0].has_key('vi'):
-                sequence[0]['vi'] = 0
-            for i in range(1, len(sequence)):
-                if not sequence[i].has_key('vi'):
-                    sequence[i]['vi'] = sequence[i-1]['vf']
-                if not sequence[i].has_key('vf'):
-                    sequence[i]['vf'] = sequence[i]['vi']
-    
-            for i, s in enumerate(sequence):
-                s['ti'] = sum([ss['dt'] for ss in sequence[:i]])
-                s['tf'] = s['ti'] + s['dt']
-            
-            self.v = lambda t: sum([self.available_ramps[s['type']](s).v(t) for s in sequence])
-            self.sequence = sequence
+        for i, s in enumerate(sequence):
+            s['ti'] = sum([ss['dt'] for ss in sequence[:i]])
+            s['tf'] = s['ti'] + s['dt']
+        
+        self.v = lambda t: sum([self.available_ramps[s['type']](s).v(t) for s in sequence])
+        self.sequence = sequence
 
     def get_plottable(self, scale='real', pts=100):
         T = np.concatenate([np.linspace(s['ti'], s['tf'], pts)[:-1] for s in self.sequence])
@@ -134,3 +175,9 @@ class RampMaker(object):
 
     def get_continuous(self):
         return self.v
+
+    def get_programable(self):
+        """
+        to list of linear ramps [{dt, dv}]
+        """
+        return np.concatenate([self.available_ramps[s['type']](s).to_lin() for s in self.sequence])

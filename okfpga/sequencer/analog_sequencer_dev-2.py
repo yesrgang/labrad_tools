@@ -121,17 +121,17 @@ class AnalogSequencerServer(LabradServer):
             return signed_ramp_rate + 2**16
 
     def make_sequence(self, board, sequence):
-        # sequence is list of tuples [(duration, {iden: {ramp_info}})] 
+        # sequence is dict {channel_id: [{dt, type, ...}]}
         
         # ramp to zero at end
         for k in board.channels.keys():
             sequence[k].append({'dt': 10e-3, 'type': 'linear', 'vf': 0})
 
-        # add parameter 'vi' to each ramp, 
+        # add parameter '_vi' to each ramp, 
         for k in board.channels.keys():
-            sequence[k][0]['vi'] = 0
+            sequence[k][0]['_vi'] = 0
             for i in range(len(sequence)):
-                sequence[k][i+1]['vi'] = sequence[k][i]['vf']
+                sequence[k][i+1]['_vi'] = sequence[k][i]['vf']
         
         
         # break into smaller pieces [(T, loc, {dt, dv})]
