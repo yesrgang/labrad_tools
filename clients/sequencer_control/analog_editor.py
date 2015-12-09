@@ -172,6 +172,7 @@ class AnalogVoltageEditor(QtGui.QDialog):
         self.populate()
 
     def populate(self):
+        self.setWindowTitle(self.channel)
 
         self.canvas = MplCanvas()
         self.nav = NavigationToolbar(self.canvas, self)
@@ -201,6 +202,7 @@ class AnalogVoltageEditor(QtGui.QDialog):
         self.setFixedSize(width, height)
         self.set_columns()
         self.replot()
+#        self.setAttribute(120, True)
 
     def connect_signals(self):
         for c in self.ramp_table.cols:
@@ -289,7 +291,7 @@ class AnalogVoltageEditor(QtGui.QDialog):
 
     def accept(self):
         sequence = self.ramp_table.get_channel_sequence()
-        print self.ramp_maker(sequence).get_programable()
+        print self.ramp_maker(sequence).get_programmable()
 
 if __name__ == '__main__':
     a = QtGui.QApplication([])

@@ -176,7 +176,7 @@ class RampMaker(object):
     def get_continuous(self):
         return self.v
 
-    def get_programable(self):
+    def get_programmable(self):
         """
         to list of linear ramps [{dt, dv}]
         """

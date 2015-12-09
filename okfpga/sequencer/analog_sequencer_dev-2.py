@@ -27,6 +27,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.threads import deferToThread
 
 from analog_errors import *
+from analog_ramps import *
 from sequence import Sequence
 
 class AnalogSequencerServer(LabradServer):
@@ -127,38 +128,21 @@ class AnalogSequencerServer(LabradServer):
         for k in board.channels.keys():
             sequence[k].append({'dt': 10e-3, 'type': 'linear', 'vf': 0})
 
-        # add parameter '_vi' to each ramp, 
-        for k in board.channels.keys():
-            sequence[k][0]['_vi'] = 0
-            for i in range(len(sequence)):
-                sequence[k][i+1]['_vi'] = sequence[k][i]['vf']
-        
-        
         # break into smaller pieces [(T, loc, {dt, dv})]
-        T = 0
-        unsorted_sequence = []
-        for s in sequence:
-            for channel in board.channels.values():
-                s[1][channel.key]['dt'] = s[0]
-                ss = (s[0], channel.loc, s[1][channel.key])
-                unsorted_sequence += ramps[ss[2]['type']](ss)
-            T += s[0]
-
+        unsorted_ramps = []
         for channel in board.channels.values():
+            ramps = RampMaker(sequence[channel.key]).get_programmable()
             T = 0
-            for cs in sequence[channel.key]:
-
-        
-        sorted_sequence = sorted(sequence3)
+            for r in ramps:
+                unsorted_ramp.append((T, channel.loc, r))
+        sorted_ramps = sorted(unsorted_ramps)
 
         ba = []
-
-        for s in sorted_sequence:
-            ba += [int(eval(hex(self.ramp_rate(board, s[2]['dv'], s[2]['dt']))) >> i & 0xff) for i in range(0, 16, 8)]
-            ba += [int(eval(hex(self.time_to_ticks(board, s[2]['dt']))) >> i & 0xff) for i in range(0, 32, 8)]
+        for r in sorted_ramps:
+            ba += [int(eval(hex(self.ramp_rate(board, r[2]['dv'], r[2]['dt']))) >> i & 0xff) for i in range(0, 16, 8)]
+            ba += [int(eval(hex(self.time_to_ticks(board, r[2]['dt']))) >> i & 0xff) for i in range(0, 32, 8)]
         
         ba += [0]*24
-        print 'writing ', len(ba), ' bytes...'
         return ba
     
     def program_sequence(self, sequence):
