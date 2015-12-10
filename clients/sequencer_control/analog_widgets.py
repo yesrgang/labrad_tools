@@ -61,7 +61,7 @@ class AnalogArray(FigureCanvas):
     def plot_sequence(self, sequence):
         self.axes.cla()
         for i, c in enumerate(self.channels):
-            channel_sequence = [combine_dicts(d[c], {'dt': dt}) for dt, d in sequence]
+            channel_sequence = sequence[c]
             T, V = self.ramp_maker(channel_sequence, scale='step')
             V = np.array(V) - i*20
             self.axes.plot(T, V)
@@ -72,7 +72,7 @@ class AnalogArray(FigureCanvas):
         self.draw()
 
 class AnalogSequencer(QtGui.QWidget):
-    sequence = []
+    sequence = {}
     def __init__(self, channels, config):
         super(AnalogSequencer, self).__init__(None)
         self.channels = channels
@@ -113,7 +113,9 @@ class AnalogSequencer(QtGui.QWidget):
         self.connect_widgets()
 
     def display_sequence(self, sequence):
-        self.sequence = [{name: s[name] for name in self.channels.values()} for (t, s) in sequence]
+#        self.sequence = [{name: s[name] for name in self.channels.values()} for (t, s) in sequence]
+#        self.array.plot_sequence(sequence)
+        self.sequence = sequence
         self.array.plot_sequence(sequence)
     
     def connect_widgets(self):

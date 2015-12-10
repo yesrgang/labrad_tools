@@ -21,10 +21,3 @@ class Sequence(object):
 
     def __getitem__(self, key):
         return self.sequence[key] 
-
-sequence = {'a@TTLA00': [{'dt': 1, 's': 0}, {'dt': 2, 's': 1}], 'b@TTLA01': [{'dt': 1, 's': 0}, {'dt': 2, 's': 1}]}
-
-sequence = json.dumps(sequence)
-
-s = Sequence(sequence)
-print s.dump()

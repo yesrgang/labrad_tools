@@ -4,6 +4,8 @@ class PulseBoardConfig(object):
         self.bit_file = 'sequencer.bit'
         self.mode_nums = {'idle': 0, 'load': 1, 'run': 2}
         self.mode = 'idle'
+        self.mode_wire = 0x00
+        self.pipe_wire = 0x80
         self.channel_mode_wires = [0x01, 0x03, 0x05, 0x07]
         self.channel_stateinv_wires = [0x02, 0x04, 0x06, 0x08]
         self.clk_frequency = 50e6

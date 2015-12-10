@@ -31,7 +31,6 @@ from analog_ramps import *
 from sequence import Sequence
 
 class AnalogSequencerServer(LabradServer):
-    mode='idle'
     def __init__(self, config_name):
         LabradServer.__init__(self)
         self.config_name = config_name
@@ -73,7 +72,7 @@ class AnalogSequencerServer(LabradServer):
     def initialize_outputs(self):
         for b in self.boards.values():
             self.write_channel_modes(b)
-            for c in b.channels.values():
+            for c in b.channels:
                 self.write_manual_voltage(c)
 
     def id2channel(self, channel_id):
@@ -91,12 +90,12 @@ class AnalogSequencerServer(LabradServer):
             loc = None
         if name:
             for b in self.boards.values():
-                for c in b.channels.values():
+                for c in b.channels:
                     if c.name == name:
                         channel = c
         if not channel:
             for b in self.boards.values():
-                for c in b.channels.values():
+                for c in b.channels:
                     if c.loc == loc:
                         channel = c
         return channel
@@ -123,18 +122,30 @@ class AnalogSequencerServer(LabradServer):
 
     def make_sequence(self, board, sequence):
         # sequence is dict {channel_id: [{dt, type, ...}]}
+
+        # take sequence name@loc to configuration name@loc
+        sequence_keyfix = {}
+        for key in sequence:
+            name, loc =key.split('@')
+            for c in board.channels:
+                if c.name == name:
+                    sequence_keyfix[c.key] = sequence[key]
+                elif c.loc == loc:
+                    sequence_keyfix.set_default(c.key, sequence[key])
+        sequence = sequence_keyfix
         
         # ramp to zero at end
-        for k in board.channels.keys():
-            sequence[k].append({'dt': 10e-3, 'type': 'linear', 'vf': 0})
+        for c in board.channels:
+            sequence[c.key].append({'dt': 10e-3, 'type': 'linear', 'vf': 0})
 
         # break into smaller pieces [(T, loc, {dt, dv})]
         unsorted_ramps = []
-        for channel in board.channels.values():
-            ramps = RampMaker(sequence[channel.key]).get_programmable()
+        for c in board.channels:
+            ramps = RampMaker(sequence[c.key]).get_programmable()
             T = 0
             for r in ramps:
-                unsorted_ramp.append((T, channel.loc, r))
+                unsorted_ramp.append((T, c.loc, r))
+                T += r['dt']
         sorted_ramps = sorted(unsorted_ramps)
 
         ba = []
@@ -160,10 +171,12 @@ class AnalogSequencerServer(LabradServer):
 
     @setting(01, 'get channels')
     def get_channels(self, c):
-        channels = {}
-        for b in self.boards.values():
-            for k, c in b.channels.items():
-                channels[k] = c.__dict__
+#        channels = {}
+#        for b in self.boards.values():
+#            for c in b.channels:
+#                channels[c.key] = c.__dict__
+#        return str(channels)
+        channels = np.concatenate([[c.key for c in board.channels] for n, b in sorted(self.boards.items())])
         return str(channels)
 
     @setting(07, 'run sequence', sequence='s')
@@ -184,8 +197,6 @@ class AnalogSequencerServer(LabradServer):
     @setting(04, 'channel mode', channel_id='s', mode='s')
     def channel_mode(self, c, channel_id, mode=None):
         channel = self.id2channel(channel_id)
-        if not channel:
-            raise ChannelNotFound()
         if mode is not None:
             channel.mode = mode
             board = self.boards[channel.loc[0]]
@@ -194,7 +205,7 @@ class AnalogSequencerServer(LabradServer):
         return channel.mode
     
     def write_channel_modes(self, board): 
-        cm_list = [c.mode for k, c in sorted(board.channels.items())]
+        cm_list = [c.mode for c in board.channels]
         mode_value = sum([2**j for j, m in enumerate(cm_list) if m == 'manual'])
         board.xem.SetWireInValue(board.channel_mode_wire, mode_value)
         board.xem.UpdateWireIns()
@@ -202,8 +213,6 @@ class AnalogSequencerServer(LabradServer):
     @setting(05, 'channel manual voltage', channel_id='s', voltage='v')
     def channel_manual_voltage(self, c, channel_id, voltage=None):
         channel = self.id2channel(channel_id)
-        if not channel:
-            raise ChannelNotFound()
         if voltage is not None:
             voltage = sorted([-10, voltage, 10])[1]
             channel.manual_voltage = voltage
@@ -227,7 +236,7 @@ class AnalogSequencerServer(LabradServer):
     def notify_listeners(self, c):
         d = {}
 	for b in self.boards.values():
-            for c in b.channels.values():
+            for c in b.channels:
                 d[c.name] = c.__dict__
         self.update(json.dumps(d))
 
