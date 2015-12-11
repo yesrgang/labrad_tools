@@ -386,8 +386,9 @@ class Sequencer(QtGui.QWidget):
     def get_sequence(self):
         durations = [b.value() for b in self.duration_row.boxes if not b.isHidden()]
         digital_logic = [c.get_logic() for c in self.digital_sequencer.array.columns if not c.isHidden()]
-        analog_logic = self.analog_sequencer.sequence
-        sequence = [(t, dict(d.items() + a.items())) for t, d, a in zip(durations, digital_logic, analog_logic)]
+        digital_sequence = {key: [{'dt': dt, 'state': dl[key]} for dt, dl in zip(durations, digital_logic)] for key in self.digital_channels}
+        analog_sequence = {key: [dict(s.items() + {'dt': dt}.items()) for s, dt in zip(self.analog_sequencer.sequence[key], durationns)] for key in self.analog_channels}
+        sequence = dict(digital_sequence.items() + analog_sequence.items())
         return sequence
     
     def add_column(self, i):

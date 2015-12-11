@@ -17,6 +17,7 @@ timeout = 5
 """
 
 import numpy as np
+import os
 from pyvisa import visa_exceptions
 from labrad.server import setting, Signal
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
@@ -130,7 +131,7 @@ class Agilent34980AServer(GPIBManagedServer):
             if hasattr(dev, 'configuration'):
                 inst_values = yield self._measure_active_channels(dev)
 		print inst_values
-                influx_client = InfluxDBClient(**dev.db_parameters)
+                influx_client = InfluxDBClient.from_DSN(os.getenv('INFLUXDBDSN'))
                 points = [{"measurement": "DMM", "tags": {"channel": name}, "fields": {"value": value}} for name, value in inst_values]
                 influx_client.write_points(points)
                 values.append(inst_values)

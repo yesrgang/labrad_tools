@@ -34,10 +34,5 @@ class ServerConfig(object):
             'srq monitor': Agilent349880AConfig(
                 gpib_device_id='yesr20 GPIB Bus - GPIB0::7', 
                 channels=srq_channels,
-                db_parameters={'host': 'yesr12.colorado.edu',
-                               'port': 8086,
-                               'username': 'srgang',
-                               'password': '698gang',
-                               'database': 'srq'}
                 ),
             }
