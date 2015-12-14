@@ -144,7 +144,7 @@ class Sequencer(QtGui.QWidget):
             print '!!!'
             self.populate()
             print '???'
-            self.default_sequence = [(1, dict([(name, {'type': 'linear', 'v': 0, 'length': (1, 1)}) for name in self.analog_channels.values()] + [(name, 0) for name in self.digital_channels.values()]), )]
+	    self.default_sequence = dict([(nameloc, [{'type': 'linear', 'vf': 0, 'dt': 1}]) for nameloc in self.analog_channels] + [(nameloc, [{'state': 0, 'dt': 1}]) for nameloc in self.digital_channels])
             self.set_sequence(self.default_sequence)
         except Exception, e:
             print e
@@ -170,9 +170,12 @@ class Sequencer(QtGui.QWidget):
         self.duration_row.scroll_area.setVerticalScrollBarPolicy(1)
         self.duration_row.scroll_area.setFrameShape(0)
 
+	print '?'
        
         self.digital_sequencer = DigitalSequencer(self.digital_channels, self.config)
+	print '!'
         self.analog_sequencer = AnalogSequencer(self.analog_channels, self.config)
+	
 
         self.hscroll_array = QtGui.QScrollArea()
         self.hscroll_array.setWidget(QtGui.QWidget())
@@ -429,8 +432,8 @@ class Sequencer(QtGui.QWidget):
 
 class SequencerConfig(object):
     def __init__(self):
-        self.digital_servername = 'yesr20_digital_sequencer'
-        self.analog_servername = 'yesr20_analog_sequencer'
+        self.digital_servername = 'yesr20_digital_sequencer_dev'
+        self.analog_servername = 'yesr20_analog_sequencer_dev'
         self.spacer_width = 65
         self.spacer_height = 15
         self.max_columns = 100

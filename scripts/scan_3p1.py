@@ -23,10 +23,10 @@ def scan(T, list_, command):
 
 cxn = labrad.connect()
 dds = cxn.DS345
-dds.select_device_by_name('ODT Tickle')
-sequence_filename = 'C:\Users\Ye Lab\Desktop\labrad\clients\sequencer_control\\20151116\loatodt_abs-swgain'
+dds.select_device_by_name('Spin Pol. AOM')
+sequence_filename = 'C:\Users\Ye Lab\Desktop\labrad\clients\sequencer_control\\20151211/loadodt_abs-redprobeb'
 T = T_from_sequence(sequence_filename)
-list_ = np.arange(50, 122, 2)
+list_ = np.arange(19.7e6, 20.4e6, .005e6)
 command = lambda l: dds.frequency(l)
 
 scan(T, list_, command)

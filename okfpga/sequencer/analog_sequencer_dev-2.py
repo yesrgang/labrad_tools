@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Analog Sequencer
+name = Analog Sequencer Dev
 version = 1.0
 description = 
-instancename = %LABRADNODE% Analog Sequencer
+instancename = %LABRADNODE% Analog Sequencer Dev
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -171,12 +171,7 @@ class AnalogSequencerServer(LabradServer):
 
     @setting(01, 'get channels')
     def get_channels(self, c):
-#        channels = {}
-#        for b in self.boards.values():
-#            for c in b.channels:
-#                channels[c.key] = c.__dict__
-#        return str(channels)
-        channels = np.concatenate([[c.key for c in board.channels] for n, b in sorted(self.boards.items())])
+        channels = np.concatenate([[c.key for c in b.channels] for n, b in sorted(self.boards.items())])
         return str(channels)
 
     @setting(07, 'run sequence', sequence='s')
@@ -241,7 +236,7 @@ class AnalogSequencerServer(LabradServer):
         self.update(json.dumps(d))
 
 if __name__ == "__main__":
-    config_name = 'analog_config'
+    config_name = 'analog_config_dev'
     __server__ = AnalogSequencerServer(config_name)
     from labrad import util
     util.runServer(__server__)

@@ -27,12 +27,12 @@ class AnalogNameColumn(QtGui.QWidget):
         self.populate()
 
     def populate(self):
-        self.labels = {n: NameBox(c+': '+n) for c, n in self.channels.items()}
+        self.labels = {nl: NameBox(nl) for nl in self.channels}
         self.layout = QtGui.QVBoxLayout()
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(10, 0, 0, 0)
 
-        for i, (c, n) in enumerate(sorted(self.channels.items())):
+        for i, nl in enumerate(sorted(self.channels, key=lambda l: nl.split('@')[1])):
             self.layout.addWidget(self.labels[n])
         self.layout.addWidget(QtGui.QWidget())
         self.setLayout(self.layout)
