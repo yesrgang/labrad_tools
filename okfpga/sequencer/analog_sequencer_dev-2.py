@@ -160,8 +160,8 @@ class AnalogSequencerServer(LabradServer):
 
     @setting(01, 'get channels')
     def get_channels(self, c):
-        channels = np.concatenate([[c.key for c in b.channels] for n, b in sorted(self.boards.items())])
-        return str(channels)
+        channels = np.concatenate([[c.key for c in b.channels] for n, b in sorted(self.boards.items())]).tolist()
+        return json.dumps(channels)
 
     @setting(07, 'run sequence', sequence='s')
     def run_sequence(self, c, sequence):

@@ -24,14 +24,14 @@ class SequencerConfig(object):
             'manual voltage' is number in Volts [-10, 10]
         """
         self.channels = {
-                        'E00': {'name': 'Alpha Intensity', 'mode': 'manual', 'manual voltage': -.5},
-                        'E01': {'name': 'Beta Intensity', 'mode': 'auto', 'manual voltage': 0},
-                        'E02': {'name': 'X Comp. Coil', 'mode': 'auto', 'manual voltage': 0},
-                        'E03': {'name': 'Y Comp. Coil', 'mode': 'auto', 'manual voltage': 0},
-                        'E04': {'name': 'Z Comp. Coil', 'mode': 'auto', 'manual voltage': 0},
+                        'E00': {'name': 'Alpha Intensity', 'mode': 'auto', 'manual voltage': 10},
+                        'E01': {'name': 'Beta Intensity', 'mode': 'auto', 'manual voltage': 10},
+                        'E02': {'name': 'X Comp. Coil', 'mode': 'manual', 'manual voltage': .59},
+                        'E03': {'name': 'Y Comp. Coil', 'mode': 'manual', 'manual voltage': .04},
+                        'E04': {'name': 'Z Comp. Coil', 'mode': 'manual', 'manual voltage': .82},
                         'E05': {'name': 'MOT Coil', 'mode': 'auto', 'manual voltage': 0},
-                        'E06': {'name': 'DACE06', 'mode': 'auto', 'manual voltage': 0},
-                        'E07': {'name': 'DACE07', 'mode': 'auto', 'manual voltage': 0},
+                        'E06': {'name': 'DACE06', 'mode': 'manual', 'manual voltage': -1.2},
+                        'E07': {'name': 'DACE07', 'mode': 'manual', 'manual voltage': -.3},
                         }
 
         self.name_to_key = {d['name']: k for k, d in self.channels.items()}

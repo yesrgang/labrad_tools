@@ -46,11 +46,11 @@ class DigitalColumn(QtGui.QWidget):
         self.populate()
 
     def populate(self):
-        self.buttons = {n: SequencerButton() for n in self.channels.values()}
+        self.buttons = {nl: SequencerButton() for nl in self.channels}
         self.layout = QtGui.QVBoxLayout()
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
-        for i, (nl, d) in enumerate(sorted(self.channels.items(), key=lambda (nl, d): nl.split('@')[1])):
+        for i, nl in enumerate(sorted(self.channels, key=lambda nl: nl.split('@')[1])):
             if not i%16 and i != 0:
                 self.layout.addWidget(Spacer(self.config))
             self.layout.addWidget(self.buttons[nl])
@@ -59,10 +59,10 @@ class DigitalColumn(QtGui.QWidget):
         self.setLayout(self.layout)
 
     def get_logic(self):
-        return {n: int(self.buttons[n].is_checked) for n in self.channels.values()}
+        return {nl: int(self.buttons[nl].is_checked) for n in self.channels}
 
     def set_logic(self, logic):
-        for nameloc in self.channels.values():
+        for nameloc in self.channels:
             self.buttons[nameloc].setChecked(logic[nameloc])
 
 class DigitalArray(QtGui.QWidget):
@@ -96,6 +96,7 @@ class NameBox(QtGui.QLabel):
         name, loc = nameloc.split('@')
         self.setText(loc+': '+name)
         self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter  )
+	self.name = name
 
     def mousePressEvent(self, x):
         self.clicked.emit()
@@ -108,12 +109,11 @@ class DigitalNameColumn(QtGui.QWidget):
         self.populate()
 
     def populate(self):
-	print self.channels
         self.labels = {nl: NameBox(nl) for nl in self.channels}
         self.layout = QtGui.QVBoxLayout()
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(10, 0, 0, 0)
-        for i, nl in enumerate(sorted(self.channels, key=lambda l: nl.split('@')[1])):
+        for i, nl in enumerate(sorted(self.channels, key=lambda nl: nl.split('@')[1])):
             if not i%16 and i != 0:
                 self.layout.addWidget(Spacer(self.config))
             self.layout.addWidget(self.labels[nl])

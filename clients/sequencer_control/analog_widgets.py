@@ -9,13 +9,25 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
+
+#class NameBox(QtGui.QLabel):
+#    clicked = QtCore.pyqtSignal()
+#    def __init__(self, name):
+#        super(NameBox, self).__init__(None)
+#        self.setText(name)
+#        self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter  )
+#        self.name = name
+#
+#    def mousePressEvent(self, x):
+#        self.clicked.emit()
 class NameBox(QtGui.QLabel):
     clicked = QtCore.pyqtSignal()
-    def __init__(self, name):
+    def __init__(self, nameloc):
         super(NameBox, self).__init__(None)
-        self.setText(name)
+        self.nameloc = nameloc
+        name, loc = nameloc.split('@')
+        self.setText(loc+': '+name)
         self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter  )
-        self.name = name.split(': ')[1]
 
     def mousePressEvent(self, x):
         self.clicked.emit()
@@ -27,13 +39,14 @@ class AnalogNameColumn(QtGui.QWidget):
         self.populate()
 
     def populate(self):
+        print type(self.channels)
         self.labels = {nl: NameBox(nl) for nl in self.channels}
         self.layout = QtGui.QVBoxLayout()
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(10, 0, 0, 0)
 
-        for i, nl in enumerate(sorted(self.channels, key=lambda l: nl.split('@')[1])):
-            self.layout.addWidget(self.labels[n])
+        for i, nl in enumerate(sorted(self.channels, key=lambda nl: nl.split('@')[1])):
+            self.layout.addWidget(self.labels[nl])
         self.layout.addWidget(QtGui.QWidget())
         self.setLayout(self.layout)
 
@@ -87,8 +100,8 @@ class AnalogSequencer(QtGui.QWidget):
         self.name_column.scroll_area.setHorizontalScrollBarPolicy(1)
         self.name_column.scroll_area.setVerticalScrollBarPolicy(1)
         self.name_column.scroll_area.setFrameShape(0)
-        
-        self.array = AnalogArray(self.channels)
+       	
+        self.array = AnalogArray(self.channels, self.config.ramp_maker)
         self.array.scroll_area = QtGui.QScrollArea()
         self.array.scroll_area.setWidget(self.array)
         self.array.scroll_area.setWidgetResizable(True)

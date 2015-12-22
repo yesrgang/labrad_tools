@@ -199,11 +199,11 @@ class SequencerServer(LabradServer):
                     else:
                         break
                 ba += [int(eval(hex(self.ramp_rate(dv, t))) >> i & 0xff) for i in range(0, 16, 8)]
-                ba += [int(eval(hex(self.time_to_ticks(t)+i)) >> i & 0xff) for i in range(0, 32, 8)]
+                ba += [int(eval(hex(self.time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)]
             else:
                 t = sequence[0][0]
                 ba += [int(eval(hex(self.ramp_rate(dv, t))) >> i & 0xff) for i in range(0, 16, 8)]
-                ba += [int(eval(hex(self.time_to_ticks(t)+i)) >> i & 0xff) for i in range(0, 32, 8)]
+                ba += [int(eval(hex(self.time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)]
         for m in range(1, len(sequence)):
             ba_buffer = {}
             for k, d in sorted(self.channels.items()): # add counter l for multiple linear ramps
@@ -223,10 +223,10 @@ class SequencerServer(LabradServer):
 			c = vi - a
 			continuous = lambda t: a*np.exp(-t/tau) + c
 			T = np.linspace(0, t_tot, pts+1)
-			dT = [t_tot/float(pts-1)]*pts
+			dT = [t_tot/float(pts)]*pts
 			V = continuous(T)
 			print 'points', V
-			dV = [V[i+1]-V[i] for i in range(pts)][:-1]
+			dV = [V[i+1]-V[i] for i in range(pts)]
 			print 'dVs', dV
 			ba += [int(eval(hex(self.ramp_rate(dV[0], dT[0]))) >> i & 0xff) for i in range(0, 16, 8)]
 			ba += [int(eval(hex(self.time_to_ticks(dT[0]))) >> i & 0xff) for i in range(0, 32, 8)]

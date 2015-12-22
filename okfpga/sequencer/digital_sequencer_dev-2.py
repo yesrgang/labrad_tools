@@ -113,8 +113,8 @@ class DigitalSequencerServer(LabradServer):
 #            for c in b.channels:
 #                channels[k] = c.__dict__
 #        return str(channels)
-        channels = np.concatenate([[c.key for c in b.channels] for n, b in sorted(self.boards.items())])
-        return str(channels)
+        channels = np.concatenate([[c.key for c in b.channels] for n, b in sorted(self.boards.items())]).tolist()
+        return json.dumps(channels)
 
     @setting(2, 'run sequence', sequence='s')
     def run_sequence(self, c, sequence):

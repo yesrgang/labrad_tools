@@ -17,18 +17,17 @@ def scan(T, list_, command):
     t0 = time.time()
     for i, l in enumerate(list_):
         command(float(l))
-        t_tar = t0 +  i*T+.5
+        t_tar = t0 +  i*T+.1
         print t_tar - time.time()
         time.sleep(t_tar - time.time())
 
 cxn = labrad.connect()
 dds = cxn.DS345
 dds.select_device_by_name('Spin Pol. AOM')
-sequence_filename = 'C:\Users\Ye Lab\Desktop\labrad\clients\sequencer_control\\20151211/loadodt_abs-redprobeb'
+sequence_filename = 'C:\Users\Ye Lab\Desktop\labrad\clients\sequencer_control\\20151221/evap_redpol'
 T = T_from_sequence(sequence_filename)
 list_ = np.arange(19.7e6, 20.4e6, .005e6)
 command = lambda l: dds.frequency(l)
-
 scan(T, list_, command)
 
 
