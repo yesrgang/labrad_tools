@@ -14,7 +14,7 @@ class DACBoard(object):
         """ non-defaults """
         for kw in kwargs:
             setattr(self, kw, kwargs[kw])
-	self.channels = {c.key: c for c in self.channels}
+#	self.channels = {c.key: c for c in self.channels}
 
 class DACChannel(object):
     def __init__(self, **kwargs):
@@ -24,21 +24,21 @@ class DACChannel(object):
 
 class AnalogSequencerConfig(object):
     def __init__(self):
-        self.name = '%LABRADNODE% Analog Sequencer'
+        self.name = '%LABRADNODE% Analog Sequencer Dev'
         self.update_id = 698023
 	self.mode = 'idle'
         self.boards = {
             'E': DACBoard(
                 device_id='sr2 dac1',
                 channels=[
-                    DACChannel(loc='E00', name='Alpha Intensity', mode='auto', manual_voltage=0),
-                    DACChannel(loc='E01', name='Beta Intensity', mode='auto', manual_voltage=0),
+                    DACChannel(loc='E00', name='Alpha Intensity', mode='auto', manual_voltage=10),
+                    DACChannel(loc='E01', name='Beta Intensity', mode='auto', manual_voltage=10),
                     DACChannel(loc='E02', name='X Comp. Coil', mode='auto', manual_voltage=0),
                     DACChannel(loc='E03', name='Y Comp. Coil', mode='auto', manual_voltage=0),
                     DACChannel(loc='E04', name='Z Comp. Coil', mode='auto', manual_voltage=0),
                     DACChannel(loc='E05', name='MOT Coil', mode='auto', manual_voltage=0),
-                    DACChannel(loc='E06', name='DACE06', mode='auto', manual_voltage=-10),
-                    DACChannel(loc='E07', name='DACE07', mode='auto', manual_voltage=-10),
+                    DACChannel(loc='E06', name='DACE06', mode='auto', manual_voltage=0),
+                    DACChannel(loc='E07', name='DACE07', mode='auto', manual_voltage=0),
 		    ],
                  ),
             'D': DACBoard(

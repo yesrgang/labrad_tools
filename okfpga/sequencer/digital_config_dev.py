@@ -13,7 +13,7 @@ class PulseBoardConfig(object):
         """ non-defaults """
         for kw in kwargs:
             setattr(self, kw, kwargs[kw])
-	self.channels = {c.key: c for c in self.channels}
+#	self.channels = {c.key: c for c in self.channels}
 
 class PulseChannelConfig(object):
     def __init__(self, **kwargs):
@@ -35,7 +35,7 @@ class PulseChannelConfig(object):
 
 class DigitalSequencerConfig(object):
     def __init__(self):
-        self.name = '%LABRADNODE% Digital Sequencer'
+        self.name = '%LABRADNODE% Digital Sequencer Dev'
 	self.update_id = 698024
 
         self.boards = {

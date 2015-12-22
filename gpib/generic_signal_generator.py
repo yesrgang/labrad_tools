@@ -2,10 +2,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = HP Signal Generator
+name = Generic Signal Generator
 version = 1.0
 description = 
-instancename = %LABRADNODE% HP Signal Generator
+instancename = %LABRADNODE% Generic Signal Generator
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -27,7 +27,7 @@ from influxdb import InfluxDBClient
 #FREQUENCY_ID = 698014
 #POWER_ID = 698015
 #
-class HPSignalGeneratorWrapper(GPIBDeviceWrapper):
+class GenericSignalGeneratorWrapper(GPIBDeviceWrapper):
     def initialize(self):
         pass
 
@@ -38,38 +38,41 @@ class HPSignalGeneratorWrapper(GPIBDeviceWrapper):
 
     @inlineCallbacks
     def get_state(self):
-        ans = yield self.query('OUTP:STAT?')
-	self.state = bool(int(ans))
-        returnValue(ans)
+        if hasattr(self, 'state_query'):
+            ans = yield self.query(self.state_query)
+            self.state = bool(int(ans))
 
     @inlineCallbacks
     def set_state(self, state):
-        yield self.write('OUTP:STAT {}'.format(int(bool(state))))
+        if hasattr(self, 'state_write'):
+        	yield self.write(self.state_write.format(int(bool(state))))
 
     @inlineCallbacks
     def get_frequency(self):
-        ans = yield self.query('FREQ:CW?')
-	self.frequency = float(ans)
-#        returnValue(float(ans)*1e-6) # keep things in MHz 
+        if hasattr(self, 'freq_query'):
+            ans = yield self.query(self.freq_query)
+            self.frequency = float(ans)
 
     @inlineCallbacks
     def set_frequency(self, frequency):
-        yield self.write('FREQ:CW {} Hz'.format(frequency))
+        if hasattr(self, 'freq_write'):
+            yield self.write(self.freq_write.format(frequency))
 
     @inlineCallbacks
     def get_amplitude(self):
-        ans = yield self.query('POW:AMPL?')
-	self.amplitude = float(ans)
-#        returnValue(float(ans))
+	if hasattr(self, 'ampl_query'):
+            ans = yield self.query(self.ampl_query)
+            self.amplitude = float(ans)
 
     @inlineCallbacks
     def set_amplitude(self, amplitude):
-        yield self.write('POW:AMPL {} DBM'.format(amplitude))
+        if hasattr(self, 'ampl_write'):
+            yield self.write(self.ampl_write.format(amplitude))
 
 
-class HPSignalGeneratorServer(GPIBManagedServer):
-    """Provides basic control for HP signal generators"""
-    deviceWrapper = HPSignalGeneratorWrapper
+class GenericSignalGeneratorServer(GPIBManagedServer):
+    """Provides basic control for Generic signal generators"""
+    deviceWrapper = GenericSignalGeneratorWrapper
     
     def __init__(self, configuration_filename):
         self.configuration_filename = configuration_filename
@@ -147,6 +150,6 @@ class HPSignalGeneratorServer(GPIBManagedServer):
 
 #if __name__ == '__main__':
 #    configuration_name = 'hpetc_signal_generator_config'
-#    __server__ = HPSignalGeneratorServer(configuration_name)
+#    __server__ = GenericSignalGeneratorServer(configuration_name)
 #    from labrad import util
 #    util.runServer(__server__)

@@ -108,11 +108,12 @@ class DigitalNameColumn(QtGui.QWidget):
         self.populate()
 
     def populate(self):
-        self.labels = {nl: NameBox(nl) for nl in self.channels.keys()}
+	print self.channels
+        self.labels = {nl: NameBox(nl) for nl in self.channels}
         self.layout = QtGui.QVBoxLayout()
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(10, 0, 0, 0)
-        for i, (nl, d) in enumerate(sorted(self.channels.items(), key=lambda (nl, d): nl.split('@')[1])):
+        for i, nl in enumerate(sorted(self.channels, key=lambda l: nl.split('@')[1])):
             if not i%16 and i != 0:
                 self.layout.addWidget(Spacer(self.config))
             self.layout.addWidget(self.labels[nl])

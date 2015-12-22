@@ -18,16 +18,25 @@ def scan(T, list_, command):
     for i, l in enumerate(list_):
         command(float(l))
         t_tar = t0 +  i*T+.5
-        print t_tar - time.time()
+	print 'value: %.4f duration: %.4f s' % (l, (t_tar - time.time()))
         time.sleep(t_tar - time.time())
 
 cxn = labrad.connect()
 dds = cxn.DS345
 dds.select_device_by_name('ODT Tickle')
-sequence_filename = 'C:\Users\Ye Lab\Desktop\labrad\clients\sequencer_control\\20151116\loatodt_abs-swgain'
+sequence_filename = 'C:\Users\Ye Lab\Desktop\labrad\clients\sequencer_control\\20151208\loadodt_abs_tickle_side'
 T = T_from_sequence(sequence_filename)
-list_ = np.arange(50, 122, 2)
+list_ = np.arange(100, 300, 10)
 command = lambda l: dds.frequency(l)
+
+print '3'
+time.sleep(1)
+print '2'
+time.sleep(1)
+print '1'
+time.sleep(1)
+print 'Go'
+time.sleep(0.1)
 
 scan(T, list_, command)
 

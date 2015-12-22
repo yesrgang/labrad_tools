@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Digital Sequencer
+name = Digital Sequencer Dev 
 version = 1.0
 description = 
-instancename = %LABRADNODE% Digital Sequencer
+instancename = %LABRADNODE% Digital Sequencer Dev
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -16,6 +16,7 @@ timeout = 20
 ### END NODE INFO
 """
 import json
+import numpy as np
 
 import ok
 from labrad.server import LabradServer, setting, Signal
@@ -112,7 +113,7 @@ class DigitalSequencerServer(LabradServer):
 #            for c in b.channels:
 #                channels[k] = c.__dict__
 #        return str(channels)
-        channels = np.concatenate([[c.key for c in board.channels] for n, b in sorted(self.boards.items())])
+        channels = np.concatenate([[c.key for c in b.channels] for n, b in sorted(self.boards.items())])
         return str(channels)
 
     @setting(2, 'run sequence', sequence='s')
@@ -150,7 +151,7 @@ class DigitalSequencerServer(LabradServer):
     
     def write_channel_stateinvs(self, board): 
         cm_list = [c.mode for c in board.channels]
-        cs_list = [c.state for c in board.channels]
+        cs_list = [c.manual_state for c in board.channels]
         ci_list = [c.invert for c in board.channels]
         bas = [sum([2**j for j, (m, s, i) in enumerate(zip(cm_list[i:i+16], cs_list[i:i+16], ci_list[i:i+16])) if (m=='manual' and s!=i) or (m=='auto' and i==True)]) for i in range(0, 64, 16)]
         for ba, wire in zip(bas, board.channel_stateinv_wires):
