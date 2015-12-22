@@ -121,18 +121,7 @@ class AnalogSequencerServer(LabradServer):
             return signed_ramp_rate + 2**16
 
     def make_sequence(self, board, sequence):
-        # sequence is dict {channel_id: [{dt, type, ...}]}
-
-        # take sequence name@loc to configuration name@loc
-        sequence_keyfix = {}
-        for key in sequence:
-            name, loc =key.split('@')
-            for c in board.channels:
-                if c.name == name:
-                    sequence_keyfix[c.key] = sequence[key]
-                elif c.loc == loc:
-                    sequence_keyfix.set_default(c.key, sequence[key])
-        sequence = sequence_keyfix
+        sequence = self._fix_sequence_keys(sequence)
         
         # ramp to zero at end
         for c in board.channels:
@@ -171,11 +160,6 @@ class AnalogSequencerServer(LabradServer):
 
     @setting(01, 'get channels')
     def get_channels(self, c):
-#        channels = {}
-#        for b in self.boards.values():
-#            for c in b.channels:
-#                channels[c.key] = c.__dict__
-#        return str(channels)
         channels = np.concatenate([[c.key for c in board.channels] for n, b in sorted(self.boards.items())])
         return str(channels)
 
@@ -232,6 +216,7 @@ class AnalogSequencerServer(LabradServer):
         channel = self.id2channel(channel_id)
         return json.dumps(channel.__dict__)
 
+
     @setting(10, 'notify listeners')
     def notify_listeners(self, c):
         d = {}
@@ -239,6 +224,25 @@ class AnalogSequencerServer(LabradServer):
             for c in b.channels:
                 d[c.name] = c.__dict__
         self.update(json.dumps(d))
+    
+    @setting(11, 'fix sequence keys', sequence='s', returns='s')
+    def fix_sequence_keys(self, c, sequence):
+        sequence =  Sequence(sequence)
+        sequence_keyfix =  self._fix_sequence_keys(sequence)
+        return sequence_keyfix.dump()
+    
+    def _fix_sequence_keys(self, sequence):
+        # take sequence name@loc to configuration name@loc
+        sequence_keyfix = {}
+        for key in sequence:
+            name, loc =key.split('@')
+            for c in board.channels:
+                if c.name == name:
+                    sequence_keyfix[c.key] = sequence[key]
+                elif c.loc == loc:
+                    sequence_keyfix.set_default(c.key, sequence[key])
+        return Sequence(sequence_keyfix)
+
 
 if __name__ == "__main__":
     config_name = 'analog_config'

@@ -72,18 +72,12 @@ class DigitalSequencerServer(LabradServer):
         return int(board.clk_frequency*time)
 
     def make_sequence(self, board, sequence):
-        # sequence is dict {name@loc: [{dt, state}]}
+        sequence = self._fix_sequence_keys(sequence)
 
-        # take sequence name@loc to configuration name@loc
-        sequence_keyfix = {}
-        for key in sequence:
-            name, loc =key.split('@')
-            for c in board.channels:
-                if c.name == name:
-                    sequence_keyfix[c.key] = sequence[key]
-                elif c.loc == loc:
-                    sequence_keyfix.set_default(c.key, sequence[key])
-        sequence = sequence_keyfix
+        # make sure trigger happens on first run
+        for c in board.channels:
+            sequence[c.key].insert(0, {'dt': 10e-6, 'state': sequence[c.key][0]['state']})
+        sequence['trigger'][0]['state'] = 0
 
         # for now, assume each channel_sequence has same timings
         programmable_sequence = [(s[channels[0].key]['dt'], [s[c.key]['state'] for c in board.channels]) for s in sequence] 
@@ -194,6 +188,24 @@ class DigitalSequencerServer(LabradServer):
             for c in b.channels:
                 d[c.name] = c.__dict__
         self.update(json.dumps(d))
+
+    @setting(11, 'fix sequence keys', sequence='s', returns='s')
+    def fix_sequence_keys(self, c, sequence):
+        sequence =  Sequence(sequence)
+        sequence_keyfix =  self._fix_sequence_keys(sequence)
+        return sequence_keyfix.dump()
+    
+    def _fix_sequence_keys(self, sequence):
+        # take sequence name@loc to configuration name@loc
+        sequence_keyfix = {}
+        for key in sequence:
+            name, loc =key.split('@')
+            for c in board.channels:
+                if c.name == name:
+                    sequence_keyfix[c.key] = sequence[key]
+                elif c.loc == loc:
+                    sequence_keyfix.set_default(c.key, sequence[key])
+        return Sequence(sequence_keyfix)
 
 if __name__ == "__main__":
     config_name = 'digital_config_dev'

@@ -1,4 +1,5 @@
 import json
+import types
 
 import ok
 from labrad.server import LabradServer, setting, Signal
@@ -12,8 +13,9 @@ from okfpga.sequencer.sequence import Sequence
 class ConductorServer(LabradServer):
     name = '%LABRADNODE% Conductor'
     def __init__(self, config_name):
+        self.device_parameters = {}
+        self.sequence_parameters = {}
         self.sequence = {}
-        self.parameters = {}
         LabradServer.__init__(self)
         self.config_name = config_name
         self.load_configuration()
@@ -29,8 +31,43 @@ class ConductorServer(LabradServer):
         config = __import__(self.config_name).ConductorConfig()
         for key, value in config.__dict__.items():
             setattr(self, key, value)
+
+    @setting(1, 'set device parameters', device_parameters='s', returns='s')
+    def set_device_parameters(self, c, device_parameters=None):
+        """ 
+        device parameters is "{*device_name: {*parameter_name: {command: *command, value: *value}}}"
+        *command is something like "lambda value: sever_name.setting(value)"
+        """
+        device_parameters = json.loads(device_parameters)
+        if device_parameters is not None:
+            self.initialize_device_parameters(device_parameters)
+            self.device_parameters.update(device_parameters)
+        return json.dumps(self.device_parameters)
     
-    @setting(2, 'load sequence', sequence='s', returns='s')
+    def initialize_device_parameters(self, device_parameters):
+        value = None
+        for device, parameters in device_parameters.items():
+            for p, d in parameters.items():
+                if type(d['value']) is types.ListType:
+                    value = d['value'][0]
+                else:
+                    value = d['value']
+            self = self
+            eval(d['init command'])
+            eval(d['command'])(value)
+    
+    @setting(2, 'set sequence parameters', parameters='s', returns='s')
+    def set_sequence_parameters(self, c, parameters=None):
+        """
+        parameters is dictionary {name: value}
+        """
+        parameters = json.loads(parameters)
+        if sequence_parameters is not None:
+            self.sequence_parameters = sequence_parameters
+        return json.dumps(self.sequence_parameters)
+    
+    
+    @setting(3, 'load sequence', sequence='s', returns='s')
     def load_sequence(self, c, sequence):
         sequence_keyfix = {}
         for sequencer in self.sequencers:
@@ -38,40 +75,41 @@ class ConductorServer(LabradServer):
             s = yield server.fix_sequence_keys(sequence)
             sequence_keyfix.update(s)
         self.sequence = Sequence(sequence_keyfix)
-        return self.sequence.dump()
+        returnValue(self.sequence.dump())
 
-    @setting(3, 'set parameters', parameters='s')
-    def set_parameters(self, c, parameters):
-        parameters = json.loads(parameters)
-        """
-        parameters is dictionary {name: value}
-        """
-        self.parameters = parameters
-
-    def evaluate_next_parameters(self, sequence):
+    def evaluate_sequence_parameters(self, sequence):
         next_parameters = {}
-        for p, v in self.parameters.items():
+        for p, v in self.sequence_parameters.items():
             if type(v) is types.ListType:
-                if len(v) == 1:
-                    next_parameters[p] = v[0]
-                else:
-                    next_parameters[p] = v.pop(0)
+                next_parameters[p] = v[0]
+                v.insert(len(v), v.pop(0))
             else:
                 next_parameters[p] = v
-        
         next_sequence = sequence.dump()
         for p, v in next_parameters:
             next_sequence.replace('"'+p+'"', str(v))
         return next_sequence
 
-    @setting(4, 'asdf')
-    def asdf(self, c):
-        return '!'
-   
+    @inlineCallbacks
+    def evaluate_device_parameters(self):
+        value = None
+        for device, parameters in self.device_parameters.items():
+            for p, d in parameters.items():
+                if type(d['value']) is types.ListType:
+                    value = d['value'][0]
+                    d['value'].insert(len(d['value']), d['value'].pop(0))
+                else:
+                    value = d['value']
+                self = self
+                yield eval(d['command'])(value)
+                print value
+
+    
     @inlineCallbacks
     def run_sequence(self):
+        yield self.evaluate_device_parameters()
         if self.sequence:
-            sequence = self.evaluate_next_parameters(self.sequence)
+            sequence = self.evaluate_sequence_parameters(self.sequence)
             for sequencer in self.sequencers:
                 server = getattr(self.client, sequencer)
                 self.in_communication.acquire()
