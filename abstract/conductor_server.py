@@ -11,16 +11,15 @@ from twisted.internet.threads import deferToThread
 from okfpga.sequencer.sequence import Sequence
 
 class ConductorServer(LabradServer):
-    name = '%LABRADNODE%_conductor'
+    update_sp = Signal(698123, 'signal: update_sp', 's')
     def __init__(self, config_name):
         self.device_parameters = {}
         self.sequence_parameters = {}
         self.sequence = {}
-        LabradServer.__init__(self)
         self.config_name = config_name
         self.load_configuration()
         self.in_communication = DeferredLock()
-	self.update = Signal(self.update_id, 'signal: update', 's')
+        LabradServer.__init__(self)
 
     @inlineCallbacks
     def initServer(self):
@@ -61,11 +60,10 @@ class ConductorServer(LabradServer):
         """
         parameters is dictionary {name: value}
         """
-        sequence_parameters = json.loads(sequence_parameters)
         if sequence_parameters is not None:
-            self.sequence_parameters = sequence_parameters
-        self.update(json.dumps(self.sequence_parameters))
-        return json.dumps(self.sequence_parameters)
+            self.sequence_parameters = json.loads(sequence_parameters)
+        yield self.update_sp(json.dumps(self.sequence_parameters))
+        returnValue(json.dumps(self.sequence_parameters))
 
     @setting(3, 'load sequence', sequence='s', returns='s')
     def load_sequence(self, c, sequence):
@@ -87,7 +85,7 @@ class ConductorServer(LabradServer):
                 next_parameters[p] = v
         next_sequence = sequence.dump()
         for p, v in next_parameters:
-            next_sequence.replace('"'+p+'"', str(v))
+            next_sequence = next_sequence.replace('"'+p+'"', str(v))
         return next_sequence
 
     @inlineCallbacks

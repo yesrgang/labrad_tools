@@ -310,9 +310,9 @@ class Sequencer(QtGui.QWidget):
 
 
     def edit_analog_voltage(self, channel_name):
-        # pass self.cxn ave connects to conductor and gets variables if undefined, set to 0
         def eav():
-            sequence = AnalogVoltageEditor(channel_name, self.get_sequence(), self.ramp_maker).getEditedSequence(channel_name, self.get_sequence())
+            ave_args = (channel_name, self.get_sequence(), self.ramp_maker, self.config, self.reactor, self.cxn)
+            sequence = AnalogVoltageEditor(*ave_args).getEditedSequence(*ave_args)
             self.set_sequence(sequence)
         return eav
 
