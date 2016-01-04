@@ -11,7 +11,7 @@ from twisted.internet.threads import deferToThread
 from okfpga.sequencer.sequence import Sequence
 
 class ConductorServer(LabradServer):
-    name = '%LABRADNODE% Conductor'
+    name = '%LABRADNODE%_conductor'
     def __init__(self, config_name):
         self.device_parameters = {}
         self.sequence_parameters = {}
