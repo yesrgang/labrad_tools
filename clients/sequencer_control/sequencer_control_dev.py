@@ -7,7 +7,7 @@ from twisted.internet.defer import inlineCallbacks
 
 import digital_channel_control as dcc
 from connection import connection
-from client_tools import SuperSpinBox
+from client_tools2 import SuperSpinBox
 from digital_widgets import DigitalSequencer
 from analog_widgets import AnalogSequencer
 from analog_editor import AnalogVoltageEditor

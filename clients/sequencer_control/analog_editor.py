@@ -1,6 +1,6 @@
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
-from client_tools import SuperSpinBox
+from client_tools2 import SuperSpinBox
 import numpy as np
 import matplotlib
 matplotlib.use('Qt4Agg')
