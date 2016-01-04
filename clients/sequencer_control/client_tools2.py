@@ -90,7 +90,7 @@ class SuperSpinBox(QtGui.QLineEdit):
         if text[0] == '*':
             return text.replace(' ', '')
         else:
-            return str(float(self.text().split(' ')[0])*self.display_factor)
+            return float(self.text().split(' ')[0])*self.display_factor
 
 
 if __name__ == '__main__':
