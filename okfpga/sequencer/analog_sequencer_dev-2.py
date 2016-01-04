@@ -125,7 +125,7 @@ class AnalogSequencerServer(LabradServer):
         
         # ramp to zero at end
         for c in board.channels:
-            sequence[c.key].append({'dt': 10e-3, 'type': 'linear', 'vf': 0})
+            sequence[c.key].append({'dt': 10e-3, 'type': 'lin', 'vf': 0})
 
         # break into smaller pieces [(T, loc, {dt, dv})]
         unsorted_ramps = []
@@ -133,7 +133,7 @@ class AnalogSequencerServer(LabradServer):
             ramps = RampMaker(sequence[c.key]).get_programmable()
             T = 0
             for r in ramps:
-                unsorted_ramp.append((T, c.loc, r))
+                unsorted_ramps.append((T, c.loc, r))
                 T += r['dt']
         sorted_ramps = sorted(unsorted_ramps)
 
@@ -234,13 +234,14 @@ class AnalogSequencerServer(LabradServer):
     def _fix_sequence_keys(self, sequence):
         # take sequence name@loc to configuration name@loc
         sequence_keyfix = {}
-        for key in sequence:
+        for key in sequence.keys():
             name, loc =key.split('@')
-            for c in board.channels:
-                if c.name == name:
-                    sequence_keyfix[c.key] = sequence[key]
-                elif c.loc == loc:
-                    sequence_keyfix.set_default(c.key, sequence[key])
+	    for board in self.boards.values():
+                for c in board.channels:
+                    if c.name == name:
+                        sequence_keyfix[c.key] = sequence[key]
+                    elif c.loc == loc:
+                        sequence_keyfix.set_default(c.key, sequence[key])
         return Sequence(sequence_keyfix)
 
 

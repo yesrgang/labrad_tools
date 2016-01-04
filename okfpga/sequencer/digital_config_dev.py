@@ -32,11 +32,22 @@ class PulseChannelConfig(object):
         
         self.key = self.name+'@'+self.loc
 
+class TimingChannelConfig(object):
+    def __init__(self, **kwargs):
+        self.name = 'digital@T'
+        self.dt_range = (1e-6, 30)
+
+        """ non-defaults """
+        for kw in kwargs:
+            setattr(self, kw, kwargs[kw])
+
+
 
 class DigitalSequencerConfig(object):
     def __init__(self):
         self.name = '%LABRADNODE% Digital Sequencer Dev'
 	self.update_id = 698024
+	self.timing_channel = TimingChannelConfig()
 
         self.boards = {
             '1': PulseBoardConfig(

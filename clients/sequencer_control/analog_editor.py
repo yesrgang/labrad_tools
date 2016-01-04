@@ -8,9 +8,9 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
-sequence = [(1, {'a': {'type': 'sexp', 'dt': 1.0, 'vi': 2.0, 'vf': 5, 'tau': .5, 'pts': 5}}), 
-            (2, {'a': {'type': 'exp', 'dt': 1.0, 'vf': 0, 'tau': -.5, 'pts': 5}}),
-           ]
+from okfpga.sequencer.analog_ramps import RampMaker
+
+sequence = {'a': [{'type': 'sexp', 'dt': 1.0, 'vi': 2.0, 'vf': 5, 'tau': .5, 'pts': 5}, {'type': 'exp', 'dt': 1.0, 'vf': 0, 'tau': -.5, 'pts': 5}]}
 
 def merge_dicts(*dictionaries):
     merged_dictionary = {}
@@ -162,11 +162,12 @@ class MplCanvas(FigureCanvas):
         self.axes.plot(times, voltages)
 
 class AnalogVoltageEditor(QtGui.QDialog):
-    def __init__(self, channel, sequence, RampMaker, parent=None):
+    def __init__(self, channel, sequence, ramp_maker, parent=None):
         super(AnalogVoltageEditor, self).__init__(parent)
-        self.channel = channel
+        self.channel = str(channel)
         self.sequence = sequence
         self.ramp_maker = RampMaker
+	print ramp_maker
 
         self.loading = False
         self.populate()
@@ -223,31 +224,35 @@ class AnalogVoltageEditor(QtGui.QDialog):
         for c in self.ramp_table.cols:
             c.hide()
 
-        for s, c in zip(self.sequence, self.ramp_table.cols):
-            t, d = s
-            d[self.channel].update({'dt': t})
-            ramp_type = d[self.channel]['type']
+        for s, c in zip(self.sequence[self.channel], self.ramp_table.cols):
+            ramp_type = s['type']
             c.show()
             c.ramp_select.setCurrentIndex(c.ramp_select.findText(ramp_type))
-            for k, v in d[self.channel].items():
-                if k not in ['length', 'type']:
-                    c.parameter_widgets[ramp_type].pboxes[k].display(v)
+	    for k in c.parameter_widgets[ramp_type].pboxes.keys():
+                c.parameter_widgets[ramp_type].pboxes[k].display(s[k])
+                
+#            for k, v in s.items():
+#                if k not in ['length', 'type']:
+#                    c.parameter_widgets[ramp_type].pboxes[k].display(v)
         self.loading = False
         self.replot()
 
     def add_column(self, i):
         def ac():
             sequence = self.get_sequence()
-            sequence.insert(i, sequence[i])
+	    for c in sequence.keys():
+                sequence[c].insert(i, sequence[c][i])
             self.set_sequence(sequence)
         return ac
 
     def dlt_column(self, i):
         def dc():
             sequence = self.get_sequence()
-            sequence.pop(i)
+	    for c in sequence.keys():
+                sequence[c].pop(i)
             self.set_sequence(sequence)
         return dc
+
 
     def set_sequence(self, sequence):
         self.sequence = sequence
@@ -260,7 +265,7 @@ class AnalogVoltageEditor(QtGui.QDialog):
 
     def get_sequence(self):
         channel_sequence = self.ramp_table.get_channel_sequence()
-        self.sequence = [(cs['dt'], merge_dicts(s[1], {self.channel: cs})) for s, cs in zip(self.sequence, channel_sequence)]
+        self.sequence.update({self.channel: channel_sequence})
         return self.sequence
 
     def replot(self):
@@ -289,9 +294,9 @@ class AnalogVoltageEditor(QtGui.QDialog):
         else:
             QtGui.QWidget().keyPressEvent(c)
 
-    def accept(self):
-        sequence = self.ramp_table.get_channel_sequence()
-        print self.ramp_maker(sequence).get_programmable()
+#    def accept(self):
+#        sequence = self.ramp_table.get_channel_sequence()
+#        print self.ramp_maker(sequence).get_programmable()
 
 if __name__ == '__main__':
     a = QtGui.QApplication([])

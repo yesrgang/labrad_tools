@@ -28,6 +28,7 @@ class NameBox(QtGui.QLabel):
         name, loc = nameloc.split('@')
         self.setText(loc+': '+name)
         self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter  )
+	self.name = name
 
     def mousePressEvent(self, x):
         self.clicked.emit()
@@ -75,13 +76,15 @@ class AnalogArray(FigureCanvas):
         self.axes.cla()
         for i, c in enumerate(self.channels):
             channel_sequence = sequence[c]
-            T, V = self.ramp_maker(channel_sequence, scale='step')
+            T, V = self.ramp_maker(channel_sequence).get_plottable(scale='step')
             V = np.array(V) - i*20
+	    print len(T), len(V)
+
             self.axes.plot(T, V)
-        for i in range(len(self.channels.items())-1):
+        for i in range(len(self.channels)-1):
             self.axes.axhline(-10-i*20, linestyle="--", color='grey')
-        self.axes.set_ylim(-20*len(self.channels.items())+10, 10)
-        self.axes.set_xlim(0, len(sequence)*pps)
+        self.axes.set_ylim(-20*len(self.channels)+10, 10)
+        self.axes.set_xlim(0, len(T))
         self.draw()
 
 class AnalogSequencer(QtGui.QWidget):

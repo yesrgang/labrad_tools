@@ -56,9 +56,9 @@ class DurationRow(QtGui.QWidget):
     def display_sequence(self, sequence):
         for b in self.boxes[::-1]:
             b.hide()
-        for (t, s), b in zip(sequence, self.boxes):
+        for dt, b in zip(sequence[self.config.timing_channel], self.boxes):
             b.show()
-            b.display(t)
+            b.display(dt)
 
 
 class AddDltButton(QtGui.QWidget):
@@ -92,7 +92,7 @@ class AddDltRow(QtGui.QWidget):
     def display_sequence(self, sequence):
         for b in self.buttons[::-1]:
             b.hide()
-        for (t, s), b in zip(sequence, self.buttons):
+        for t, b in zip(sequence[self.config.timing_channel], self.buttons):
             b.show()
 
 class LoadAndSave(QtGui.QWidget):
@@ -142,15 +142,29 @@ class Sequencer(QtGui.QWidget):
             dserver = yield self.cxn.get_server(self.digital_servername)
             dc = yield dserver.get_channels()
             self.digital_channels = json.loads(dc)
+	    tc = yield dserver.get_timing_channel()
+	    self.timing_channel = json.loads(tc)
+	    self.config.timing_channel = json.loads(tc)
             aserver = yield self.cxn.get_server(self.analog_servername)
             ac = yield aserver.get_channels()
             self.analog_channels = json.loads(ac)
+	    self.channels = self.digital_channels + self.analog_channels + [self.timing_channel]
             self.populate()
-	    self.default_sequence = dict([(nameloc, [{'type': 'linear', 'vf': 0, 'dt': 1}]) for nameloc in self.analog_channels] + [(nameloc, [{'state': 0, 'dt': 1}]) for nameloc in self.digital_channels])
+            self.default_sequence = dict([(nameloc, [{'type': 'lin', 'vf': 0, 'dt': 1}]) for nameloc in self.analog_channels] + [(nameloc, [{'state': 0, 'dt': 1}]) for nameloc in self.digital_channels] + [(self.timing_channel, [1])])
             self.set_sequence(self.default_sequence)
         except Exception, e:
-            print e
+            print 'Error', e
             self.setDisabled(True)
+#        dserver = yield self.cxn.get_server(self.digital_servername)
+#        dc = yield dserver.get_channels()
+#        self.digital_channels = json.loads(dc)
+#        aserver = yield self.cxn.get_server(self.analog_servername)
+#        ac = yield aserver.get_channels()
+#        self.analog_channels = json.loads(ac)
+#        self.populate()
+#	self.default_sequence = dict([(nameloc, [{'type': 'lin', 'vf': 0, 'dt': 1}]) for nameloc in self.analog_channels] + [(nameloc, [{'state': 0, 'dt': 1}]) for nameloc in self.digital_channels] + [(self.timing_channel, [1])])
+#        self.set_sequence(self.default_sequence)
+#        self.setDisabled(True)
 
 
     def populate(self):
@@ -290,10 +304,10 @@ class Sequencer(QtGui.QWidget):
             b.dlt.clicked.connect(self.dlt_column(i))
 
         for l in self.digital_sequencer.name_column.labels.values():
-            l.clicked.connect(self.open_digital_manual(l.name))
+            l.clicked.connect(self.open_digital_manual(l.nameloc))
 
         for l in self.analog_sequencer.name_column.labels.values():
-            l.clicked.connect(self.edit_analog_voltage(l.name))
+            l.clicked.connect(self.edit_analog_voltage(l.nameloc))
 
     def open_digital_manual(self, channel_name):
         def odm():
@@ -305,7 +319,6 @@ class Sequencer(QtGui.QWidget):
             dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             widget.show()
             pos = QtGui.QCursor().pos()
-            print pos
             pos = pos - QtCore.QPoint(100, 50)
             widget.move(pos)
         return odm
@@ -313,7 +326,7 @@ class Sequencer(QtGui.QWidget):
 
     def edit_analog_voltage(self, channel_name):
         def eav():
-            sequence = AnalogVoltageEditor(channel_name, self.get_sequence()).getEditedSequence(channel_name, self.get_sequence())
+            sequence = AnalogVoltageEditor(channel_name, self.get_sequence(), self.ramp_maker).getEditedSequence(channel_name, self.get_sequence())
             self.set_sequence(sequence)
         return eav
 
@@ -345,9 +358,10 @@ class Sequencer(QtGui.QWidget):
         self.load_sequence(file_name)
     
     def save_sequence(self):
-        sequence = [str(seq) + '\n' for seq in self.get_sequence()]
-        outfile = open(self.browse_and_save.location_box.text(), 'w')
-        outfile.write(''.join(sequence))
+        file_name = self.browse_and_save.location_box.text()
+	with open(file_name, 'w') as outfile:
+            sequence = self.get_sequence()
+            json.dump(sequence, outfile)
 
     @inlineCallbacks
     def run_sequence(self, c):
@@ -358,9 +372,9 @@ class Sequencer(QtGui.QWidget):
         yield dserver.run_sequence(sequence)
 
     def load_sequence(self, file_name):
-        infile = open(file_name, 'r')
-        sequence = [eval(line.split('\n')[:-1][0]) for line in infile.readlines()]
-        self.set_sequence(sequence)
+	with open(file_name, 'r') as infile:
+	    sequence = json.load(infile)
+	    self.set_sequence(sequence)
 
     def set_sequence(self, sequence):
 #        self.sequence_history.insert(0, sequence)
@@ -370,14 +384,13 @@ class Sequencer(QtGui.QWidget):
 #            self.sequence_history.pop(i)
 #        self.sequence_history_index = 0
 
-        self.display_sequence()
+        self.display_sequence(sequence)
 
 
-    def display_sequence(self):
+    def display_sequence(self, sequence):
 #        self.sequence_history_index = sorted([0, self.sequence_history_index, 20])[1]
 #        sequence = self.sequence_history[self.sequence_history_index]
 #        self.sequence_history.append(sequence)
-	print 1
 
         self.analog_sequencer.display_sequence(sequence)
         self.digital_sequencer.display_sequence(sequence)
@@ -387,23 +400,26 @@ class Sequencer(QtGui.QWidget):
 
     def get_sequence(self):
         durations = [b.value() for b in self.duration_row.boxes if not b.isHidden()]
+	timing_sequence = {self.timing_channel: durations}
         digital_logic = [c.get_logic() for c in self.digital_sequencer.array.columns if not c.isHidden()]
-        digital_sequence = {key: [{'dt': dt, 'state': dl[key]} for dt, dl in zip(durations, digital_logic)] for key in self.digital_channels}
-        analog_sequence = {key: [dict(s.items() + {'dt': dt}.items()) for s, dt in zip(self.analog_sequencer.sequence[key], durationns)] for key in self.analog_channels}
-        sequence = dict(digital_sequence.items() + analog_sequence.items())
+        digital_sequence = {key: [{'state': dl[key]} for dl in digital_logic] for key in self.digital_channels}
+        analog_sequence = {key: [dict(s.items() + {'dt': dt}.items()) for s, dt in zip(self.analog_sequencer.sequence[key], durations)] for key in self.analog_channels}
+        sequence = dict(digital_sequence.items() + analog_sequence.items() + timing_sequence.items())
         return sequence
     
     def add_column(self, i):
         def ac():
             sequence = self.get_sequence()
-            sequence.insert(i, sequence[i])
+	    for c in self.channels:
+                sequence[c].insert(i, sequence[c][i])
             self.set_sequence(sequence)
         return ac
 
     def dlt_column(self, i):
         def dc():
             sequence = self.get_sequence()
-            sequence.pop(i)
+	    for c in self.channels:
+                sequence[c].pop(i)
             self.set_sequence(sequence)
         return dc
 

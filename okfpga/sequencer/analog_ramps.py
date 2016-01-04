@@ -170,7 +170,7 @@ class RampMaker(object):
         if scale=='real':
             return T, V
         elif scale=='step':
-            T = range(len(self.sequence)*pts)
+            T = range(len(V))
             return T, V
 
     def get_continuous(self):

@@ -41,17 +41,17 @@ class AnalogSequencerConfig(object):
                     DACChannel(loc='E07', name='DACE07', mode='auto', manual_voltage=0),
 		    ],
                  ),
-            'D': DACBoard(
+            'F': DACBoard(
                 device_id='srq analog 2',
                 channels=[
-                    DACChannel(loc='D00', name='DACD00', mode='auto', manual_voltage=0),
-                    DACChannel(loc='D01', name='DACD01', mode='auto', manual_voltage=0),
-                    DACChannel(loc='D02', name='DACD02', mode='auto', manual_voltage=0),
-                    DACChannel(loc='D03', name='DACD03', mode='auto', manual_voltage=0),
-                    DACChannel(loc='D04', name='DACD04', mode='auto', manual_voltage=0),
-                    DACChannel(loc='D05', name='DACD05', mode='auto', manual_voltage=0),
-                    DACChannel(loc='D06', name='DACD06', mode='auto', manual_voltage=0),
-                    DACChannel(loc='D07', name='DACD07', mode='auto', manual_voltage=0),
+                    DACChannel(loc='F00', name='DACF00', mode='auto', manual_voltage=0),
+                    DACChannel(loc='F01', name='DACF01', mode='auto', manual_voltage=0),
+                    DACChannel(loc='F02', name='DACF02', mode='auto', manual_voltage=0),
+                    DACChannel(loc='F03', name='DACF03', mode='auto', manual_voltage=0),
+                    DACChannel(loc='F04', name='DACF04', mode='auto', manual_voltage=0),
+                    DACChannel(loc='F05', name='DACF05', mode='auto', manual_voltage=0),
+                    DACChannel(loc='F06', name='DACF06', mode='auto', manual_voltage=0),
+                    DACChannel(loc='F07', name='DACF07', mode='auto', manual_voltage=0),
 		    ],
                 ),
             }

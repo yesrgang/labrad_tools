@@ -39,10 +39,11 @@ class SequencerButton(QtGui.QFrame):
             self.setChecked(True)
 
 class DigitalColumn(QtGui.QWidget):
-    def __init__(self, channels, config):
+    def __init__(self, channels, config, position):
         super(DigitalColumn, self).__init__(None)
         self.channels = channels
         self.config = config
+	self.position = position
         self.populate()
 
     def populate(self):
@@ -59,11 +60,12 @@ class DigitalColumn(QtGui.QWidget):
         self.setLayout(self.layout)
 
     def get_logic(self):
-        return {nl: int(self.buttons[nl].is_checked) for n in self.channels}
+        return {nl: int(self.buttons[nl].is_checked) for nl in self.channels}
 
-    def set_logic(self, logic):
+    def set_logic(self, sequence):
+        print self.position
         for nameloc in self.channels:
-            self.buttons[nameloc].setChecked(logic[nameloc])
+            self.buttons[nameloc].setChecked(sequence[nameloc][self.position]['state'])
 
 class DigitalArray(QtGui.QWidget):
     def __init__(self, channels, config):
@@ -73,7 +75,7 @@ class DigitalArray(QtGui.QWidget):
         self.populate()
 
     def populate(self):
-        self.columns = [DigitalColumn(self.channels, self.config) for i in range(self.config.max_columns)]
+        self.columns = [DigitalColumn(self.channels, self.config, i) for i in range(self.config.max_columns)]
         self.layout = QtGui.QHBoxLayout()
         for lc in self.columns:
             self.layout.addWidget(lc)
@@ -84,9 +86,10 @@ class DigitalArray(QtGui.QWidget):
     def display_sequence(self, sequence): 
         for c in self.columns[::-1]:
             c.hide()
-        for (t, s), c in zip(sequence, self.columns):
+	print len(sequence[self.channels[0]])
+	for c in self.columns[:len(sequence[self.channels[0]])]:
             c.show()
-            c.set_logic(s)
+            c.set_logic(sequence)
 
 class NameBox(QtGui.QLabel):
     clicked = QtCore.pyqtSignal()

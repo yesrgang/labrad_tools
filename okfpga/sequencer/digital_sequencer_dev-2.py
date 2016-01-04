@@ -77,14 +77,20 @@ class DigitalSequencerServer(LabradServer):
 
         # make sure trigger happens on first run
         for c in board.channels:
-            sequence[c.key].insert(0, {'dt': 10e-6, 'state': sequence[c.key][0]['state']})
-        sequence['trigger'][0]['state'] = 0
+            sequence[c.key].insert(0, {'state': sequence[c.key][0]['state']})
+        sequence[self.timing_channel.name].insert(0, 10e-6)
+        sequence['Trigger@D15'][0]['state'] = 0
+
+	# allow for sequencer's ramp to zero
+        for c in board.channels:
+            sequence[c.key].append({'dt': 10e-3, 'state': sequence[c.key][-1]['state']})
+        sequence[self.timing_channel.name].append(10e-3)
 
         # for now, assume each channel_sequence has same timings
-        programmable_sequence = [(s[channels[0].key]['dt'], [s[c.key]['state'] for c in board.channels]) for s in sequence] 
+        programmable_sequence = [(dt, [sequence[c.key][i]['state'] for c in board.channels]) for i, dt in enumerate(sequence[self.timing_channel.name])]
         
         ba = []
-        for t, l in sequence:
+        for t, l in programmable_sequence:
             ba += list([sum([2**j for j, b in enumerate(l[i:i+8]) if b]) for i in range(0, 64, 8)])
             ba += list([int(eval(hex(self.time_to_ticks(board, t))) >> i & 0xff) for i in range(0, 32, 8)])
         ba += [0]*96
@@ -94,10 +100,10 @@ class DigitalSequencerServer(LabradServer):
         updated_sequence = {}
         for board in self.boards.values():
             ba, s = self.make_sequence(board, sequence)
-            board.set_sequencer_mode('idle')
-            board.set_sequencer_mode('load')
+            self.set_board_mode(board, 'idle')
+            self.set_board_mode(board, 'load')
             board.xem.WriteToPipeIn(board.pipe_wire, bytearray(ba))
-            board.set_sequencer_mode('idle')
+            self.set_board_mode(board, 'idle')
             updated_sequence.update(s)
         return updated_sequence
 
@@ -108,13 +114,12 @@ class DigitalSequencerServer(LabradServer):
 
     @setting(1, 'get channels')
     def get_channels(self, c):
-#        channels = {}
-#        for b in self.boards.values():
-#            for c in b.channels:
-#                channels[k] = c.__dict__
-#        return str(channels)
         channels = np.concatenate([[c.key for c in b.channels] for n, b in sorted(self.boards.items())]).tolist()
         return json.dumps(channels)
+    
+    @setting(11, 'get timing channel')
+    def get_timing_channel(self, c):
+        return json.dumps(self.timing_channel.name)
 
     @setting(2, 'run sequence', sequence='s')
     def run_sequence(self, c, sequence):
@@ -190,7 +195,7 @@ class DigitalSequencerServer(LabradServer):
                 d[c.name] = c.__dict__
         self.update(json.dumps(d))
 
-    @setting(11, 'fix sequence keys', sequence='s', returns='s')
+    @setting(9, 'fix sequence keys', sequence='s', returns='s')
     def fix_sequence_keys(self, c, sequence):
         sequence =  Sequence(sequence)
         sequence_keyfix =  self._fix_sequence_keys(sequence)
@@ -199,13 +204,15 @@ class DigitalSequencerServer(LabradServer):
     def _fix_sequence_keys(self, sequence):
         # take sequence name@loc to configuration name@loc
         sequence_keyfix = {}
-        for key in sequence:
+        for key in sequence.keys():
             name, loc =key.split('@')
-            for c in board.channels:
-                if c.name == name:
-                    sequence_keyfix[c.key] = sequence[key]
-                elif c.loc == loc:
-                    sequence_keyfix.set_default(c.key, sequence[key])
+	    for board in self.boards.values():
+                for c in board.channels:
+                    if c.name == name:
+                        sequence_keyfix[c.key] = sequence[key]
+                    elif c.loc == loc:
+                        sequence_keyfix.set_default(c.key, sequence[key])
+	sequence_keyfix[self.timing_channel.name] = sequence[self.timing_channel.name]
         return Sequence(sequence_keyfix)
 
 if __name__ == "__main__":
