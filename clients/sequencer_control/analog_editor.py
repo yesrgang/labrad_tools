@@ -1,6 +1,6 @@
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
-from client_tools2 import SuperSpinBox
+from twisted.internet.defer import inlineCallbacks
 import numpy as np
 import matplotlib
 matplotlib.use('Qt4Agg')
@@ -8,6 +8,8 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
+from connection import connection
+from client_tools2 import SuperSpinBox
 from okfpga.sequencer.analog_ramps import RampMaker
 
 sequence = {'a': [{'type': 'sexp', 'dt': 1.0, 'vi': 2.0, 'vf': 5, 'tau': .5, 'pts': 5}, {'type': 'exp', 'dt': 1.0, 'vf': 0, 'tau': -.5, 'pts': 5}]}
@@ -162,15 +164,27 @@ class MplCanvas(FigureCanvas):
         self.axes.plot(times, voltages)
 
 class AnalogVoltageEditor(QtGui.QDialog):
-    def __init__(self, channel, sequence, ramp_maker, parent=None):
+    sequence_parameters = {}
+    def __init__(self, channel, sequence, ramp_maker, config, reactor=None, cxn=None, parent=None):
         super(AnalogVoltageEditor, self).__init__(parent)
         self.channel = str(channel)
         self.sequence = sequence
         self.ramp_maker = RampMaker
-	print ramp_maker
+        self.config = config
+        self.reactor = reactor
+        self.cxn = cxn
 
         self.loading = False
+        self.connect()
+   
+    @inlineCallbacks
+    def connect(self):
+        if self.cxn is None:
+            self.cxn = connection()  
+            yield self.cxn.connect()
+        self.context = yield self.cxn.context()
         self.populate()
+        self.connect_signals()
 
     def populate(self):
         self.setWindowTitle(self.channel)
@@ -197,7 +211,6 @@ class AnalogVoltageEditor(QtGui.QDialog):
 
         self.setLayout(self.layout)
        
-        self.connect_signals()
         width = self.canvas.width()
         height = self.nav.height() + self.canvas.height() + self.ramp_scroll.height() + 20
         self.setFixedSize(width, height)
@@ -205,7 +218,9 @@ class AnalogVoltageEditor(QtGui.QDialog):
         self.replot()
 #        self.setAttribute(120, True)
 
+    @inlineCallbacks
     def connect_signals(self):
+        # pyqt signals
         for c in self.ramp_table.cols:
             c.ramp_select.currentIndexChanged.connect(self.replot)
             for pw in c.parameter_widgets.values():
@@ -218,6 +233,23 @@ class AnalogVoltageEditor(QtGui.QDialog):
 
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
+
+        # labrad signals
+        print 1
+        conductor = yield self.cxn.get_server(self.config.conductor_servername)
+        print 2
+        yield conductor.signal__update(self.config.conductor_update_id)
+        yield conductor.addListener(listener=self.receive_parameters, source=None, ID=self.config.conductor_update_id)
+
+    @inlineCallbacks
+    def get_parameters(self):
+        conductor = yield self.cxn.get_server(self.config.conductor_servername)
+        sp = yield conductor.set_sequence_parameters()
+        self.sequence_parameters = json.loads(sp)
+
+    def receive_parameters(self, c, signal):
+        self.sequence_parameters = json.loads(signal)
+        self.replot()
 
     def set_columns(self):
         self.loading = True
@@ -261,6 +293,8 @@ class AnalogVoltageEditor(QtGui.QDialog):
 
     def get_plottable_sequence(self):
         sequence = self.ramp_table.get_channel_sequence()
+        for p, v in self.sequence_parameters.items():
+            sequence.replace('"'+p+'"', v)
         return self.ramp_maker(sequence).get_plottable()
 
     def get_sequence(self):
@@ -297,6 +331,10 @@ class AnalogVoltageEditor(QtGui.QDialog):
 #    def accept(self):
 #        sequence = self.ramp_table.get_channel_sequence()
 #        print self.ramp_maker(sequence).get_programmable()
+class FakeConfig(object):
+    def __init__(self):
+        self.conductor_servername = 'yesr20_conductor'
+        self.conductor_update_id = 689121
 
 if __name__ == '__main__':
     a = QtGui.QApplication([])
@@ -305,6 +343,6 @@ if __name__ == '__main__':
     from twisted.internet import reactor
     from okfpga.sequencer.analog_ramps import RampMaker
     widget = RampTable(RampMaker)
-    widget = AnalogVoltageEditor('a', sequence, RampMaker)
+    widget = AnalogVoltageEditor('a', sequence, RampMaker, FakeConfig(), reactor)
     widget.show()
     reactor.run()

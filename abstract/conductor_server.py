@@ -56,14 +56,15 @@ class ConductorServer(LabradServer):
             eval(d['init command'])
             eval(d['command'])(value)
 
-    @setting(2, 'set sequence parameters', parameters='s', returns='s')
-    def set_sequence_parameters(self, c, parameters=None):
+    @setting(2, 'set sequence parameters', sequence_parameters='s', returns='s')
+    def set_sequence_parameters(self, c, sequence_parameters=None):
         """
         parameters is dictionary {name: value}
         """
-        parameters = json.loads(parameters)
+        sequence_parameters = json.loads(sequence_parameters)
         if sequence_parameters is not None:
             self.sequence_parameters = sequence_parameters
+        self.update(json.dumps(self.sequence_parameters))
         return json.dumps(self.sequence_parameters)
 
     @setting(3, 'load sequence', sequence='s', returns='s')
@@ -117,7 +118,6 @@ class ConductorServer(LabradServer):
             reactor.callLater(self.sequence.get_duration(), self.run_sequence)
         else:
             reactor.callLater(5, self.run_sequence)
-            
 
 if __name__ == "__main__":
     config_name = 'conductor_config'
