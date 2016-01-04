@@ -43,7 +43,7 @@ class ConductorServer(LabradServer):
             self.initialize_device_parameters(device_parameters)
             self.device_parameters.update(device_parameters)
         return json.dumps(self.device_parameters)
-    
+
     def initialize_device_parameters(self, device_parameters):
         value = None
         for device, parameters in device_parameters.items():
@@ -55,7 +55,7 @@ class ConductorServer(LabradServer):
             self = self
             eval(d['init command'])
             eval(d['command'])(value)
-    
+
     @setting(2, 'set sequence parameters', parameters='s', returns='s')
     def set_sequence_parameters(self, c, parameters=None):
         """
@@ -65,8 +65,7 @@ class ConductorServer(LabradServer):
         if sequence_parameters is not None:
             self.sequence_parameters = sequence_parameters
         return json.dumps(self.sequence_parameters)
-    
-    
+
     @setting(3, 'load sequence', sequence='s', returns='s')
     def load_sequence(self, c, sequence):
         sequence_keyfix = {}
@@ -103,7 +102,6 @@ class ConductorServer(LabradServer):
                 self = self
                 yield eval(d['command'])(value)
                 print value
-
     
     @inlineCallbacks
     def run_sequence(self):

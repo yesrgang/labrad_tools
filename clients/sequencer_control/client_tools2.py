@@ -13,6 +13,10 @@ class SuperSpinBox(QtGui.QLineEdit):
         self.display(0)
 
     def keyPressEvent(self, c):
+        if len(self.text().split('*')) > 1:
+            print 'variable: ', self.text()
+            super(SuperSpinBox, self).keyPressEvent(c)
+            return
         if c.key() == QtCore.Qt.Key_Return: 
             split_text = self.text().split(' ')
             if len(split_text) == 1:
@@ -82,7 +86,11 @@ class SuperSpinBox(QtGui.QLineEdit):
                 return 10.**x, y
 
     def value(self):
-        return float(self.text().split(' ')[0])*self.display_factor
+        text = self.text()
+        if text[0] == '*':
+            return text.replace(' ', '')
+        else:
+            return str(float(self.text().split(' ')[0])*self.display_factor)
 
 
 if __name__ == '__main__':
@@ -90,7 +98,6 @@ if __name__ == '__main__':
     import qt4reactor 
     qt4reactor.install()
     from twisted.internet import reactor
-    widget = SuperSpinBox([-100, 100], [(0, 'na')], 3)
+    widget = SuperSpinBox([-100, 100], [(0, 'na'), (-3, 'naa')], 3)
     widget.show()
     reactor.run()
-
