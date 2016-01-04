@@ -129,8 +129,6 @@ class Sequencer(QtGui.QWidget):
         self.reactor = reactor
         self.connect()
 
-#        self.sequence_history = []
-#        self.sequence_history_index = 0
 
     @inlineCallbacks
     def connect(self):
@@ -155,17 +153,6 @@ class Sequencer(QtGui.QWidget):
         except Exception, e:
             print 'Error', e
             self.setDisabled(True)
-#        dserver = yield self.cxn.get_server(self.digital_servername)
-#        dc = yield dserver.get_channels()
-#        self.digital_channels = json.loads(dc)
-#        aserver = yield self.cxn.get_server(self.analog_servername)
-#        ac = yield aserver.get_channels()
-#        self.analog_channels = json.loads(ac)
-#        self.populate()
-#	self.default_sequence = dict([(nameloc, [{'type': 'lin', 'vf': 0, 'dt': 1}]) for nameloc in self.analog_channels] + [(nameloc, [{'state': 0, 'dt': 1}]) for nameloc in self.digital_channels] + [(self.timing_channel, [1])])
-#        self.set_sequence(self.default_sequence)
-#        self.setDisabled(True)
-
 
     def populate(self):
         self.browse_and_save = BrowseAndSave()
@@ -251,7 +238,6 @@ class Sequencer(QtGui.QWidget):
 
         for nl in self.digital_sequencer.name_column.labels.values():
             nl.setFixedHeight(self.spacer_height)
-#            nb.setFixedSize(self.namelabel_width, self.spacer_height)
         nc_width = self.namelabel_width
         nc_height = self.digital_sequencer.array.height()
         self.digital_sequencer.name_column.setFixedSize(nc_width, nc_height)
@@ -265,7 +251,6 @@ class Sequencer(QtGui.QWidget):
         self.analog_sequencer.vscroll.setFixedWidth(20)
         
         for nl in self.analog_sequencer.name_column.labels.values():
-#            nl.setFixedHeight(self.analog_height)
             nl.setFixedSize(self.namelabel_width, self.analog_height)
         nc_width = self.namelabel_width
         nc_height = self.analog_sequencer.array.height()
@@ -377,21 +362,10 @@ class Sequencer(QtGui.QWidget):
 	    self.set_sequence(sequence)
 
     def set_sequence(self, sequence):
-#        self.sequence_history.insert(0, sequence)
-#        if len(self.sequence_history) > 20:
-#            self.sequence_history.pop(-1)
-#        for i in range(self.sequence_history_index):
-#            self.sequence_history.pop(i)
-#        self.sequence_history_index = 0
-
         self.display_sequence(sequence)
 
 
     def display_sequence(self, sequence):
-#        self.sequence_history_index = sorted([0, self.sequence_history_index, 20])[1]
-#        sequence = self.sequence_history[self.sequence_history_index]
-#        self.sequence_history.append(sequence)
-
         self.analog_sequencer.display_sequence(sequence)
         self.digital_sequencer.display_sequence(sequence)
         self.duration_row.display_sequence(sequence)
@@ -424,11 +398,9 @@ class Sequencer(QtGui.QWidget):
         return dc
 
     def undo(self):
-#        self.sequence_history_index += 1
         self.display_sequence()
 
     def redo(self):
-#        self.sequence_history_index -= 1
         self.display_sequence()
 
     def keyPressEvent(self, c):
@@ -447,8 +419,8 @@ class Sequencer(QtGui.QWidget):
 
 class SequencerConfig(object):
     def __init__(self):
-        self.digital_servername = 'yesr20_digital_sequencer_dev'
-        self.analog_servername = 'yesr20_analog_sequencer_dev'
+        self.digital_servername = 'yesr20_digital_sequencer'
+        self.analog_servername = 'yesr20_analog_sequencer'
         self.spacer_width = 65
         self.spacer_height = 15
 	self.namecolumn_width = 130

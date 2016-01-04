@@ -45,7 +45,7 @@ class TimingChannelConfig(object):
 
 class DigitalSequencerConfig(object):
     def __init__(self):
-        self.name = '%LABRADNODE% Digital Sequencer Dev'
+        self.name = '%LABRADNODE%_digital_sequencer'
 	self.update_id = 698024
 	self.timing_channel = TimingChannelConfig()
 
@@ -72,22 +72,22 @@ class DigitalSequencerConfig(object):
 
                     PulseChannelConfig(loc='B00', name='Tickle Enable', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B01', name='TTLB01', mode='auto', manual_state=0, invert=0),
-                    PulseChannelConfig(loc='B02', name='TTLB02', mode='auto', manual_state=0, invert=0),
-                    PulseChannelConfig(loc='B03', name='TTLB03', mode='auto', manual_state=0, invert=0),
+                    PulseChannelConfig(loc='B02', name='Spin Pol. Drive sw', mode='auto', manual_state=0, invert=0),
+                    PulseChannelConfig(loc='B03', name='LC Wave', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B04', name='TTLB04', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B05', name='TTLB05', mode='auto', manual_state=0, invert=0),
-                    PulseChannelConfig(loc='B06', name='TTLB06', mode='auto', manual_state=0, invert=0),
-                    PulseChannelConfig(loc='B07', name='TTLB07', mode='auto', manual_state=0, invert=0),
-                    PulseChannelConfig(loc='B08', name='TTLB08', mode='auto', manual_state=0, invert=0),
-                    PulseChannelConfig(loc='B09', name='TTLB09', mode='auto', manual_state=0, invert=0),
-                    PulseChannelConfig(loc='B10', name='TTLB10', mode='auto', manual_state=0, invert=0),
-                    PulseChannelConfig(loc='B11', name='TTLB11', mode='auto', manual_state=0, invert=0),
+                    PulseChannelConfig(loc='B06', name='HODT Shutter', mode='auto', manual_state=0, invert=0),
+                    PulseChannelConfig(loc='B07', name='VODT Shutter', mode='auto', manual_state=0, invert=0),
+                    PulseChannelConfig(loc='B08', name='Dimple Shutter', mode='auto', manual_state=0, invert=0),
+                    PulseChannelConfig(loc='B09', name='813 H1 AOM', mode='auto', manual_state=0, invert=0),
+                    PulseChannelConfig(loc='B10', name='813 H2 AOM', mode='auto', manual_state=0, invert=0),
+                    PulseChannelConfig(loc='B11', name='813 V AOM', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B12', name='TTLB12', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B13', name='TTLB13', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B14', name='TTLB14', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B15', name='TTLB15', mode='auto', manual_state=0, invert=0),
                     
-                    PulseChannelConfig(loc='C00', name='TTLC00', mode='auto', manual_state=0, invert=0),
+                    PulseChannelConfig(loc='C00', name='Broken!', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='C01', name='RM Gain Switch', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='C02', name='TTLC02', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='C03', name='TTLC03', mode='auto', manual_state=0, invert=0),
@@ -102,7 +102,7 @@ class DigitalSequencerConfig(object):
                     PulseChannelConfig(loc='C12', name='TTLC12', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='C13', name='TTLC13', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='C14', name='TTLC14', mode='auto', manual_state=0, invert=0),
-                    PulseChannelConfig(loc='C15', name='TTLC15', mode='auto', manual_state=0, invert=0),
+                    PulseChannelConfig(loc='C15', name='ODT Servo Enable', mode='manual', manual_state=1, invert=0),
                     
                     PulseChannelConfig(loc='D00', name='Alpha AOM', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='D01', name='Alpha Shutter', mode='auto', manual_state=0, invert=0),

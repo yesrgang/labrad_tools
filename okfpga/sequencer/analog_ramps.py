@@ -141,7 +141,6 @@ class RampMaker(object):
         'sexp': SExpRamp,
         }
     def __init__(self, sequence):
-
         j=0
         for i, s in enumerate(sequence):
             if s['type'] is 'sub':
