@@ -119,7 +119,7 @@ class DigitalSequencerConfig(object):
                     PulseChannelConfig(loc='D12', name='TTLD12', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='D13', name='TTLD13', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='D14', name='AOSense Heater Enable', mode='manual', manual_state=1, invert=0),
-                    PulseChannelConfig(loc='D15', name='Trigger', mode='auto', manual_state=0, invert=0),
+                    PulseChannelConfig(loc='D15', name='Trigger', mode='auto', manual_state=1, invert=1),
                     ]
                 ),
             }

@@ -40,7 +40,6 @@ class AnalogNameColumn(QtGui.QWidget):
         self.populate()
 
     def populate(self):
-        print type(self.channels)
         self.labels = {nl: NameBox(nl) for nl in self.channels}
         self.layout = QtGui.QVBoxLayout()
         self.layout.setSpacing(0)
@@ -128,11 +127,25 @@ class AnalogSequencer(QtGui.QWidget):
 
         self.connect_widgets()
 
-    def display_sequence(self, sequence):
-#        self.sequence = [{name: s[name] for name in self.channels.values()} for (t, s) in sequence]
-#        self.array.plot_sequence(sequence)
+    def set_sequence(self, sequence):
         self.sequence = sequence
+
+    def display_sequence(self, sequence):
         self.array.plot_sequence(sequence)
+
+#    def evaluate_sequence_parameters(self, sequence, parameters):
+#        sequence = json.dumps(sequence)
+#        for p, v in parameters.items():
+#            sequence = sequence.replace('"{}"'.format(p), str(v))
+#        sequence = json.loads(sequence)
+#	print sequence['Z Comp. Coil@E04']
+##        for d in sequence:
+##            for v in d.values():
+##                try:
+##                    v = float(v)
+##                except:
+##                    v = 0
+#        return sequence
     
     def connect_widgets(self):
         self.vscrolls = [self.name_column.scroll_area.verticalScrollBar(), self.array.scroll_area.verticalScrollBar(), self.vscroll.verticalScrollBar()]

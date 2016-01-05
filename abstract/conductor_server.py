@@ -11,7 +11,7 @@ from twisted.internet.threads import deferToThread
 from okfpga.sequencer.sequence import Sequence
 
 class ConductorServer(LabradServer):
-    update_sp = Signal(698123, 'signal: update_sp', 's')
+    update_sp = Signal(698123, 'signal: update_sp', 'b')
     def __init__(self, config_name):
         self.device_parameters = {}
         self.sequence_parameters = {}
@@ -62,31 +62,40 @@ class ConductorServer(LabradServer):
         """
         if sequence_parameters is not None:
             self.sequence_parameters = json.loads(sequence_parameters)
-        yield self.update_sp(json.dumps(self.sequence_parameters))
+        yield self.update_sp(True)
         returnValue(json.dumps(self.sequence_parameters))
+    
+    @setting(3, 'evaluate sequence parameters', sequence='s', returns='s') 
+    def evaluate_sequence_parameters(self, c, sequence):
+        sequence = Sequence(sequence)
+	return self._evaluate_sequence_parameters(sequence)
 
-    @setting(3, 'load sequence', sequence='s', returns='s')
+    def _evaluate_sequence_parameters(self, sequence):
+        current_parameters = {}
+        for p, v in self.sequence_parameters.items():
+            if type(v) is types.ListType:
+                current_parameters[p] = v[0]
+            else:
+                current_parameters[p] = v
+        current_sequence = sequence.dump()
+        for p, v in current_parameters.items():
+            current_sequence = current_sequence.replace('"{}"'.format(p), str(v))
+        return current_sequence
+	
+    def advance_sequence_parameters(self):
+        for p, v in self.sequence_parameters.items():
+            if type(v) is types.ListType:
+                v.insert(len(v), v.pop(0))
+
+    @setting(4, 'load sequence', sequence='s', returns='s')
     def load_sequence(self, c, sequence):
         sequence_keyfix = {}
         for sequencer in self.sequencers:
             server = getattr(self.client, sequencer)
             s = yield server.fix_sequence_keys(sequence)
-            sequence_keyfix.update(s)
+            sequence_keyfix.update(json.loads(s))
         self.sequence = Sequence(sequence_keyfix)
         returnValue(self.sequence.dump())
-
-    def evaluate_sequence_parameters(self, sequence):
-        next_parameters = {}
-        for p, v in self.sequence_parameters.items():
-            if type(v) is types.ListType:
-                next_parameters[p] = v[0]
-                v.insert(len(v), v.pop(0))
-            else:
-                next_parameters[p] = v
-        next_sequence = sequence.dump()
-        for p, v in next_parameters:
-            next_sequence = next_sequence.replace('"'+p+'"', str(v))
-        return next_sequence
 
     @inlineCallbacks
     def evaluate_device_parameters(self):
@@ -106,14 +115,16 @@ class ConductorServer(LabradServer):
     def run_sequence(self):
         yield self.evaluate_device_parameters()
         if self.sequence:
-            sequence = self.evaluate_sequence_parameters(self.sequence)
+            sequence = self._evaluate_sequence_parameters(self.sequence)
+            self.update_sp(True)
+	    #print json.loads(sequence)['Z Comp. Coil@E04']
             for sequencer in self.sequencers:
                 server = getattr(self.client, sequencer)
                 self.in_communication.acquire()
-                yield None
-#                yield server.run_sequence(sequence)
+                yield server.run_sequence(str(sequence))
                 self.in_communication.release()
-            reactor.callLater(self.sequence.get_duration(), self.run_sequence)
+            reactor.callLater(Sequence(sequence).get_duration(), self.run_sequence)
+	    self.advance_sequence_parameters()
         else:
             reactor.callLater(5, self.run_sequence)
 

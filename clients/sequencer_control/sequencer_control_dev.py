@@ -117,6 +117,7 @@ class LoadAndSave(QtGui.QWidget):
 
 
 class Sequencer(QtGui.QWidget):
+    sequence_parameters = {}
     def __init__(self, config, reactor=None, cxn=None):
         super(Sequencer, self).__init__(None)
         self.config = config
@@ -147,6 +148,9 @@ class Sequencer(QtGui.QWidget):
             ac = yield aserver.get_channels()
             self.analog_channels = json.loads(ac)
 	    self.channels = self.digital_channels + self.analog_channels + [self.timing_channel]
+	    conductor = yield self.cxn.get_server(self.conductor_servername)
+	    yield conductor.signal__update_sp(self.config.conductor_update_id)
+	    yield conductor.addListener(listener=self.update_parameters, source=None, ID=self.conductor_update_id)
             self.populate()
             self.default_sequence = dict([(nameloc, [{'type': 'lin', 'vf': 0, 'dt': 1}]) for nameloc in self.analog_channels] + [(nameloc, [{'state': 0, 'dt': 1}]) for nameloc in self.digital_channels] + [(self.timing_channel, [1])])
             self.set_sequence(self.default_sequence)
@@ -297,7 +301,7 @@ class Sequencer(QtGui.QWidget):
     def open_digital_manual(self, channel_name):
         def odm():
             config = dcc.ControlConfig()
-            config.name = channel_name
+            config.name = channel_name.split('@')[0]
             widget = dcc.DigitalManualControl(config)
             dialog = QtGui.QDialog()
             dialog.ui = widget
@@ -352,10 +356,12 @@ class Sequencer(QtGui.QWidget):
     @inlineCallbacks
     def run_sequence(self, c):
         sequence = json.dumps(self.get_sequence())
-        aserver = yield self.cxn.get_server(self.analog_servername)
-        yield aserver.run_sequence(sequence)
-        dserver = yield self.cxn.get_server(self.digital_servername)
-        yield dserver.run_sequence(sequence)
+#        aserver = yield self.cxn.get_server(self.analog_servername)
+#        yield aserver.run_sequence(sequence)
+#        dserver = yield self.cxn.get_server(self.digital_servername)
+#        yield dserver.run_sequence(sequence)
+        conductor = yield self.cxn.get_server(self.conductor_servername)
+	yield conductor.load_sequence(sequence)
 
     def load_sequence(self, file_name):
 	with open(file_name, 'r') as infile:
@@ -365,9 +371,24 @@ class Sequencer(QtGui.QWidget):
     def set_sequence(self, sequence):
         self.display_sequence(sequence)
 
+    @inlineCallbacks
+    def get_sequence_paramaters(self):
+        conductor = yield self.cxn.get_server(self.conductor_servername)
+	sp = yield conductor.set_sequence_parameters()
+	self.sequence_parameters = json.loads(sp)
 
+    @inlineCallbacks
+    def update_parameters(self, c, signal):
+        conductor = yield self.cxn.get_server(self.conductor_servername)
+        plottable_sequence = yield conductor.evaluate_sequence_parameters(json.dumps(self.get_sequence()))
+	self.analog_sequencer.display_sequence(json.loads(plottable_sequence)) 
+
+    @inlineCallbacks
     def display_sequence(self, sequence):
-        self.analog_sequencer.display_sequence(sequence)
+        conductor = yield self.cxn.get_server(self.conductor_servername)
+        plottable_sequence = yield conductor.evaluate_sequence_parameters(json.dumps(sequence))
+	self.analog_sequencer.set_sequence(sequence)
+        self.analog_sequencer.display_sequence(json.loads(plottable_sequence))
         self.digital_sequencer.display_sequence(sequence)
         self.duration_row.display_sequence(sequence)
         self.add_dlt_row.display_sequence(sequence)
@@ -422,6 +443,8 @@ class SequencerConfig(object):
     def __init__(self):
         self.digital_servername = 'yesr20_digital_sequencer'
         self.analog_servername = 'yesr20_analog_sequencer'
+	self.conductor_servername = 'yesr20_conductor'
+	self.conductor_update_id = 689222
         self.spacer_width = 65
         self.spacer_height = 15
 	self.namecolumn_width = 130
@@ -429,7 +452,7 @@ class SequencerConfig(object):
 	self.durationrow_height = 20
 	self.analog_height = 50
         self.max_columns = 100
-        self.digital_colors = ['#ff0000', '#ff7700', '#00ff00', '#0000ff', '#ffff00', '#c77df3']
+        self.digital_colors = ['#ff0000', '#ff7700', '#ffff00', '#00ff00', '#0000ff', '#8a2be2']
 	self.ramp_maker = RampMaker
 
 if __name__ == '__main__':

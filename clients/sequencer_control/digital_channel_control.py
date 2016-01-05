@@ -95,7 +95,7 @@ class DigitalManualControl(QtGui.QGroupBox):
         else:
             self.mode_button.setChecked(0)
             self.mode_button.setText('Auto')
-        if update['manual state'] == True:
+        if update['manual_state'] == True:
             self.manual_state_button.setChecked(1)
             self.manual_state_button.setText('On')
         else:
@@ -148,7 +148,7 @@ class ControlConfig(object):
 class ManyChannels(QtGui.QWidget):
     def __init__(self, reactor, cxn=None):
         QtGui.QDialog.__init__(self)
-        self.channels = ['3D MOT AOM', '3D MOT Shutter', '2D Mot Shutter', 'Zeeman Shutter']
+        self.channels = ['3D MOT AOM@A00', '3D MOT Shutter', '2D Mot Shutter', 'Zeeman Shutter']
         self.reactor = reactor
         self.cxn = cxn
 #        self.populateGUI()
@@ -182,7 +182,7 @@ if __name__ == '__main__':
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-#    widget = DigitalManualControl(ControlConfig(), reactor)
-    widget = ManyChannels(reactor)
+    widget = DigitalManualControl(ControlConfig(), reactor)
+#    widget = ManyChannels(reactor)
     widget.show()
     reactor.run()

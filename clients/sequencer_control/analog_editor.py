@@ -1,7 +1,7 @@
 import json
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import inlineCallbacks, returnValue
 import numpy as np
 import matplotlib
 matplotlib.use('Qt4Agg')
@@ -114,7 +114,8 @@ class RampColumn(QtGui.QGroupBox):
             try:
                 val = self.parameter_widgets[prev_ramp_type].pboxes[p].value()
                 self.parameter_widgets[self.ramp_type].pboxes[p].display(val)
-            except: 
+            except:
+                print 'something went wrong here'
                 pass
         self.stack.setCurrentWidget(self.parameter_widgets[self.ramp_type])
 
@@ -185,9 +186,10 @@ class AnalogVoltageEditor(QtGui.QDialog):
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
         yield self.get_sequence_parameters()
-        self.populate()
+        yield self.populate()
         self.connect_signals()
 
+    @inlineCallbacks
     def populate(self):
         self.setWindowTitle(self.channel)
 
@@ -216,8 +218,8 @@ class AnalogVoltageEditor(QtGui.QDialog):
         width = self.canvas.width()
         height = self.nav.height() + self.canvas.height() + self.ramp_scroll.height() + 20
         self.setFixedSize(width, height)
-        self.set_columns()
-        self.replot()
+        yield self.set_columns()
+        yield self.replot()
 #        self.setAttribute(120, True)
 
     @inlineCallbacks
@@ -239,20 +241,19 @@ class AnalogVoltageEditor(QtGui.QDialog):
         # labrad signals
         conductor = yield self.cxn.get_server(self.config.conductor_servername)
         yield conductor.signal__update_sp(self.config.conductor_update_id)
-        print 1
         yield conductor.addListener(listener=self.receive_parameters, source=None, ID=self.config.conductor_update_id)
-        print 2
 
     @inlineCallbacks
     def get_sequence_parameters(self):
         conductor = yield self.cxn.get_server(self.config.conductor_servername)
         sp = yield conductor.set_sequence_parameters()
         self.sequence_parameters = json.loads(sp)
-
+    
+    @inlineCallbacks
     def receive_parameters(self, c, signal):
-        self.sequence_parameters = json.loads(signal)
-        self.replot()
+        yield self.replot()
 
+    @inlineCallbacks
     def set_columns(self):
         self.loading = True
         for c in self.ramp_table.cols:
@@ -266,7 +267,7 @@ class AnalogVoltageEditor(QtGui.QDialog):
                 c.parameter_widgets[ramp_type].pboxes[k].display(s[k])
                 
         self.loading = False
-        self.replot()
+        yield self.replot()
 
     def add_column(self, i):
         def ac():
@@ -288,35 +289,30 @@ class AnalogVoltageEditor(QtGui.QDialog):
         self.sequence = sequence
         self.set_columns()
 
+    @inlineCallbacks
     def get_plottable_sequence(self):
         sequence = self.ramp_table.get_channel_sequence()
-        sequence = json.dumps(sequence)
-        for p, v in self.sequence_parameters.items():
-            sequence = sequence.replace('"{}"'.format(p), str(v))
-        sequence = json.loads(sequence)
-        for d in sequence:
-            for v in d.values():
-                try:
-                    v = float(v)
-                except:
-                    v = 0.
-        return self.ramp_maker(sequence).get_plottable()
+	conductor = yield self.cxn.get_server(self.config.conductor_servername)
+	plottable_sequence = yield conductor.evaluate_sequence_parameters(json.dumps(sequence))
+        returnValue(self.ramp_maker(json.loads(plottable_sequence)).get_plottable())
 
     def get_sequence(self):
         channel_sequence = self.ramp_table.get_channel_sequence()
         self.sequence.update({self.channel: channel_sequence})
         return self.sequence
 
-    def replot(self):
+    @inlineCallbacks
+    def replot(self, c=None):
         if not self.loading:
-            T, V =  self.get_plottable_sequence()
+            T, V = yield self.get_plottable_sequence()
             self.canvas.make_figure(T, V)
             self.canvas.draw()
 
     @staticmethod
-    def getEditedSequence(channel, sequence, parent=None):
-        old_sequence = sequence
-        dialog = AnalogVoltageEditor(channel, sequence, parent)
+    def getEditedSequence(*ave_args):
+#        old_sequence = sequence
+        old_sequence = ave_args[1]
+        dialog = AnalogVoltageEditor(*ave_args)
         result = dialog.exec_()
         new_sequence = dialog.get_sequence()
         if result == QtGui.QDialog.Accepted:
@@ -338,7 +334,7 @@ class AnalogVoltageEditor(QtGui.QDialog):
 #        print self.ramp_maker(sequence).get_programmable()
 class FakeConfig(object):
     def __init__(self):
-        self.conductor_servername = 'vagabond_conductor'
+        self.conductor_servername = 'yesr20_conductor'
         self.conductor_update_id = 461349
 
 if __name__ == '__main__':

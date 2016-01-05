@@ -21,12 +21,14 @@ class Sequence(object):
 
     def load(self, sequence):
         if type(sequence) == types.StringType:
-            sequence = json.loads(sequence)
-        if type(sequence) == types.DictType:
+            self.sequence = json.loads(sequence)
+        elif type(sequence) == types.DictType:
             self.sequence = sequence
 
     def dump(self):
         return json.dumps(self.sequence)
 
     def get_duration(self):
-        return max([sum([d['dt'] for d in cs]) for cs in self.sequence.values()])
+#        return max([sum([d['dt'] for d in cs if d.has_key('dt')]) for cs in self.sequence.values()])
+        return sum(self.sequence['digital@T'])
+

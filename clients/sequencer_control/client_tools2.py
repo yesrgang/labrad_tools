@@ -56,6 +56,9 @@ class SuperSpinBox(QtGui.QLineEdit):
         self.returnPressed.emit()
 
     def display(self, value):
+	if str(value)[0] == '*':
+            self.setText(value)
+	    return
         text = self.text().split(' ')[0] # previously displayed value, strip away unit
         cursor_position = self.cursorPosition() # position, from left, of cursor
         decimal_position = len(text.split('.')[0]) +1 #position, from left, of decimal

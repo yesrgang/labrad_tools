@@ -79,12 +79,13 @@ class DigitalSequencerServer(LabradServer):
         for c in board.channels:
             sequence[c.key].insert(0, {'state': sequence[c.key][0]['state']})
         sequence[self.timing_channel.name].insert(0, 10e-6)
-        sequence['Trigger@D15'][0]['state'] = 0
+        sequence['Trigger@D15'][0]['state'] = 1
 
 	# allow for sequencer's ramp to zero
         for c in board.channels:
             sequence[c.key].append({'dt': 10e-3, 'state': sequence[c.key][-1]['state']})
-        sequence[self.timing_channel.name].append(10e-3)
+        sequence[self.timing_channel.name].append(1)
+        sequence['Trigger@D15'][-1]['state'] = 1
 
         # for now, assume each channel_sequence has same timings
         programmable_sequence = [(dt, [sequence[c.key][i]['state'] for c in board.channels]) for i, dt in enumerate(sequence[self.timing_channel.name])]
@@ -192,7 +193,7 @@ class DigitalSequencerServer(LabradServer):
         d = {}
 	for b in self.boards.values():
             for c in b.channels:
-                d[c.name] = c.__dict__
+                d[c.key] = c.__dict__
         self.update(json.dumps(d))
 
     @setting(9, 'fix sequence keys', sequence='s', returns='s')
