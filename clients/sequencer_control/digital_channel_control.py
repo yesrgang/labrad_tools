@@ -133,8 +133,8 @@ class DigitalManualControl(QtGui.QGroupBox):
     def disable(self):
         self.setDisabled(True)
 
-    def closeEvent(self, x):
-        self.reactor.stop()
+#    def closeEvent(self, x):
+#        self.reactor.stop()
 
 class ControlConfig(object):
     def __init__(self):

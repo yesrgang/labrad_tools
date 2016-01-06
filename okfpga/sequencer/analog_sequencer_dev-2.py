@@ -223,7 +223,7 @@ class AnalogSequencerServer(LabradServer):
         d = {}
 	for b in self.boards.values():
             for c in b.channels:
-                d[c.name] = c.__dict__
+                d[c.key] = c.__dict__
         self.update(json.dumps(d))
     
     @setting(11, 'fix sequence keys', sequence='s', returns='s')

@@ -77,18 +77,18 @@ class DigitalSequencerServer(LabradServer):
 
         # make sure trigger happens on first run
         for c in board.channels:
-            sequence[c.key].insert(0, {'state': sequence[c.key][0]['state']})
+            sequence[c.key].insert(0, sequence[c.key][0])
         sequence[self.timing_channel.name].insert(0, 10e-6)
-        sequence['Trigger@D15'][0]['state'] = 1
+        sequence['Trigger@D15'][0] = 1
 
 	# allow for sequencer's ramp to zero
         for c in board.channels:
-            sequence[c.key].append({'dt': 10e-3, 'state': sequence[c.key][-1]['state']})
+            sequence[c.key].append(sequence[c.key][-1])
         sequence[self.timing_channel.name].append(1)
-        sequence['Trigger@D15'][-1]['state'] = 1
+        sequence['Trigger@D15'][-1] = 1
 
         # for now, assume each channel_sequence has same timings
-        programmable_sequence = [(dt, [sequence[c.key][i]['state'] for c in board.channels]) for i, dt in enumerate(sequence[self.timing_channel.name])]
+        programmable_sequence = [(dt, [sequence[c.key][i] for c in board.channels]) for i, dt in enumerate(sequence[self.timing_channel.name])]
         
         ba = []
         for t, l in programmable_sequence:
@@ -112,6 +112,31 @@ class DigitalSequencerServer(LabradServer):
         board.xem.SetWireInValue(board.mode_wire, board.mode_nums[mode])
         board.xem.UpdateWireIns()
         board.seuqencer_mode = mode
+
+    def id2channel(self, channel_id):
+        """
+        expect 3 possibilities for channel_id.
+        1) name -> return channel with that name
+        2) @loc -> return channel at that location
+        3) name@loc -> first try name, then location
+        """
+        channel = None
+        try:
+            name, loc = channel_id.split('@')
+        except:
+            name = channel_id
+            loc = None
+        if name:
+            for b in self.boards.values():
+                for c in b.channels:
+                    if c.name == name:
+                        channel = c
+        if not channel:
+            for b in self.boards.values():
+                for c in b.channels:
+                    if c.loc == loc:
+                        channel = c
+        return channel
 
     @setting(1, 'get channels')
     def get_channels(self, c):

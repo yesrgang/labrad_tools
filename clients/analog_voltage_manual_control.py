@@ -99,7 +99,7 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
         else:
             self.mode_button.setChecked(0)
             self.mode_button.setText('Auto')
-        self.voltage_box.display(update['manual voltage'])
+        self.voltage_box.display(update['manual_voltage'])
         self.free = True
 
     def enterEvent(self, c):
@@ -131,7 +131,6 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
             self.hasNewVoltage = True
     @inlineCallbacks	
     def reinit(self): 
-        print '?'
         self.setDisabled(False)
         server = yield self.cxn.get_server(self.servername)
         yield server.signal__update(self.update_id, context=self.context)
@@ -187,9 +186,9 @@ class ManyChannels(QtGui.QWidget):
 
 class ControlConfig(object):
     def __init__(self):
-        self.name = 'MOT Coil'
+        self.name = 'X Comp. Coil'
         self.servername = 'yesr20_analog_sequencer'
-        self.servername_alt = 'yesr20 Analog Sequencer'
+        self.servername_alt = 'yesr20_analog_sequencer'
         self.update_id = 461023
         self.update_time = 100 # [ms]
 
@@ -202,7 +201,7 @@ if __name__ == '__main__':
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-#    widget = AnalogVoltageManualControl(ControlConfig(), reactor)
-    widget = ManyChannels(reactor)
+    widget = AnalogVoltageManualControl(ControlConfig(), reactor)
+#    widget = ManyChannels(reactor)
     widget.show()
     reactor.run()

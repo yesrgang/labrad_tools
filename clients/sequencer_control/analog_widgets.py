@@ -77,11 +77,11 @@ class AnalogArray(FigureCanvas):
             channel_sequence = sequence[c]
             T, V = self.ramp_maker(channel_sequence).get_plottable(scale='step')
             V = np.array(V) - i*20
-	    print len(T), len(V)
-
             self.axes.plot(T, V)
         for i in range(len(self.channels)-1):
             self.axes.axhline(-10-i*20, linestyle="--", color='grey')
+	for i in range(len(sequence['digital@T'])-1):
+            self.axes.axvline(i*99+99, color='grey')
         self.axes.set_ylim(-20*len(self.channels)+10, 10)
         self.axes.set_xlim(0, len(T))
         self.draw()

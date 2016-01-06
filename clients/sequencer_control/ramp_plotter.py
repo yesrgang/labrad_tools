@@ -213,7 +213,6 @@ class RampColumn(QtGui.QGroupBox):
 #                self.parameterwidgets[self.ramp_type].
 
         self.stack.setCurrentWidget(self.parameter_widgets[self.ramp_type])
-        print self.get_ramp()
 
     def get_ramp(self):
         ramp_type = str(self.ramp_select.currentText())

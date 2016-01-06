@@ -152,7 +152,7 @@ class Sequencer(QtGui.QWidget):
 	    yield conductor.signal__update_sp(self.config.conductor_update_id)
 	    yield conductor.addListener(listener=self.update_parameters, source=None, ID=self.conductor_update_id)
             self.populate()
-            self.default_sequence = dict([(nameloc, [{'type': 'lin', 'vf': 0, 'dt': 1}]) for nameloc in self.analog_channels] + [(nameloc, [{'state': 0, 'dt': 1}]) for nameloc in self.digital_channels] + [(self.timing_channel, [1])])
+            self.default_sequence = dict([(nameloc, [{'type': 'lin', 'vf': 0, 'dt': 1}]) for nameloc in self.analog_channels] + [(nameloc, [0]) for nameloc in self.digital_channels] + [(self.timing_channel, [1])])
             self.set_sequence(self.default_sequence)
         except Exception, e:
             print 'Error', e
@@ -301,7 +301,7 @@ class Sequencer(QtGui.QWidget):
     def open_digital_manual(self, channel_name):
         def odm():
             config = dcc.ControlConfig()
-            config.name = channel_name.split('@')[0]
+            config.name = str(channel_name.split('@')[0])
             widget = dcc.DigitalManualControl(config)
             dialog = QtGui.QDialog()
             dialog.ui = widget
@@ -398,7 +398,7 @@ class Sequencer(QtGui.QWidget):
         durations = [b.value() for b in self.duration_row.boxes if not b.isHidden()]
 	timing_sequence = {self.timing_channel: durations}
         digital_logic = [c.get_logic() for c in self.digital_sequencer.array.columns if not c.isHidden()]
-        digital_sequence = {key: [{'state': dl[key]} for dl in digital_logic] for key in self.digital_channels}
+        digital_sequence = {key: [dl[key] for dl in digital_logic] for key in self.digital_channels}
         analog_sequence = {key: [dict(s.items() + {'dt': dt}.items()) for s, dt in zip(self.analog_sequencer.sequence[key], durations)] for key in self.analog_channels}
         sequence = dict(digital_sequence.items() + analog_sequence.items() + timing_sequence.items())
         return sequence

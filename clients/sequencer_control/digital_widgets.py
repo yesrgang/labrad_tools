@@ -64,7 +64,7 @@ class DigitalColumn(QtGui.QWidget):
 
     def set_logic(self, sequence):
         for nameloc in self.channels:
-            self.buttons[nameloc].setChecked(sequence[nameloc][self.position]['state'])
+            self.buttons[nameloc].setChecked(sequence[nameloc][self.position])
 
 class DigitalArray(QtGui.QWidget):
     def __init__(self, channels, config):

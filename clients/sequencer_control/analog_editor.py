@@ -115,7 +115,6 @@ class RampColumn(QtGui.QGroupBox):
                 val = self.parameter_widgets[prev_ramp_type].pboxes[p].value()
                 self.parameter_widgets[self.ramp_type].pboxes[p].display(val)
             except:
-                print 'something went wrong here'
                 pass
         self.stack.setCurrentWidget(self.parameter_widgets[self.ramp_type])
 
@@ -135,7 +134,7 @@ class RampTable(QtGui.QWidget):
         self.populate()
 
     def populate(self):
-        self.cols = [RampColumn(self.ramp_maker) for i in range(10)]
+        self.cols = [RampColumn(self.ramp_maker) for i in range(100)]
         self.layout = QtGui.QHBoxLayout()
         for c in self.cols:
             self.layout.addWidget(c)
@@ -324,10 +323,21 @@ class AnalogVoltageEditor(QtGui.QDialog):
         if QtGui.QApplication.keyboardModifiers() == QtCore.Qt.ControlModifier:
             if c.key() == QtCore.Qt.Key_Return:
                 self.buttons.accepted.emit()
+                conductor = yield self.cxn.get_server(self.config.conductor_servername)
+        	yield conductor.removeListener(listener=self.receive_parameters, ID=self.config.conductor_update_id)
             if c.key() == QtCore.Qt.Key_Q:
                 self.buttons.rejected.emit()
+                conductor = yield self.cxn.get_server(self.config.conductor_servername)
+        	yield conductor.removeListener(listener=self.receive_parameters, ID=self.config.conductor_update_id)
         else:
             QtGui.QWidget().keyPressEvent(c)
+
+    def closeEvent(self, c):
+#        conductor = yield self.cxn.get_server(self.config.conductor_servername)
+#	yield conductor.removeListener(listener=self.receive_parameters, ID=self.config.conductor_update_id)
+	#self.reactor.stop()
+        self.deleteLater()
+        
 
 #    def accept(self):
 #        sequence = self.ramp_table.get_channel_sequence()
