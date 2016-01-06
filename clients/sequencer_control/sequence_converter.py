@@ -68,7 +68,7 @@ channel_map = {
         'TTLD11': 'TTLD11@D11',
         'TTLD12': 'TTLD12@D12',
         'TTLD13': 'TTLD13@D13',
-        'Aosense Heater Enable': 'AOSence Heater Enable@D14',
+        'Aosense Heater Enable': 'AOSense Heater Enable@D14',
         'E Trigger': 'Trigger@D15',
 
         'Alpha Intensity': 'Alpha Intensity@E00',
