@@ -99,7 +99,7 @@ def replace_file(filename):
     for ok, nk in channel_map.items():
         new_sequence[nk] = [os[1][ok] for os in old_sequence]
     for nc in new_channels:
-        new_sequence[nc] = [{'type': 'lin', 'vf': 0} for os in old_sequence]
+        new_sequence[nc] = [{'type': 'lin', 'vf': 0, 'dt': os[0]} for os in old_sequence]
     new_sequence['digital@T'] = [os[0] for os in old_sequence]
     with open(filename+'.new', 'w') as outfile:
         json.dump(new_sequence, outfile)
