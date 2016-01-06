@@ -98,6 +98,12 @@ def replace_file(filename):
     new_sequence = {}
     for ok, nk in channel_map.items():
         new_sequence[nk] = [os[1][ok] for os in old_sequence]
+        for cs in new_sequence[nk]:
+            try:
+                cs['dt'] = cs.pop('t')
+                cs['vf'] = cs.pop('v')
+            except:
+                pass
     for nc in new_channels:
         new_sequence[nc] = [{'type': 'lin', 'vf': 0, 'dt': os[0]} for os in old_sequence]
     new_sequence['digital@T'] = [os[0] for os in old_sequence]
