@@ -37,8 +37,8 @@ channel_map = {
         'TTLB14': 'TTLB14@B14',
         'TTLB15': 'TTLB15@B15',
         
-        'TTLC00': 'RM Gain Switch@C00',
-        'TTLC01': 'TTLC01@C01',
+        'TTLC00': 'Broken!@C00',
+        'TTLC01': 'RM Gain Switch@C01',
         'TTLC02': 'TTLC02@C02',
         'TTLC03': 'TTLC03@C03',
         'TTLC04': 'TTLC04@C04',
