@@ -98,12 +98,13 @@ def replace_file(filename):
     new_sequence = {}
     for ok, nk in channel_map.items():
         new_sequence[nk] = [os[1][ok] for os in old_sequence]
-        for cs in new_sequence[nk]:
+        for cs, os in zip(new_sequence[nk], old_sequence):
             try:
                 cs['vf'] = cs.pop('v')
                 if cs['type'] == 'linear':
                     cs['type'] = 'lin'
-                cs['dt'] = cs.pop('t')
+                cs['dt'] = os[0]
+                cs.pop('t')
             except:
                 pass
     for nc in new_channels:
