@@ -1,3 +1,4 @@
+import os
 import sys
 import json
 
@@ -84,7 +85,11 @@ def replace_file(filename):
 
 
 if __name__ == '__main__':
-    o = replace_file(sys.argv[1])
+    filenames = os.listdir('.')
+    for fn in filenames:
+        replace_file(fn)
+
+    #o = replace_file(sys.argv[1])
     #sys.stdout.write(str(o))
 
 
