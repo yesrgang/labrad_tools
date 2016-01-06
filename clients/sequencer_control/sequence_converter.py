@@ -100,10 +100,10 @@ def replace_file(filename):
         new_sequence[nk] = [os[1][ok] for os in old_sequence]
         for cs in new_sequence[nk]:
             try:
-                cs['dt'] = cs.pop('t')
                 cs['vf'] = cs.pop('v')
                 if cs['type'] == 'linear':
                     cs['type'] = 'lin'
+                cs['dt'] = cs.pop('t')
             except:
                 pass
     for nc in new_channels:
