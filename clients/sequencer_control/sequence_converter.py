@@ -8,7 +8,7 @@ channel_map = {
         'Fluores. AOM': 'Fluores. AOM@A02',
         'Fluores. Shutter': 'Fluores. Shutter@A03',
         'Abs. AOM': 'Abs. AOM@A04',
-        'Abs. Shutter': 'Abs Shutter@A05',
+        'Abs. Shutter': 'Abs. Shutter@A05',
         '2D Mot Shutter': '2D MOT Shutter@A06',
         'Zeeman Shutter': 'Zeeman Shutter@A07',
         'AH Enable': 'AH Enable@A08',
