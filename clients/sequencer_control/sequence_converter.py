@@ -102,6 +102,8 @@ def replace_file(filename):
             try:
                 cs['dt'] = cs.pop('t')
                 cs['vf'] = cs.pop('v')
+                if cs['type'] == 'linear':
+                    cs['type'] = 'lin'
             except:
                 pass
     for nc in new_channels:
