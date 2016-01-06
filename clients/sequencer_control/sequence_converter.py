@@ -2,7 +2,6 @@ import os
 import sys
 import json
 
-
 channel_map = {
         '3D MOT AOM': '3D MOT AOM@A00',
         '3D MOT Shutter': '3D MOT Shutter@A01',
@@ -71,7 +70,27 @@ channel_map = {
         'TTLD13': 'TTLD13@D13',
         'Aosense Heater Enable': 'AOSence Heater Enable@D14',
         'E Trigger': 'Trigger@D15',
+
+        'Alpha Intensity': 'Alpha Intensity@E00',
+        'Beta Intensity': 'Beta Intensity@E01',
+        'X Comp. Coil': 'X Comp. Coil@E02',
+        'Y Comp. Coil': 'Y Comp. Coil@E03',
+        'Z Comp. Coil': 'Z Comp. Coil@E04',
+        'MOT Coil': 'MOT Coil@E05',
+        'DACE06': 'HODT Intensity@E06',
+        'DACE07': 'Dimple Intensity@E07',
     }
+
+new_channels = [
+        'VODT Intensity@F00',
+        '813 H1 Intensity@F01',
+        '813 H2 Intensity@F02',
+        '813 V Intensity@F03',
+        'DACF04@F04',
+        'DACF05@F05',
+        'DACF06@F06',
+        'DACF07@F07',
+        ]
 
 def replace_file(filename):
     with open(filename, 'r') as infile:
@@ -79,6 +98,8 @@ def replace_file(filename):
     new_sequence = {}
     for ok, nk in channel_map.items():
         new_sequence[nk] = [os[1][ok] for os in old_sequence]
+    for nc in new_channels:
+        new_sequence[nc] = [{'type': 'lin', 'vf': 0} for os in old_sequence]
     new_sequence['digital@T'] = [os[0] for os in old_sequence]
     with open(filename+'.new', 'w') as outfile:
         json.dump(new_sequence, outfile)
