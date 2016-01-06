@@ -2,6 +2,7 @@ import os
 import sys
 import json
 
+
 channel_map = {
         '3D MOT AOM': '3D MOT AOM@A00',
         '3D MOT Shutter': '3D MOT Shutter@A01',
@@ -87,9 +88,7 @@ def replace_file(filename):
 if __name__ == '__main__':
     filenames = os.listdir('.')
     for fn in filenames:
-        replace_file(fn)
-
-    #o = replace_file(sys.argv[1])
-    #sys.stdout.write(str(o))
-
-
+        try:
+            replace_file(fn)
+        except:
+            print 'could not fix {}'.format(fn)
