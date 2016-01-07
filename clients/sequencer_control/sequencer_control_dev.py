@@ -1,4 +1,5 @@
 import json
+import gc
 import numpy as np
 
 from PyQt4 import QtGui, QtCore, Qt
@@ -312,12 +313,16 @@ class Sequencer(QtGui.QWidget):
             widget.move(pos)
         return odm
 
-
     def edit_analog_voltage(self, channel_name):
+    	@inlineCallbacks
         def eav():
             ave_args = (channel_name, self.get_sequence(), self.ramp_maker, self.config, self.reactor, self.cxn)
-            sequence = AnalogVoltageEditor(*ave_args).getEditedSequence(*ave_args)
-            self.set_sequence(sequence)
+	    ave = AnalogVoltageEditor(*ave_args)
+            sequence = ave.getEditedSequence(*ave_args)
+	    conductor = yield self.cxn.get_server(self.conductor_servername)
+	    yield conductor.removeListener(listener=ave.receive_parameters, ID=ave.config.conductor_update_id)
+            self.set_sequence(sequence.copy())
+	    sequence = None
         return eav
 
     def adjust_for_dvscroll(self):

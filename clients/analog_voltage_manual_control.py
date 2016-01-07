@@ -149,7 +149,7 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
 class ManyChannels(QtGui.QWidget):
     def __init__(self, reactor, cxn=None):
         QtGui.QDialog.__init__(self)
-        self.channels = ['Alpha Intensity', 'Beta Intensity', 'X Comp. Coil', 'Y Comp. Coil', 'Z Comp. Coil', 'MOT Coil', 'DACE06', 'DACE07']
+        self.channels = ['Alpha Intensity', 'Beta Intensity', 'X Comp. Coil', 'Y Comp. Coil', 'Z Comp. Coil', 'MOT Coil', 'HODT Intensity', 'Dimple Intensity']
         self.reactor = reactor
         self.cxn = cxn
         self.connect()
@@ -201,7 +201,7 @@ if __name__ == '__main__':
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-    widget = AnalogVoltageManualControl(ControlConfig(), reactor)
-#    widget = ManyChannels(reactor)
+#    widget = AnalogVoltageManualControl(ControlConfig(), reactor)
+    widget = ManyChannels(reactor)
     widget.show()
     reactor.run()

@@ -318,25 +318,30 @@ class AnalogVoltageEditor(QtGui.QDialog):
             return new_sequence
         else:
             return old_sequence
+        dialog.deleteLater()
 
     def keyPressEvent(self, c):
         if QtGui.QApplication.keyboardModifiers() == QtCore.Qt.ControlModifier:
             if c.key() == QtCore.Qt.Key_Return:
                 self.buttons.accepted.emit()
-                conductor = yield self.cxn.get_server(self.config.conductor_servername)
-        	yield conductor.removeListener(listener=self.receive_parameters, ID=self.config.conductor_update_id)
+#                conductor = yield self.cxn.get_server(self.config.conductor_servername)
+#        	yield conductor.removeListener(listener=self.receive_parameters, ID=self.config.conductor_update_id)
+#		self.close()
+#		returnValue(True)
             if c.key() == QtCore.Qt.Key_Q:
                 self.buttons.rejected.emit()
-                conductor = yield self.cxn.get_server(self.config.conductor_servername)
-        	yield conductor.removeListener(listener=self.receive_parameters, ID=self.config.conductor_update_id)
+#                conductor = yield self.cxn.get_server(self.config.conductor_servername)
+#        	yield conductor.removeListener(listener=self.receive_parameters, ID=self.config.conductor_update_id)
+#		self.close()
+#		returnValue(True)
         else:
             QtGui.QWidget().keyPressEvent(c)
 
-    def closeEvent(self, c):
+#    def closeEvent(self, c):
 #        conductor = yield self.cxn.get_server(self.config.conductor_servername)
 #	yield conductor.removeListener(listener=self.receive_parameters, ID=self.config.conductor_update_id)
 	#self.reactor.stop()
-        self.deleteLater()
+#        self.deleteLater()
         
 
 #    def accept(self):
