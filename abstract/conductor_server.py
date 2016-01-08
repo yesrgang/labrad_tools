@@ -40,8 +40,16 @@ class ConductorServer(LabradServer):
         device_parameters = json.loads(device_parameters)
         if device_parameters is not None:
             self.initialize_device_parameters(device_parameters)
-            self.device_parameters.update(device_parameters)
+            self.device_parameters = device_parameters
         return json.dumps(self.device_parameters)
+
+    @setting(2, 'remove device', device_name='s', returns='b')
+    def remove_device(self, c, device_name):
+        parameters = self.device_parameters.pop(device_name)
+        if parameters:
+            return True
+        else: 
+            return False
 
     def initialize_device_parameters(self, device_parameters):
         value = None
@@ -55,7 +63,7 @@ class ConductorServer(LabradServer):
             eval(d['init command'])
             eval(d['command'])(value)
 
-    @setting(2, 'set sequence parameters', sequence_parameters='s', returns='s')
+    @setting(3, 'set sequence parameters', sequence_parameters='s', returns='s')
     def set_sequence_parameters(self, c, sequence_parameters=None):
         """
         parameters is dictionary {name: value}
@@ -65,7 +73,7 @@ class ConductorServer(LabradServer):
         yield self.update_sp(True)
         returnValue(json.dumps(self.sequence_parameters))
     
-    @setting(3, 'evaluate sequence parameters', sequence='s', returns='s') 
+    @setting(4, 'evaluate sequence parameters', sequence='s', returns='s') 
     def evaluate_sequence_parameters(self, c, sequence):
         sequence = Sequence(sequence)
 	return self._evaluate_sequence_parameters(sequence)
@@ -87,7 +95,7 @@ class ConductorServer(LabradServer):
             if type(v) is types.ListType:
                 v.insert(len(v), v.pop(0))
 
-    @setting(4, 'load sequence', sequence='s', returns='s')
+    @setting(5, 'load sequence', sequence='s', returns='s')
     def load_sequence(self, c, sequence):
         sequence_keyfix = {}
         for sequencer in self.sequencers:

@@ -91,6 +91,11 @@ class connection(object):
     def context(self):
         cntx = yield self.cxn.context()
         returnValue(cntx)
+
+    @inlineCallbacks
+    def getcxn(self):
+        cxn = yield self.cxn
+        returnValue(cxn)
             
 if __name__ == '__main__':
     from twisted.internet import reactor
