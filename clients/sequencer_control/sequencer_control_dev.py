@@ -55,10 +55,20 @@ class DurationRow(QtGui.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
 
     def display_sequence(self, sequence):
-        for b in self.boxes[::-1]:
-            b.hide()
-        for dt, b in zip(sequence[self.config.timing_channel], self.boxes):
-            b.show()
+#        for b in self.boxes[::-1]:
+#            b.hide()
+#        for dt, b in zip(sequence[self.config.timing_channel], self.boxes):
+#            b.show()
+#            b.display(dt)
+        shown = sum([1 for b in self.boxes if not b.isHidden()])
+	num_to_show = len(sequence[self.config.timing_channel])
+	if shown > num_to_show:
+            for b in self.boxes[num_to_show: shown][::-1]:
+                b.hide()
+        elif shown < num_to_show:
+            for b in self.boxes[shown:num_to_show]:
+                b.show()
+	for b, dt in zip(self.boxes[:num_to_show], sequence[self.config.timing_channel]):
             b.display(dt)
 
 
@@ -91,10 +101,18 @@ class AddDltRow(QtGui.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
     
     def display_sequence(self, sequence):
-        for b in self.buttons[::-1]:
-            b.hide()
-        for t, b in zip(sequence[self.config.timing_channel], self.buttons):
-            b.show()
+#        for b in self.buttons[::-1]:
+#            b.hide()
+#        for t, b in zip(sequence[self.config.timing_channel], self.buttons):
+#            b.show()
+        shown = sum([1 for b in self.buttons if not b.isHidden()])
+	num_to_show = len(sequence[self.config.timing_channel])
+	if shown > num_to_show:
+            for b in self.buttons[num_to_show: shown][::-1]:
+                b.hide()
+        elif shown < num_to_show:
+            for b in self.buttons[shown:num_to_show]:
+                b.show()
 
 class LoadAndSave(QtGui.QWidget):
     def __init__(self):
@@ -314,15 +332,29 @@ class Sequencer(QtGui.QWidget):
         return odm
 
     def edit_analog_voltage(self, channel_name):
+#    	@inlineCallbacks
+#        def eav():
+#            ave_args = (channel_name, self.get_sequence(), self.ramp_maker, self.config, self.reactor, self.cxn)
+#	    ave = AnalogVoltageEditor(*ave_args)
+#            sequence = ave.getEditedSequence(*ave_args)
+#	    conductor = yield self.cxn.get_server(self.conductor_servername)
+#	    yield conductor.removeListener(listener=ave.receive_parameters, ID=ave.config.conductor_update_id)
+#            self.set_sequence(sequence)
+#        return eav
     	@inlineCallbacks
         def eav():
             ave_args = (channel_name, self.get_sequence(), self.ramp_maker, self.config, self.reactor, self.cxn)
 	    ave = AnalogVoltageEditor(*ave_args)
-            sequence = ave.getEditedSequence(*ave_args)
-	    conductor = yield self.cxn.get_server(self.conductor_servername)
-	    yield conductor.removeListener(listener=ave.receive_parameters, ID=ave.config.conductor_update_id)
-            self.set_sequence(sequence.copy())
-	    sequence = None
+	    if ave.exec_():
+                print '!'
+                sequence = ave.getEditedSequence().copy()
+                self.set_sequence(sequence)
+            conductor = yield self.cxn.get_server(self.conductor_servername)
+            yield conductor.removeListener(listener=ave.receive_parameters, ID=ave.config.conductor_update_id)
+	    ave.setParent(None)
+            ave.deleteLater()
+	    ave = None
+	    gc.collect()
         return eav
 
     def adjust_for_dvscroll(self):
@@ -354,7 +386,7 @@ class Sequencer(QtGui.QWidget):
     
     def save_sequence(self):
         file_name = self.browse_and_save.location_box.text()
-	with open(file_name, 'w') as outfile:
+	with open(file_name, 'w+') as outfile:
             sequence = self.get_sequence()
             json.dump(sequence, outfile)
 
@@ -438,6 +470,9 @@ class Sequencer(QtGui.QWidget):
             if c.key() == QtCore.Qt.Key_R:
                 self.redo()
             if c.key() == QtCore.Qt.Key_S:
+                self.save_sequence()
+                self.run_sequence(c)
+            if c.key() == QtCore.Qt.Key_Return:
                 self.save_sequence()
                 self.run_sequence(c)
 

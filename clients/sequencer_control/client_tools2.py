@@ -17,7 +17,7 @@ class SuperSpinBox(QtGui.QLineEdit):
             print 'variable: ', self.text()
             super(SuperSpinBox, self).keyPressEvent(c)
             return
-        if c.key() == QtCore.Qt.Key_Return: 
+        if c.key() in [QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter]:
             split_text = self.text().split(' ')
             if len(split_text) == 1:
                 unit = self.unit

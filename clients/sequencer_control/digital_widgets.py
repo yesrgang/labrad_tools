@@ -83,10 +83,20 @@ class DigitalArray(QtGui.QWidget):
         self.setLayout(self.layout)
 
     def display_sequence(self, sequence): 
-        for c in self.columns[::-1]:
-            c.hide()
-	for c in self.columns[:len(sequence[self.channels[0]])]:
-            c.show()
+#        for c in self.columns[::-1]:
+#            c.hide()
+#	for c in self.columns[:len(sequence[self.channels[0]])]:
+#            c.show()
+#            c.set_logic(sequence)
+        shown_columns = sum([1 for c in self.columns if not c.isHidden()])
+	num_to_show = len(sequence['digital@T'])
+	if shown_columns > num_to_show:
+            for c in self.columns[num_to_show: shown_columns][::-1]:
+                c.hide()
+        elif shown_columns < num_to_show:
+            for c in self.columns[shown_columns:num_to_show]:
+                c.show()
+	for c in self.columns[:num_to_show]:
             c.set_logic(sequence)
 
 class NameBox(QtGui.QLabel):

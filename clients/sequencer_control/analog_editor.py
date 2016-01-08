@@ -219,7 +219,6 @@ class AnalogVoltageEditor(QtGui.QDialog):
         self.setFixedSize(width, height)
         yield self.set_columns()
         yield self.replot()
-#        self.setAttribute(120, True)
 
     @inlineCallbacks
     def connect_signals(self):
@@ -307,46 +306,18 @@ class AnalogVoltageEditor(QtGui.QDialog):
             self.canvas.make_figure(T, V)
             self.canvas.draw()
 
-    @staticmethod
-    def getEditedSequence(*ave_args):
-#        old_sequence = sequence
-        old_sequence = ave_args[1]
-        dialog = AnalogVoltageEditor(*ave_args)
-        result = dialog.exec_()
-        new_sequence = dialog.get_sequence()
-        if result == QtGui.QDialog.Accepted:
-            return new_sequence
-        else:
-            return old_sequence
-        dialog.deleteLater()
+    def getEditedSequence(self):
+        return self.get_sequence()
 
     def keyPressEvent(self, c):
         if QtGui.QApplication.keyboardModifiers() == QtCore.Qt.ControlModifier:
             if c.key() == QtCore.Qt.Key_Return:
                 self.buttons.accepted.emit()
-#                conductor = yield self.cxn.get_server(self.config.conductor_servername)
-#        	yield conductor.removeListener(listener=self.receive_parameters, ID=self.config.conductor_update_id)
-#		self.close()
-#		returnValue(True)
             if c.key() == QtCore.Qt.Key_Q:
                 self.buttons.rejected.emit()
-#                conductor = yield self.cxn.get_server(self.config.conductor_servername)
-#        	yield conductor.removeListener(listener=self.receive_parameters, ID=self.config.conductor_update_id)
-#		self.close()
-#		returnValue(True)
         else:
             QtGui.QWidget().keyPressEvent(c)
 
-#    def closeEvent(self, c):
-#        conductor = yield self.cxn.get_server(self.config.conductor_servername)
-#	yield conductor.removeListener(listener=self.receive_parameters, ID=self.config.conductor_update_id)
-	#self.reactor.stop()
-#        self.deleteLater()
-        
-
-#    def accept(self):
-#        sequence = self.ramp_table.get_channel_sequence()
-#        print self.ramp_maker(sequence).get_programmable()
 class FakeConfig(object):
     def __init__(self):
         self.conductor_servername = 'yesr20_conductor'
