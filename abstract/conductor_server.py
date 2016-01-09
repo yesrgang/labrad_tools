@@ -12,6 +12,8 @@ from okfpga.sequencer.sequence import Sequence
 
 class ConductorServer(LabradServer):
     update_sp = Signal(698123, 'signal: update_sp', 'b')
+    previous_sequence_parameters = [None, None, None]
+    previous_device_parameters = [None, None, None]
     def __init__(self, config_name):
         self.device_parameters = {}
         self.sequence_parameters = {}
@@ -73,10 +75,43 @@ class ConductorServer(LabradServer):
         yield self.update_sp(True)
         returnValue(json.dumps(self.sequence_parameters))
     
-    @setting(4, 'evaluate sequence parameters', sequence='s', returns='s') 
+    @setting(4, 'update sequence parameters', sequence_parameters='s', returns='s')
+    def update_sequence_parameters(self, c, sequence_parameters=None):
+        """
+        parameters is dictionary {name: value}
+        """
+        if sequence_parameters is not None:
+            self.sequence_parameters.update(json.loads(sequence_parameters))
+        yield self.update_sp(True)
+        returnValue(json.dumps(self.sequence_parameters))
+    
+    @setting(5, 'evaluate sequence parameters', sequence='s', returns='s') 
     def evaluate_sequence_parameters(self, c, sequence):
         sequence = Sequence(sequence)
 	return self._evaluate_sequence_parameters(sequence)
+
+    @setting(6, 'get previous parameters', returns='s')
+    def get_previous_parameters(self, c):
+	#previous_parameters = {}
+#	sp = {}
+#        for p, v in self.sequence_parameters.items():
+#            if type(v) is types.ListType:
+#                sp[p] = v[-1]
+#            else:
+#                sp[p] = v
+#        dp = {}
+#	for device, parameter in self.device_parameters.items():
+#            for p, d in parameter.items():
+#                if type(d['value']) is types.ListType:
+#                    dp[device][parameter] = d['value'][-1]
+#		else:
+#                    dp[device][parameter] = d['value']
+#        sp.update(dp)
+#        return json.dumps(sp)
+	previous_parameters = {}
+	previous_parameters.update(self.previous_sequence_parameters[0])
+	previous_parameters.update(self.previous_device_parameters[0])
+	return json.dumps(previous_parameters)
 
     def _evaluate_sequence_parameters(self, sequence):
         current_parameters = {}
@@ -85,6 +120,8 @@ class ConductorServer(LabradServer):
                 current_parameters[p] = v[0]
             else:
                 current_parameters[p] = v
+        self.previous_sequence_parameters.pop(0)
+	self.previous_sequence_parameters.append(current_parameters)
         current_sequence = sequence.dump()
         for p, v in current_parameters.items():
             current_sequence = current_sequence.replace('"{}"'.format(p), str(v))
@@ -95,7 +132,7 @@ class ConductorServer(LabradServer):
             if type(v) is types.ListType:
                 v.insert(len(v), v.pop(0))
 
-    @setting(5, 'load sequence', sequence='s', returns='s')
+    @setting(7, 'load sequence', sequence='s', returns='s')
     def load_sequence(self, c, sequence):
         sequence_keyfix = {}
         for sequencer in self.sequencers:
@@ -108,6 +145,7 @@ class ConductorServer(LabradServer):
     @inlineCallbacks
     def evaluate_device_parameters(self):
         value = None
+	current_parameters = {}
         for device, parameters in self.device_parameters.items():
             for p, d in parameters.items():
                 if type(d['value']) is types.ListType:
@@ -115,9 +153,11 @@ class ConductorServer(LabradServer):
                     d['value'].insert(len(d['value']), d['value'].pop(0))
                 else:
                     value = d['value']
+		current_prarameters[device][p] = value
                 self = self
                 yield eval(d['command'])(value)
-                print value
+        self.previous_device_parameters.pop(0)
+	self.previous_device_parameters.append(current_parameters)
     
     @inlineCallbacks
     def run_sequence(self):
