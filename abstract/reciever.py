@@ -1,15 +1,12 @@
 import json
 import os
 
-import ok
 from time import sleep
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
 from twisted.internet.task import LoopingCall
 from twisted.internet.threads import deferToThread
-
-from okfpga.sequencer.sequence import Sequence
 
 class ReceiverServer(LabradServer):
     name = '%LABRADNODE% Receiver'
