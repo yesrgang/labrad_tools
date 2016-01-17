@@ -1,6 +1,6 @@
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
-from client_tools import SuperSpinBox
+#from client_tools import SuperSpinBox
 import numpy as np
 import json
 import matplotlib
