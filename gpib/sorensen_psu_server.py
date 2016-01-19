@@ -14,6 +14,7 @@ message = 987654321
 timeout = 5
 ### END NODE INFO
 """
+import json
 
 from labrad.server import setting, Signal
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
@@ -26,7 +27,13 @@ class SorensenPSUWrapper(GPIBDeviceWrapper):
     def load_configuration(self, config):
         for key, value in config.__dict__.items():
             setattr(self, key, value)
-        return str(config.__dict__)
+
+    @inlineCallbacks
+    def set_defaults(self):
+        yield self.set_state(self.def_state)
+        yield self.set_current(self.def_current)
+        yield self.set_voltage(self.def_voltage)
+        yield self.set_power(self.def_power)
     
     @inlineCallbacks
     def get_state(self):
@@ -76,18 +83,44 @@ class SorensenPSUWrapper(GPIBDeviceWrapper):
         yield self.write('SOUR:POW {}'.format(power))
         returnValue(power)
 
+class fake_c(object):
+    ID = 0
+    def __init__(self):
+        self.ID = 0
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        raise StopIteration
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        return setattr(self, key, value)
+
+
 class SorensenPSUServer(GPIBManagedServer):
     """Provides basic control for Sorensen DHP series power supplies"""
-    name = '%LABRADNODE% PSU'
     deviceName = 'Sorensen DHP60-330 M9D'
     deviceWrapper = SorensenPSUWrapper
-
 
     def __init__(self, config_name):
         self.config_name = config_name
         self._load_configuration()
         self.update_values = Signal(self.update_id, "signal: update_values", '(sbvvv)')
         GPIBManagedServer.__init__(self)
+    
+    @inlineCallbacks
+    def initServer(self):
+        yield GPIBManagedServer.initServer(self)
+        for name, conf in self.psu.items():
+            for key, gpib_device_id in self.list_devices(None):
+                if conf.gpib_device_id == gpib_device_id:
+                    dev = self.devices[key]
+                    dev.load_configuration(conf)
+                    dev.set_defaults()
 
     @setting(10, 'state', state='b', returns='b')
     def state(self, c, state=None):
@@ -135,6 +168,7 @@ class SorensenPSUServer(GPIBManagedServer):
         c = yield dev.get_current()
         v = yield dev.get_voltage()
         p = yield dev.get_power()
+        print s,c,v,p
         yield self.update_values((dev.name, s, c, v, p))
 
     def _load_configuration(self):
@@ -150,8 +184,8 @@ class SorensenPSUServer(GPIBManagedServer):
         else:
             yield self.select_device(c, self.psu[name].gpib_device_id)
             dev = self.selectedDevice(c)
-            conf_str = dev.load_configuration(self.psu[name])
-            returnValue(conf_str)
+            dev.load_configuration(self.psu[name])
+            returnValue(json.dumps(self.psu[name].__dict__))
 
 if __name__ == '__main__':
     from labrad import util

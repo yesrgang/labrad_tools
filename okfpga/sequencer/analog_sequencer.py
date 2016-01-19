@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Analog Sequencer
+name = analog_sequencer
 version = 1.0
 description = 
-instancename = %LABRADNODE% Analog Sequencer
+instancename = %LABRADNODE%_analog_sequencer
 
 [startup]
 cmdline = %PYTHON% %FILE%

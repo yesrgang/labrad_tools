@@ -1,3 +1,21 @@
+"""
+### BEGIN NODE INFO
+[info]
+name = receiver
+version = 1.0
+description = 
+instancename = %LABRADNODE%_receiver
+
+[startup]
+cmdline = %PYTHON% %FILE%
+timeout = 20
+
+[shutdown]
+message = 987654321
+timeout = 20
+### END NODE INFO
+"""
+
 import json
 import os
 import time
@@ -10,7 +28,7 @@ from twisted.internet.task import LoopingCall
 from twisted.internet.threads import deferToThread
 
 class ReceiverServer(LabradServer):
-    name = '%LABRADNODE% Receiver'
+    name = '%LABRADNODE%_receiver'
     data = []
     do_record = False
     
