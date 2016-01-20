@@ -58,20 +58,20 @@ class SerialServer(LabradServer):
 
     def initServer(self):
         print 'Searching for COM ports:'
-#        self.SerialPorts = []
-#        ports = list_ports.comports()
-#        for name,description,hardware in ports:
-#            #make sure the discovered ports can be opened
-#            try:
-#                ser = Serial(name)
-#                ser.close()
-#            except SerialException, e:
-#                pass
-#            else:
-#                self.SerialPorts += [name]
-#                print name
-#        if not len(self.SerialPorts):
-#            print '  none'
+        self.SerialPorts = []
+        ports = list_ports.comports()
+        for name,description,hardware in ports:
+            #make sure the discovered ports can be opened
+            try:
+                ser = Serial(name)
+                ser.close()
+            except SerialException, e:
+                pass
+            else:
+                self.SerialPorts += [name]
+                print name
+        if not len(self.SerialPorts):
+            print '  none'
 
     def expireContext(self, c):
         if 'PortObject' in c:

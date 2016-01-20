@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Digital Sequencer
+name = digital_sequencer
 version = 1.0
 description = 
-instancename = %LABRADNODE% Digital Sequencer
+instancename = %LABRADNODE%_digital_sequencer
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -15,17 +15,17 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
+import json
+import numpy as np
 
+import ok
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
-import json
-import ok
 
-class DigitalSequencer(LabradServer):
-    name = '%LABRADNODE% Digital Sequencer'
-    mode='idle'
+from sequence import Sequence
 
+class DigitalSequencerServer(LabradServer):
     def __init__(self, config_name):
         LabradServer.__init__(self)
         self.config_name = config_name
@@ -33,136 +33,216 @@ class DigitalSequencer(LabradServer):
 	self.update = Signal(self.update_id, 'signal: update', 's')
 
     def load_configuration(self):
-        config = __import__(self.config_name).SequencerConfig()
+        config = __import__(self.config_name).DigitalSequencerConfig()
         for key, value in config.__dict__.items():
             setattr(self, key, value)
 
     def initServer(self):
-#        self.channels = SequencerConfiguration.channels
-        self.initialize_board()
-
-    def initialize_board(self):
-        connected = self.connect_board()
-        if not connected:
-            raise Exception("sequencer board not found")
-        self.program_board()
-	self.write_channel_modes()
-	self.write_channel_stateinvs()
-
-    def connect_board(self):
+        for board in self.boards.values():
+            success = self.initialize_board(board)
+            if not success:
+                self.boards.pop(board)
+        self.initialize_outputs()
+    
+    def initialize_board(self, board):
         fp = ok.FrontPanel()
         module_count = fp.GetDeviceCount()
-        print "Found {} unused modules".format(module_count)
+        print "found {} unused devices".format(module_count)
         for i in range(module_count):
             serial = fp.GetDeviceListSerial(i)
             tmp = ok.FrontPanel()
             tmp.OpenBySerial(serial)
             iden = tmp.GetDeviceID()
-            if iden == self.okDeviceID:
-                self.xem = tmp
-                print 'Connected to {}'.format(iden)
-                self.program_board()
+            if iden == board.device_id:
+                board.xem = tmp
+                print 'connected to {}'.format(iden)
+                board.xem.LoadDefaultPLLConfiguration() 
+                prog = board.xem.ConfigureFPGA(board.bit_file)
+                if prog:
+                   print "unable to program sequencer"
+                   return False
                 return True
         return False
-
-    def program_board(self):
-        self.xem.LoadDefaultPLLConfiguration() 
-        prog = self.xem.ConfigureFPGA(self.bit_file)
-        if prog:
-            raise "unable to program sequencer"
-
-    def _time_to_ticks(self, time):
-        return int(time*self.clk_frequency)
     
-    def _program_sequence(self, sequence):
-        """ sequence is list of tuples [(duration, {name: logic}), ...] """
+    def initialize_outputs(self):
+        for b in self.boards.values():
+	    self.write_channel_modes(b)
+	    self.write_channel_stateinvs(b)
+
+    def time_to_ticks(self, board, time):
+        return int(board.clk_frequency*time)
+
+    def make_sequence(self, board, sequence):
+        sequence = self._fix_sequence_keys(sequence)
+
+        # make sure trigger happens on first run
+        for c in board.channels:
+            sequence[c.key].insert(0, sequence[c.key][0])
+        sequence[self.timing_channel.name].insert(0, 10e-6)
+        sequence['Trigger@D15'][0] = 1
+
+	# allow for sequencer's ramp to zero
+        for c in board.channels:
+            sequence[c.key].append(sequence[c.key][-1])
+        sequence[self.timing_channel.name].append(1)
+        sequence['Trigger@D15'][-1] = 1
+
+        # for now, assume each channel_sequence has same timings
+        programmable_sequence = [(dt, [sequence[c.key][i] for c in board.channels]) for i, dt in enumerate(sequence[self.timing_channel.name])]
+        
         ba = []
-        for t, l in sequence:
-            #l is a dict
-            l2 = [l[d['name']] for k, d in sorted(self.channels.items())]
-            ba += list([sum([2**j for j, b in enumerate(l2[i:i+8]) if b]) for i in range(0, 64, 8)])
-            ba += list([int(eval(hex(self._time_to_ticks(t))) >> i & 0xff) for i in range(0, 32, 8)])
+        for t, l in programmable_sequence:
+            ba += list([sum([2**j for j, b in enumerate(l[i:i+8]) if b]) for i in range(0, 64, 8)])
+            ba += list([int(eval(hex(self.time_to_ticks(board, t))) >> i & 0xff) for i in range(0, 32, 8)])
         ba += [0]*96
-        self.set_sequencer_mode('idle')
-        self.set_sequencer_mode('load')
-        self.xem.WriteToPipeIn(0x80, bytearray(ba))
-        self.set_sequencer_mode('idle')
-
-    def set_sequencer_mode(self, mode):
-        self.xem.SetWireInValue(0x00, self.sequencer_mode_num[mode])
-        self.xem.UpdateWireIns()
-        self.seuqencer_mode = mode
-
-    @setting(01, 'get channels')
-    def get_channels(self, c):
-        return str({k: d['name'] for k, d in self.channels.items()})
-
-    @setting(07, 'run sequence', sequence='s')
-    def run_sequence(self, c, sequence):
-        sequence = json.loads(sequence)
-        self._program_sequence(sequence)
-        self.set_sequencer_mode('run')
-
-    @setting(02, 'run sequence from file', file_name='s')
-    def run_sequence_from_file(self, c, file_name):
-        infile = open(file_name, 'r')
-        sequence = [eval(line.split('\n')[:-1][0]) for line in infile.readlines()]
-        self._program_sequence(sequence)
-        self.set_sequencer_mode('run')
-        return file_name
-
-    @setting(03, 'sequencer mode', mode='s')
-    def _sequencer_mode(self, c, mode=None):
-        if mode is not None:
-            self.set_sequencer_mode(mode)
-        return self.sequencer_mode
-
-    def write_channel_modes(self): 
-        cm_list = [d['mode'] for k, d in sorted(self.channels.items())]
-        bas = [sum([2**j for j, m in enumerate(cm_list[i:i+16]) if m == 'manual']) for i in range(0, 64, 16)]
-        for ba, wire in zip(bas, self.channel_mode_wires):
-            self.xem.SetWireInValue(wire, ba)
-        self.xem.UpdateWireIns()
-
-    @setting(04, 'channel mode', channel='s', mode='s')
-    def channel_mode(self, c, channel, mode=None):
-        if mode is not None:
-            self.channels[self.name_to_key[channel]]['mode'] = mode
-            self.write_channel_modes()
-            self.write_channel_stateinvs()
-        self.notify_listeners(c)
-        return self.channels[self.name_to_key[channel]]['mode']
+        return ba, sequence
     
-    def write_channel_stateinvs(self): 
-        cm_list = [d['mode'] for k, d in sorted(self.channels.items())]
-        cs_list = [d['manual state'] for k, d in sorted(self.channels.items())]
-        ci_list = [d['invert'] for k, d in sorted(self.channels.items())]
+    def program_sequence(self, sequence):
+        updated_sequence = {}
+        for board in self.boards.values():
+            ba, s = self.make_sequence(board, sequence)
+            self.set_board_mode(board, 'idle')
+            self.set_board_mode(board, 'load')
+            board.xem.WriteToPipeIn(board.pipe_wire, bytearray(ba))
+            self.set_board_mode(board, 'idle')
+            updated_sequence.update(s)
+        return updated_sequence
+
+    def set_board_mode(self, board, mode):
+        board.xem.SetWireInValue(board.mode_wire, board.mode_nums[mode])
+        board.xem.UpdateWireIns()
+        board.seuqencer_mode = mode
+
+    def id2channel(self, channel_id):
+        """
+        expect 3 possibilities for channel_id.
+        1) name -> return channel with that name
+        2) @loc -> return channel at that location
+        3) name@loc -> first try name, then location
+        """
+        channel = None
+        try:
+            name, loc = channel_id.split('@')
+        except:
+            name = channel_id
+            loc = None
+        if name:
+            for b in self.boards.values():
+                for c in b.channels:
+                    if c.name == name:
+                        channel = c
+        if not channel:
+            for b in self.boards.values():
+                for c in b.channels:
+                    if c.loc == loc:
+                        channel = c
+        return channel
+
+    @setting(1, 'get channels')
+    def get_channels(self, c):
+        channels = np.concatenate([[c.key for c in b.channels] for n, b in sorted(self.boards.items())]).tolist()
+        return json.dumps(channels)
+    
+    @setting(11, 'get timing channel')
+    def get_timing_channel(self, c):
+        return json.dumps(self.timing_channel.name)
+
+    @setting(2, 'run sequence', sequence='s')
+    def run_sequence(self, c, sequence):
+        sequence = Sequence(sequence)
+        self.program_sequence(sequence)
+        for board in self.boards.values():
+            self.set_board_mode(board, 'run')
+
+    @setting(3, 'sequencer mode', mode='s')
+    def sequencer_mode(self, c, mode=None):
+        if mode is not None:
+            for board in self.boards.values():
+                self.set_board_mode(board, mode)
+            self.mode = mode
+        return self.mode
+
+    @setting(4, 'channel mode', channel_id='s', mode='s')
+    def channel_mode(self, c, channel_id, mode=None):
+        channel = self.id2channel(channel_id)
+        if mode is not None:
+            channel.mode = mode
+            board = self.boards[channel.board]
+            self.write_channel_modes(board)
+            self.write_channel_stateinvs(board)
+        self.notify_listeners(c)
+        return channel.mode
+    
+    def write_channel_modes(self, board): 
+        cm_list = [c.mode for c in board.channels]
+        bas = [sum([2**j for j, m in enumerate(cm_list[i:i+16]) if m == 'manual']) for i in range(0, 64, 16)]
+        for ba, wire in zip(bas, board.channel_mode_wires):
+            board.xem.SetWireInValue(wire, ba)
+        board.xem.UpdateWireIns()
+    
+    def write_channel_stateinvs(self, board): 
+        cm_list = [c.mode for c in board.channels]
+        cs_list = [c.manual_state for c in board.channels]
+        ci_list = [c.invert for c in board.channels]
         bas = [sum([2**j for j, (m, s, i) in enumerate(zip(cm_list[i:i+16], cs_list[i:i+16], ci_list[i:i+16])) if (m=='manual' and s!=i) or (m=='auto' and i==True)]) for i in range(0, 64, 16)]
-        for ba, wire in zip(bas, self.channel_stateinv_wires):
-            self.xem.SetWireInValue(wire, ba)
-        self.xem.UpdateWireIns()
+        for ba, wire in zip(bas, board.channel_stateinv_wires):
+            board.xem.SetWireInValue(wire, ba)
+        board.xem.UpdateWireIns()
 
-    @setting(05, 'channel manual state', channel='s', state='i')
-    def channel_manual_state(self, c, channel, state=None):
+    @setting(5, 'channel manual state', channel_id='s', state='i')
+    def channel_manual_state(self, c, channel_id, state=None):
+        channel = self.id2channel(channel_id)
         if state is not None:
-            self.channels[self.name_to_key[channel]]['manual state'] = state
-            self.write_channel_stateinvs()
+            channel.manual_state = state
+            board = self.boards[channel.board]
+            self.write_channel_stateinvs(board)
 	self.notify_listeners(c)
-        return self.channels[self.name_to_key[channel]]['manual state']
+        return channel.manual_state
 
-    @setting(06, 'channel invert', channel='s', invert='i')
-    def channel_invert(self, c, channel, invert=None):
+    @setting(6, 'channel invert', channel_id='s', invert='i')
+    def channel_invert(self, c, channel_id, invert=None):
+        channel = self.id2channel(channel_id)
         if invert is not None:
-            self.channels[self.name_to_key[channel]]['invert'] = invert
-            self.write_channel_stateinvs()
-        return self.channels[self.name_to_key[channel]]['invert']
+            channel.invert = invert
+            board = self.boards[channel.board]
+            self.write_channel_stateinvs(board)
+        return channel.invert
 
-    @setting(10, 'notify listeners')
+    @setting(7, 'get channel configuration', channel_id='s')
+    def get_channel_configuration(self, c, channel_id):
+        channel = self.id2channel(channel_id)
+        return json.dumps(channel.__dict__)
+
+    @setting(8, 'notify listeners')
     def notify_listeners(self, c):
-        self.update(json.dumps(self.channels))
+        d = {}
+	for b in self.boards.values():
+            for c in b.channels:
+                d[c.key] = c.__dict__
+        self.update(json.dumps(d))
+
+    @setting(9, 'fix sequence keys', sequence='s', returns='s')
+    def fix_sequence_keys(self, c, sequence):
+        sequence =  Sequence(sequence)
+        sequence_keyfix =  self._fix_sequence_keys(sequence)
+        return sequence_keyfix.dump()
+    
+    def _fix_sequence_keys(self, sequence):
+        # take sequence name@loc to configuration name@loc
+        sequence_keyfix = {}
+        for key in sequence.keys():
+            name, loc =key.split('@')
+	    for board in self.boards.values():
+                for c in board.channels:
+                    if c.name == name:
+                        sequence_keyfix[c.key] = sequence[key]
+                    elif c.loc == loc:
+                        sequence_keyfix.set_default(c.key, sequence[key])
+	sequence_keyfix[self.timing_channel.name] = sequence[self.timing_channel.name]
+        return Sequence(sequence_keyfix)
 
 if __name__ == "__main__":
-    config_name = 'digital_config'
-    __server__ = DigitalSequencer(config_name)
+    config_name = 'digital_sequencer_config'
+    __server__ = DigitalSequencerServer(config_name)
     from labrad import util
     util.runServer(__server__)

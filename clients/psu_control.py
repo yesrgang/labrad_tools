@@ -1,6 +1,8 @@
+import json
+
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
-from client_tools import SuperSpinBox
+from client_tools2 import SuperSpinBox
 from connection import connection
 from twisted.internet.defer import inlineCallbacks
 import numpy as np
@@ -8,9 +10,10 @@ from time import sleep
 
 class PSUControl(QtGui.QGroupBox):
     has_new_state = False
-    has_new_current = False
+#    has_new_current = False
     has_new_volatage = False
     layout = None
+    mouseHover = pyqtSignal(bool)
 
     def __init__(self, config_name, reactor, cxn=None):
         config = __import__(config_name).PSUConfig()
@@ -27,30 +30,22 @@ class PSUControl(QtGui.QGroupBox):
             self.cxn = connection()
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
-        try:
-            yield self.select_device()
-            self.populate_gui()
-            yield self.connect_signals()
-            yield self.request_values()
-        except Exception, e:
-            print e
-            self.setDisabled(True)
+        yield self.select_device()
+        self.populate_gui()
+        yield self.connect_signals()
+        yield self.request_values()
 
     @inlineCallbacks
     def select_device(self):
         server = yield self.cxn.get_server(self.server_name)
         confstr = yield server.select_device_by_name(self.name)
-        for key, value in eval(confstr).iteritems():
+        for key, value in json.loads(confstr).iteritems():
             setattr(self, key, value)
     
     def populate_gui(self):
         self.state_button = QtGui.QPushButton()
         self.state_button.setCheckable(1)
-        
-        self.current_box = SuperSpinBox(self.current_range, self.current_decimals) 
-        self.current_box.setFixedWidth(self.spinbox_width)
-        
-        self.voltage_box = SuperSpinBox(self.voltage_range, self.voltage_decimals)
+        self.voltage_box = SuperSpinBox(self.voltage_range, self.voltage_units, self.voltage_decimals)
         self.voltage_box.setFixedWidth(self.spinbox_width)
 
         if self.layout is None:
@@ -58,12 +53,10 @@ class PSUControl(QtGui.QGroupBox):
 
         self.layout.addWidget(QtGui.QLabel('<b>'+self.name+'</b>'), 1, 0, 1, 1, QtCore.Qt.AlignHCenter)
         self.layout.addWidget(self.state_button, 1, 1)
-        self.layout.addWidget(QtGui.QLabel('Current [A]: '), 2, 0, 1, 1, QtCore.Qt.AlignRight)
-        self.layout.addWidget(self.current_box, 2, 1)
-        self.layout.addWidget(QtGui.QLabel('Voltage [V]: '), 3, 0, 1, 1, QtCore.Qt.AlignRight)
+        self.layout.addWidget(QtGui.QLabel('Voltage: '), 3, 0, 1, 1, QtCore.Qt.AlignRight)
         self.layout.addWidget(self.voltage_box, 3, 1)
         self.setLayout(self.layout)
-        self.setFixedSize(120 + self.spinbox_width, 166)
+        self.setFixedSize(70 + self.spinbox_width, 70)
 
     @inlineCallbacks
     def connect_signals(self):
@@ -74,14 +67,20 @@ class PSUControl(QtGui.QGroupBox):
         yield self.cxn.add_on_disconnect(self.server_name, self.disable)
 
         self.state_button.toggled.connect(self.on_new_state)
-        self.current_box.returnPressed.connect(self.on_new_current)
         self.voltage_box.returnPressed.connect(self.on_new_voltage)
         self.setMouseTracking(True)
+        self.mouseHover.connect(self.request_values)
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.write_values)
         self.timer.start(self.update_time)
         
         self.free = True
+
+    def enterEvent(self, c):
+        self.mouseHover.emit(True)
+    
+#    def leaveEvent(self, c):
+#        self.mouseHover.emit(True)
 
     @inlineCallbacks
     def request_values(self, c=None):
@@ -99,8 +98,8 @@ class PSUControl(QtGui.QGroupBox):
             else:
                 self.state_button.setChecked(0)
                 self.state_button.setText('Off')
-            if not self.current_box.hasFocus():
-                self.current_box.display(current)
+#            if not self.current_box.hasFocus():
+#                self.current_box.display(current)
             if not self.voltage_box.hasFocus():
                 self.voltage_box.display(voltage)
             self.free = True
@@ -109,9 +108,9 @@ class PSUControl(QtGui.QGroupBox):
         if self.free:
             self.has_new_state = True
    
-    def on_new_current(self):
-        if self.free:
-            self.has_new_current = True
+#    def on_new_current(self):
+#        if self.free:
+#            self.has_new_current = True
     
     def on_new_voltage(self):
         if self.free:
@@ -124,12 +123,10 @@ class PSUControl(QtGui.QGroupBox):
             server = yield self.cxn.get_server(self.server_name)
             state = self.state_button.isChecked() #yield server.state(self.name)
             yield server.state(state)
-        elif self.has_new_current:
-            self.has_new_current = False
-            server = yield self.cxn.get_server(self.server_name)
-            yield server.current(self.current_box.value())
-#            sleep(.5)
-#            yield server.current()
+#        elif self.has_new_current:
+#            self.has_new_current = False
+#            server = yield self.cxn.get_server(self.server_name)
+#            yield server.current(self.current_box.value())
         elif self.has_new_volatage:
             self.has_new_volatage = False
             server = yield self.cxn.get_server(self.server_name)
