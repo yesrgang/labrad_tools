@@ -36,7 +36,8 @@ class AG33522AServer(LabradServer):
         channel = self.channels[waveform['channel name']]
         commands = [
             'SOUR{}:DATA:VOL:CLE'.format(channel.output),
-            ('SOUR{}:DATA:ARB '.format(channel.output), waveform['name'], ', ', str(waveform['points'])[1:-1]),
+            #('SOUR{}:DATA:ARB '.format(channel.output), waveform['name'], ', ', str(waveform['points'])[1:-1]),
+            ('SOUR{}:DATA:ARB '.format(channel.output), waveform['name'], ', ', str(waveform['points'])),
             ('SOUR{}:FUNC:ARB '.format(channel.output), waveform['name']),
             ('SOUR{}:FUNC:ARB:SRAT '.format(channel.output), str(waveform['sample rate'])),
             ]

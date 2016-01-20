@@ -2,11 +2,12 @@ import labrad
 import json
 import numpy as np
 
-filename = 'Z:\\SrQ\\data\\20160108\\vodt_300mV'
+filename = 'measure_trap_freq_vodt1500mV'
 scan_parameters = {
-    '*HODTi': -.9,
-    '*HODTf': -.2,
-    '*Thold': np.arange(1e-3, 10e-3, .2e-3).tolist(),
+    '*HODTi': -1.1,
+    '*HODTf': -.5,
+    '*Thold': np.arange(1e-3, 20e-3, .5e-3).tolist(),
+    'description': '...'
 }
 
 cxn = labrad.connect()

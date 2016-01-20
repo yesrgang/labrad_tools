@@ -4,7 +4,7 @@ from connection import connection
 from twisted.internet.defer import inlineCallbacks
 import numpy as np
 import json
-from client_tools import SuperSpinBox
+from client_tools2 import SuperSpinBox
 
 class AnalogVoltageManualControl(QtGui.QGroupBox):
     hasNewVoltage = False
@@ -197,11 +197,16 @@ class ControlConfig(object):
         self.spinbox_width = 80
 
 if __name__ == '__main__':
+    import sys
     a = QtGui.QApplication([])
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-#    widget = AnalogVoltageManualControl(ControlConfig(), reactor)
-    widget = ManyChannels(reactor)
+    if len(sys.argv) > 1:
+        conf = ControlConfig()
+        conf.name = sys.argv[1]
+        widget = AnalogVoltageManualControl(conf, reactor)
+    else:
+        widget = ManyChannels(reactor)
     widget.show()
     reactor.run()
