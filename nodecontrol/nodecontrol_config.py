@@ -3,6 +3,9 @@ node_dict = {
         'GPIB Bus',
         'Serial Server',
     ],
+    'node yesr13': [
+        'beeper',
+    ],
     'node yesr20': [
         'GPIB Device Manager',
         'GPIB Bus',
