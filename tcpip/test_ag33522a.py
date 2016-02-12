@@ -45,6 +45,6 @@ plt.plot(T_list, waveform['points'])
 plt.show()
 
 
-cxn = labrad.connect()
-awg = cxn.AG33522A
-awg.program_waveform(json.dumps(waveform))
+#cxn = labrad.connect()
+#awg = cxn.AG33522A
+#awg.program_waveform(json.dumps(waveform))
