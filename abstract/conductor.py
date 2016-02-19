@@ -53,7 +53,8 @@ class ConductorServer(LabradServer):
 
     @setting(1, 'set device parameters', device_parameters='s', returns='s')
     def set_device_parameters(self, c, device_parameters=None):
-        """ 
+        """ replace server device parameters with input!
+
         device parameters is "{*device_name: {*parameter_name: {command: *command, value: *value}}}"
         *command is something like "lambda value: sever_name.setting(value)"
         """
@@ -65,7 +66,8 @@ class ConductorServer(LabradServer):
 
     @setting(2, 'update device parameters', device_parameters='s', returns='s')
     def update_device_parameters(self, c, device_parameters=None):
-        """ 
+        """ edit existing device parameters
+
         device parameters is "{*device_name: {*parameter_name: {command: *command, value: *value}}}"
         *command is something like "lambda value: sever_name.setting(value)"
         """
@@ -77,6 +79,10 @@ class ConductorServer(LabradServer):
     
     @setting(3, 'update device parameter values', device_parameters='s', raturns='s')
     def update_device_parameter_values(self, c, device_parameters='s', returns='s'):
+        """update device parameter value only
+        
+        give device parameters {device: {parameter: {value: *value}}}
+        """
         for dev in json.loads(device_parameters):
             for par in dev:
                 self.device_parameters[dev][par]['value'] = par['value']
