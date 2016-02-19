@@ -65,11 +65,7 @@ class AG33500BWrapper(GPIBDeviceWrapper):
     def set_amplitude(self, amplitude):
         yield self.write('SOUR{}:VOLT {}'.format(self.cource, amplitude))
 
-#    @inlineCallbacks
-#    def set_ramprate(self, rate, f_start):
-#
-#
-#
+
 class AG33500BServer(GPIBManagedServer):
     """Provides basic control for HP signal generators"""
     deviceWrapper = AG33500BWrapper

@@ -74,8 +74,15 @@ class ConductorServer(LabradServer):
             yield self.initialize_device_parameters(device_parameters)
             self.device_parameters.update(device_parameters)
         returnValue(json.dumps(self.device_parameters))
+    
+    @setting(3, 'update device parameter values', device_parameters='s', raturns='s')
+    def update_device_parameter_values(self, c, device_parameters='s', returns='s'):
+        for dev in json.loads(device_parameters):
+            for par in dev:
+                self.device_parameters[dev][par]['value'] = par['value']
+        return self.device_parameters
 
-    @setting(3, 'remove device', device_name='s', returns='b')
+    @setting(4, 'remove device', device_name='s', returns='b')
     def remove_device(self, c, device_name):
         parameters = self.device_parameters.pop(device_name)
         if parameters:
@@ -112,7 +119,7 @@ class ConductorServer(LabradServer):
         self.previous_device_parameters.pop(0)
         self.previous_device_parameters.append(current_parameters)
     
-    @setting(4, 'set sequence parameters', sequence_parameters='s', returns='s')
+    @setting(5, 'set sequence parameters', sequence_parameters='s', returns='s')
     def set_sequence_parameters(self, c, sequence_parameters=None):
         """
         parameters is dictionary {name: value}
@@ -122,7 +129,7 @@ class ConductorServer(LabradServer):
         yield self.update_sp(True)
         returnValue(json.dumps(self.sequence_parameters))
     
-    @setting(5, 'update sequence parameters', sequence_parameters='s', returns='s')
+    @setting(6, 'update sequence parameters', sequence_parameters='s', returns='s')
     def update_sequence_parameters(self, c, sequence_parameters=None):
         """
         parameters is dictionary {name: value}
@@ -132,7 +139,7 @@ class ConductorServer(LabradServer):
         yield self.update_sp(True)
         returnValue(json.dumps(self.sequence_parameters))
     
-    @setting(6, 'evaluate sequence parameters', sequence='s', returns='s') 
+    @setting(7, 'evaluate sequence parameters', sequence='s', returns='s') 
     def evaluate_sequence_parameters(self, c, sequence):
         sequence = Sequence(sequence)
         return self._evaluate_sequence_parameters(sequence)
@@ -156,14 +163,14 @@ class ConductorServer(LabradServer):
             if type(v) is types.ListType:
                 v.insert(len(v), v.pop(0))
 
-    @setting(7, 'get previous parameters', returns='s')
+    @setting(8, 'get previous parameters', returns='s')
     def get_previous_parameters(self, c):
         previous_parameters = {}
         previous_parameters.update(self.previous_sequence_parameters[0])
         previous_parameters.update(self.previous_device_parameters[0])
         return json.dumps(previous_parameters)
 
-    @setting(8, 'load sequence', sequence='s', returns='s')
+    @setting(9, 'load sequence', sequence='s', returns='s')
     def load_sequence(self, c, sequence):
         sequence_keyfix = {}
         for sequencer in self.sequencers:
@@ -173,7 +180,7 @@ class ConductorServer(LabradServer):
         self.sequence = Sequence(sequence_keyfix)
         returnValue(self.sequence.dump())
 
-    @setting(9, 'get sequence', returns='s')
+    @setting(10, 'get sequence', returns='s')
     def get_sequence(self, c):
         return self.sequence.dump()
 
