@@ -31,6 +31,7 @@ from analog_ramps import *
 from sequence import Sequence
 
 class AnalogSequencerServer(LabradServer):
+    """Communicate with DAC board"""
     def __init__(self, config_name):
         LabradServer.__init__(self)
         self.config_name = config_name
@@ -76,7 +77,8 @@ class AnalogSequencerServer(LabradServer):
                 self.write_manual_voltage(c)
 
     def id2channel(self, channel_id):
-        """
+        """take generic id and try to match channel
+
         expect 3 possibilities for channel_id.
         1) name -> return channel with that name
         2) @loc -> return channel at that location
@@ -101,9 +103,11 @@ class AnalogSequencerServer(LabradServer):
         return channel
 
     def time_to_ticks(self, board, time):
+        """specify time in seconds return number of ticks at board clock rate"""
         return int(board.clk_frequency*time)
 
     def voltage_to_signed(self, voltage):
+        """for signed voltage difference to ramp"""
         voltage = sorted([-20, voltage, 20])[1]
         return int(voltage/20.*(2**16-1))
 
@@ -121,6 +125,9 @@ class AnalogSequencerServer(LabradServer):
             return signed_ramp_rate + 2**16
 
     def make_sequence(self, board, sequence):
+        """take readable {channel: [{}]} to programmable [ramp_rate[16], duration[32]]"""
+
+        # channel keys might not match available channels, handle this
         sequence = self._fix_sequence_keys(sequence)
         
         # ramp to zero at end
@@ -136,22 +143,26 @@ class AnalogSequencerServer(LabradServer):
             for r in ramps:
                 unsorted_ramps.append((T, c.loc, r))
                 T += r['dt']
-        sorted_ramps = sorted(unsorted_ramps)
 
+        # order ramps by when the happen, then physical location on board
+        sorted_ramps = sorted(unsorted_ramps)
+        
+        # ints to bytes
         ba = []
         for r in sorted_ramps:
             ba += [int(eval(hex(self.ramp_rate(board, r[2]['dv'], r[2]['dt']))) >> i & 0xff) for i in range(0, 16, 8)]
             ba += [int(eval(hex(self.time_to_ticks(board, r[2]['dt']))) >> i & 0xff) for i in range(0, 32, 8)]
         
+        # add dead space
         ba += [0]*24
-        return ba
+        return bytearray(ba)
     
     def program_sequence(self, sequence):
         for board in self.boards.values():
-            ba = self.make_sequence(board, sequence)
+            byte_array = self.make_sequence(board, sequence)
             self.set_board_mode(board, 'idle')
             self.set_board_mode(board, 'load')
-            board.xem.WriteToPipeIn(0x80, bytearray(ba))
+            board.xem.WriteToPipeIn(0x80, byte_array)
             self.set_board_mode(board, 'idle')
     
     def set_board_mode(self, board, mode):
@@ -161,11 +172,13 @@ class AnalogSequencerServer(LabradServer):
 
     @setting(01, 'get channels')
     def get_channels(self, c):
+        """returns json object of {channelname: config}"""
         channels = np.concatenate([[c.key for c in b.channels] for n, b in sorted(self.boards.items())]).tolist()
         return json.dumps(channels)
 
     @setting(07, 'run sequence', sequence='s')
     def run_sequence(self, c, sequence):
+        """program sequence and then set board mode to run"""
         sequence = Sequence(sequence)
         self.program_sequence(sequence)
         for board in self.boards.values():
@@ -173,6 +186,12 @@ class AnalogSequencerServer(LabradServer):
 
     @setting(03, 'sequencer mode', mode='s')
     def sequencer_mode(self, c, mode=None):
+        """manually set sequencer mode
+        
+        'idle': does nothing
+        'load': listens to USB interface
+        'run': plays sequence after external trigger
+        """
         if mode is not None:
             for board in self.boards.values():
                 self.set_board_mode(board, mode)
@@ -181,6 +200,11 @@ class AnalogSequencerServer(LabradServer):
 
     @setting(04, 'channel mode', channel_id='s', mode='s')
     def channel_mode(self, c, channel_id, mode=None):
+        """who does the DAC listen to?
+
+        'auto': listen to programmed sequence
+        'manual': listen to manual voltage
+        """
         channel = self.id2channel(channel_id)
         if mode is not None:
             channel.mode = mode
@@ -195,7 +219,8 @@ class AnalogSequencerServer(LabradServer):
         board.xem.SetWireInValue(board.channel_mode_wire, mode_value)
         board.xem.UpdateWireIns()
     
-    @setting(05, 'channel manual voltage', channel_id='s', voltage='v')
+    @setting(05, 'channel manual voltage', channel_id='s', voltage='v: [V] in [-10, 10]')
+    """set channel output value for manual mode"""
     def channel_manual_voltage(self, c, channel_id, voltage=None):
         channel = self.id2channel(channel_id)
         if voltage is not None:
@@ -213,12 +238,17 @@ class AnalogSequencerServer(LabradServer):
         board.xem.UpdateWireIns()
 
     @setting(06, 'get channel configuration', channel_id='s')
+    """returns JSON channel configuration"""
     def get_channel_configuration(self, c, channel_id):
         channel = self.id2channel(channel_id)
         return json.dumps(channel.__dict__)
 
 
     @setting(10, 'notify listeners')
+    """emit update signal
+    
+    call to update clients
+    """
     def notify_listeners(self, c):
         d = {}
 	for b in self.boards.values():
