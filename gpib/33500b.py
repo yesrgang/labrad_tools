@@ -21,6 +21,7 @@ import numpy as np
 from labrad.server import setting, Signal
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet import reactor
 from influxdb import InfluxDBClient
 
 
@@ -64,6 +65,16 @@ class AG33500BWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def set_amplitude(self, amplitude):
         yield self.write('SOUR{}:VOLT {}'.format(self.cource, amplitude))
+
+    @inlineCallbacks
+    def set_ramp(self, f_start, f_stop):
+        self.ramp_rate = (f_stop-f_stop)/self.t_ramp
+        yield self.write('SOUR{}:FREQ {}'.format(self.source, f_start))
+        yield self.write('SOUR{}:FREQ:STAR {}'.format(self.source, f_start))
+        yield self.write('SOUR{}:FREQ:STOP {}'.format(self.source, f_stop))
+        yield self.write('SOUR{}:SWEEp:TIME {}'.format(self.source, self.t_ramp))
+        yield self.write('SOUR{}:FREQ:MODE SWE'.format(self.source))
+        yield self.write('TRIG{}:SOUR IMM'.format(self.source))
 
 
 class AG33500BServer(GPIBManagedServer):
@@ -144,6 +155,22 @@ class AG33500BServer(GPIBManagedServer):
     def get_system_configuration(self, c):
         conf = self.load_configuration()
         return str(conf)
+
+    @setting(16, 'set ramprate', ramprate='v', returns='v')
+    def set_ramprate(self, c, ramprate=0):
+        dev = self.selectedDevice(c)
+        print '!'
+        for command in dev.get_counter_frequency:
+            f_start = yield eval(command)
+        f_stop = float(f_start) + ramprate*dev.t_ramp
+        yield dev.set_ramp(f_start, f_stop)
+        print 'reset ramprate. rate: {}, start {}'.format(ramprate, f_start)
+        try:
+            dev.delayed_call.cancel()
+        except:
+            pass
+        dev.delayed_call = reactor.callLater(dev.t_ramp/2., self.set_ramprate, c, ramprate)
+        returnValue(ramprate)
 
 if __name__ == '__main__':
     configuration_name = '33500b_config'
