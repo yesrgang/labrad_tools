@@ -40,6 +40,8 @@ class ConductorServer(LabradServer):
         self.load_configuration()
         self.in_communication = DeferredLock()
         LabradServer.__init__(self)
+        if self.save_to_db = True:
+            self.client = InfluxDBClient.from_DSN(os.getenv('INFLUXDBDSN'))
 
     @inlineCallbacks
     def initServer(self):
@@ -190,6 +192,22 @@ class ConductorServer(LabradServer):
     def get_sequence(self, c):
         return self.sequence.dump()
 
+    def write_to_db(self):
+        parameters = self.previous_sequence_parameters[0]
+        parameters.update({device_name + parameter_name: parameter['value']} 
+            for device_name, device in self.previous_device_parameters[0]
+            for parameter_name, parameter in device}
+        to_db = [{
+            "measurement": "sequence parameters",
+            "tags": {"name": k for k in parameters.keys()},
+            "fields": {"value": v for v in parameters.values()},
+        }]
+        try:
+            self.client.write_points(to_db)
+        except:
+            print "failed to save parameters to database"
+
+
     @inlineCallbacks
     def run_sequence(self):
         self.evaluate_device_parameters()
@@ -201,7 +219,9 @@ class ConductorServer(LabradServer):
                 self.in_communication.acquire()
                 yield server.run_sequence(str(sequence))
                 self.in_communication.release()
+
             reactor.callLater(Sequence(sequence).get_duration(), self.run_sequence)
+            self.write_to_db()
 	    self.advance_sequence_parameters()
         else:
             reactor.callLater(5, self.run_sequence)
