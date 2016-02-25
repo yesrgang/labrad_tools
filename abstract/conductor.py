@@ -18,6 +18,8 @@ timeout = 20
 
 import json
 import types
+import os
+from influxdb import InfluxDBClient
 
 import ok
 from labrad.server import LabradServer, setting, Signal
@@ -40,13 +42,14 @@ class ConductorServer(LabradServer):
         self.load_configuration()
         self.in_communication = DeferredLock()
         LabradServer.__init__(self)
-        if self.save_to_db = True:
-            self.client = InfluxDBClient.from_DSN(os.getenv('INFLUXDBDSN'))
 
     @inlineCallbacks
     def initServer(self):
         yield LabradServer.initServer(self)
         yield self.run_sequence()
+        if self.save_to_db == True:
+            self.dbclient = InfluxDBClient.from_DSN(os.getenv('INFLUXDBDSN'))
+            self.write_to_db()
 
     def load_configuration(self):
         config = __import__(self.config_name).ConductorConfig()
@@ -114,16 +117,21 @@ class ConductorServer(LabradServer):
         value = None
         current_parameters = {}
         for device, parameters in self.device_parameters.items():
-            for p, d in parameters.items():
-                if type(d['value']) is types.ListType:
-                    value = d['value'][0]
-                    d['value'].insert(len(d['value']), d['value'].pop(0))
-                else:
-                    value = d['value']
-                current_parameters[device] = {}
-                current_parameters[device][p] = value
-                self = self
-                eval(d['command'])(value)
+            try:
+                for p, d in parameters.items():
+                    if type(d['value']) is types.ListType:
+                        value = d['value'][0]
+                        d['value'].insert(len(d['value']), d['value'].pop(0))
+                    else:
+                        value = d['value']
+                    current_parameters[device] = {}
+                    current_parameters[device][p] = value
+                    self = self
+                    eval(d['command'])(value)
+            except Exception, e:
+                print 'unable to program {}'.format(device)
+                print 'due to error {}, removing device'.format(e)
+                self.device_parameters.pop(device)
         self.previous_device_parameters.pop(0)
         self.previous_device_parameters.append(current_parameters)
     
@@ -159,17 +167,46 @@ class ConductorServer(LabradServer):
                 current_parameters[p] = v[0]
             else:
                 current_parameters[p] = v
-        self.previous_sequence_parameters.pop(0)
-        self.previous_sequence_parameters.append(current_parameters)
+        self.current_sequence_parameters = current_parameters
         current_sequence = sequence.dump()
         for p, v in current_parameters.items():
             current_sequence = current_sequence.replace('"{}"'.format(p), str(v))
+
+#        def do_eval(s):
+#            if type(s).__name__ == 'dict':
+#                return {k: do_eval(v) for k, v in s.items()}
+#            elif type(s).__name__ == 'str':
+#                try:
+#                    self.sequence_parameters[s] = self.dbclient.query('SELECT value FROM "sequence parameters" WHERE name = \'{}\' ORDER BY time DESC LIMIT 1'.format(s)).get_points().next()['value']
+#                except:
+#                    self.sequence_parameters[s] = 10e-6
+#                print self.sequence_parameters[s]
+#                return True
+#        
+#        def check_for_strings(s):
+#            if type(s).__name__ == 'dict':
+#                for ss in s.values():
+#                    check_for_strings(ss) 
+#            elif type(s).__name__ == 'str':
+#                try:
+#                    self.sequence_parameters[s] = self.dbclient.query('SELECT value FROM "sequence parameters" WHERE name = \'{}\' ORDER BY time DESC LIMIT 1'.format(s)).get_points().next()['value']
+#                except:
+#                    self.sequence_parameters[s] = 10e-6
+#                print self.sequence_parameters[s]
+#                return True
+#                
+#        
+#        if check_for_strings(json.loads(current_sequence)):
+#            self._evaluate_sequence_parameters(sequence)
+#        else:
         return current_sequence
 
     def advance_sequence_parameters(self):
         for p, v in self.sequence_parameters.items():
             if type(v) is types.ListType:
                 v.insert(len(v), v.pop(0))
+        self.previous_sequence_parameters.pop(0)
+        self.previous_sequence_parameters.append(self.current_sequence_parameters)
 
     @setting(8, 'get previous parameters', returns='s')
     def get_previous_parameters(self, c):
@@ -191,38 +228,55 @@ class ConductorServer(LabradServer):
     @setting(10, 'get sequence', returns='s')
     def get_sequence(self, c):
         return self.sequence.dump()
-
+    
     def write_to_db(self):
+        reactor.callLater(60, self.write_to_db)
+        if not self.previous_sequence_parameters[0]:
+            return
         parameters = self.previous_sequence_parameters[0]
-        parameters.update({device_name + parameter_name: parameter['value']} 
-            for device_name, device in self.previous_device_parameters[0]
-            for parameter_name, parameter in device}
+        parameters.update({device_name + ' - ' + parameter_name: parameter
+            for device_name, device in self.previous_device_parameters[0].items()
+            for parameter_name, parameter in device.items()})
+        def tofloat(x):
+            try:
+                return float(x)
+            except:
+                return 0.
         to_db = [{
             "measurement": "sequence parameters",
-            "tags": {"name": k for k in parameters.keys()},
-            "fields": {"value": v for v in parameters.values()},
-        }]
+            "tags": {"name": k},
+            "fields": {"value": tofloat(v)},
+        } for k, v in parameters.items()]
+        
         try:
-            self.client.write_points(to_db)
+            print 'writing {} points'.format(len(to_db))
+            self.dbclient.write_points(to_db)
         except:
             print "failed to save parameters to database"
 
-
+    
     @inlineCallbacks
-    def run_sequence(self):
-        self.evaluate_device_parameters()
-        if self.sequence:
+    def program_sequencers(self):
+        try:
             sequence = self._evaluate_sequence_parameters(self.sequence)
-            self.update_sp(True)
+            print sequence
             for sequencer in self.sequencers:
                 server = getattr(self.client, sequencer)
                 self.in_communication.acquire()
                 yield server.run_sequence(str(sequence))
                 self.in_communication.release()
+        except KeyError, e:
+            print e
+        returnValue(sequence)
 
+    @inlineCallbacks
+    def run_sequence(self):
+        self.evaluate_device_parameters()
+        if self.sequence:
+            sequence = yield self.program_sequencers()
+            self.update_sp(True)
+            self.advance_sequence_parameters()
             reactor.callLater(Sequence(sequence).get_duration(), self.run_sequence)
-            self.write_to_db()
-	    self.advance_sequence_parameters()
         else:
             reactor.callLater(5, self.run_sequence)
 
