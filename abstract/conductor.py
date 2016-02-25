@@ -37,6 +37,7 @@ class ConductorServer(LabradServer):
     def __init__(self, config_name):
         self.device_parameters = {}
         self.sequence_parameters = {}
+        self.current_sequence_parameters = {}
         self.sequence = {}
         self.config_name = config_name
         self.load_configuration()
@@ -162,29 +163,35 @@ class ConductorServer(LabradServer):
     @setting(7, 'evaluate sequence parameters', sequence='s', returns='s') 
     def evaluate_sequence_parameters(self, c, sequence):
         sequence = Sequence(sequence)
-        return self._evaluate_sequence_parameters(sequence.sequence)
+        return json.dumps(self._evaluate_sequence_parameters(sequence.sequence))
 
     def _evaluate_sequence_parameters(self, x):
-        if type(x).__name__ == 'str':
-            try:
-                csp = self.current_sequence_parameters[x]
-                if type(csp).__name__ == 'list':
-                    return csp[0]
+        if type(x).__name__ in ['str', 'unicode']:
+            if x[0] == '*':
+                value = None
+                if self.sequence_parameters.has_key(x):
+                    csp = self.sequence_parameters[x]
+                    if type(csp).__name__ == 'list':
+                        value =  csp[0]
+                    else:
+                        value = csp
                 else:
-                    return csp
-            except:
-                try:
-                    from_db = self.dbclient.query(self.dbquerystr.format(s))
-                    param = from_db.get_points().next()['value']
-                    self.current_sequence_parameters[x] = param
-                    self.sequence_parameters[x] = param
-                    return param
-                except:
-                    raise Exception('could not sub var {}'.format(x))
-        elif type(seq).__name__ == 'list':
-            return [self._evaluate_sequence_parameters(xx) for x in x]
-        elif type(seq).__name__ == 'dict':
-            return {k: self._evaluate_sequence_parameters(v) for k, v in x}
+                    try:
+                        dqs = self.dbquerystr.format(str(x))
+                        from_db = self.dbclient.query(dqs)
+                        print 'dbresult', from_db
+                        value = from_db.get_points().next()['value']
+                        self.sequence_parameters[x] = value
+                    except:
+                        raise Exception('could not sub var {}'.format(x))
+                self.current_sequence_parameters[x] = value
+                return value
+            else:
+                return x
+        elif type(x).__name__ == 'list':
+            return [self._evaluate_sequence_parameters(xx) for xx in x]
+        elif type(x).__name__ == 'dict':
+            return {k: self._evaluate_sequence_parameters(v) for k, v in x.items()}
         else:
             return x
 
@@ -217,8 +224,9 @@ class ConductorServer(LabradServer):
         return self.sequence.dump()
     
     def write_to_db(self):
-        reactor.callLater(60, self.write_to_db)
+        reactor.callLater(120, self.write_to_db)
         if not self.previous_sequence_parameters[0]:
+            print 'no parameters to save'
             return
         parameters = self.previous_sequence_parameters[0]
         parameters.update({device_name + ' - ' + parameter_name: parameter
@@ -245,11 +253,11 @@ class ConductorServer(LabradServer):
     @inlineCallbacks
     def program_sequencers(self):
         try:
-            sequence = self._evaluate_sequence_parameters(self.sequence)
+            sequence = self._evaluate_sequence_parameters(self.sequence.sequence)
             for sequencer in self.sequencers:
                 server = getattr(self.client, sequencer)
                 self.in_communication.acquire()
-                yield server.run_sequence(str(sequence))
+                yield server.run_sequence(json.dumps(sequence))
                 self.in_communication.release()
         except KeyError, e:
             print e

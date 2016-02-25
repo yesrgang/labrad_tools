@@ -219,9 +219,9 @@ class AnalogSequencerServer(LabradServer):
         board.xem.SetWireInValue(board.channel_mode_wire, mode_value)
         board.xem.UpdateWireIns()
     
-    @setting(05, 'channel manual voltage', channel_id='s', voltage='v: [V] in [-10, 10]')
-    """set channel output value for manual mode"""
+    @setting(05, 'channel manual voltage', channel_id='s', voltage='v')
     def channel_manual_voltage(self, c, channel_id, voltage=None):
+        """set channel output value for manual mode"""
         channel = self.id2channel(channel_id)
         if voltage is not None:
             voltage = sorted([-10, voltage, 10])[1]
@@ -238,20 +238,20 @@ class AnalogSequencerServer(LabradServer):
         board.xem.UpdateWireIns()
 
     @setting(06, 'get channel configuration', channel_id='s')
-    """returns JSON channel configuration"""
     def get_channel_configuration(self, c, channel_id):
+        """returns JSON channel configuration"""
         channel = self.id2channel(channel_id)
         return json.dumps(channel.__dict__)
 
 
     @setting(10, 'notify listeners')
-    """emit update signal
-    
-    call to update clients
-    """
     def notify_listeners(self, c):
+        """emit update signal
+        
+        call to update clients
+        """
         d = {}
-	for b in self.boards.values():
+    	for b in self.boards.values():
             for c in b.channels:
                 d[c.key] = c.__dict__
         self.update(json.dumps(d))
