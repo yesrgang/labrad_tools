@@ -60,7 +60,9 @@ class ConductorServer(LabradServer):
     def set_device_parameters(self, c, device_parameters=None):
         """ replace server device parameters with input!
 
-        device parameters is "{*device_name: {*parameter_name: {command: *command, value: *value}}}"
+        device parameters is 
+        "{*device_name: {*parameter_name: {command: *command, value: *value}}}"
+        
         *command is something like "lambda value: sever_name.setting(value)"
         """
         if device_parameters is not None:
@@ -73,7 +75,9 @@ class ConductorServer(LabradServer):
     def update_device_parameters(self, c, device_parameters=None):
         """ edit existing device parameters
 
-        device parameters is "{*device_name: {*parameter_name: {command: *command, value: *value}}}"
+        device parameters is 
+        "{*device_name: {*parameter_name: {command: *command, value: *value}}}"
+        
         *command is something like "lambda value: sever_name.setting(value)"
         """
         if device_parameters is not None:
@@ -158,48 +162,31 @@ class ConductorServer(LabradServer):
     @setting(7, 'evaluate sequence parameters', sequence='s', returns='s') 
     def evaluate_sequence_parameters(self, c, sequence):
         sequence = Sequence(sequence)
-        return self._evaluate_sequence_parameters(sequence)
+        return self._evaluate_sequence_parameters(sequence.sequence)
 
-    def _evaluate_sequence_parameters(self, sequence):
-        current_parameters = {}
-        for p, v in self.sequence_parameters.items():
-            if type(v) is types.ListType:
-                current_parameters[p] = v[0]
-            else:
-                current_parameters[p] = v
-        self.current_sequence_parameters = current_parameters
-        current_sequence = sequence.dump()
-        for p, v in current_parameters.items():
-            current_sequence = current_sequence.replace('"{}"'.format(p), str(v))
-
-#        def do_eval(s):
-#            if type(s).__name__ == 'dict':
-#                return {k: do_eval(v) for k, v in s.items()}
-#            elif type(s).__name__ == 'str':
-#                try:
-#                    self.sequence_parameters[s] = self.dbclient.query('SELECT value FROM "sequence parameters" WHERE name = \'{}\' ORDER BY time DESC LIMIT 1'.format(s)).get_points().next()['value']
-#                except:
-#                    self.sequence_parameters[s] = 10e-6
-#                print self.sequence_parameters[s]
-#                return True
-#        
-#        def check_for_strings(s):
-#            if type(s).__name__ == 'dict':
-#                for ss in s.values():
-#                    check_for_strings(ss) 
-#            elif type(s).__name__ == 'str':
-#                try:
-#                    self.sequence_parameters[s] = self.dbclient.query('SELECT value FROM "sequence parameters" WHERE name = \'{}\' ORDER BY time DESC LIMIT 1'.format(s)).get_points().next()['value']
-#                except:
-#                    self.sequence_parameters[s] = 10e-6
-#                print self.sequence_parameters[s]
-#                return True
-#                
-#        
-#        if check_for_strings(json.loads(current_sequence)):
-#            self._evaluate_sequence_parameters(sequence)
-#        else:
-        return current_sequence
+    def _evaluate_sequence_parameters(self, x):
+        if type(x).__name__ == 'str':
+            try:
+                csp = self.current_sequence_parameters[x]
+                if type(csp).__name__ == 'list':
+                    return csp[0]
+                else:
+                    return csp
+            except:
+                try:
+                    from_db = self.dbclient.query(self.dbquerystr.format(s))
+                    param = from_db.get_points().next()['value']
+                    self.current_sequence_parameters[x] = param
+                    self.sequence_parameters[x] = param
+                    return param
+                except:
+                    raise Exception('could not sub var {}'.format(x))
+        elif type(seq).__name__ == 'list':
+            return [self._evaluate_sequence_parameters(xx) for x in x]
+        elif type(seq).__name__ == 'dict':
+            return {k: self._evaluate_sequence_parameters(v) for k, v in x}
+        else:
+            return x
 
     def advance_sequence_parameters(self):
         for p, v in self.sequence_parameters.items():
@@ -259,7 +246,6 @@ class ConductorServer(LabradServer):
     def program_sequencers(self):
         try:
             sequence = self._evaluate_sequence_parameters(self.sequence)
-            print sequence
             for sequencer in self.sequencers:
                 server = getattr(self.client, sequencer)
                 self.in_communication.acquire()
