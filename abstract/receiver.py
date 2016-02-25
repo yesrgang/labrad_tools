@@ -20,6 +20,7 @@ import json
 import os
 import time
 import types
+import numpy as np
 
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
@@ -31,6 +32,8 @@ class ReceiverServer(LabradServer):
     name = '%LABRADNODE%_receiver'
     data = []
     do_record = False
+    num_cycles = 0
+    display = ''
     
     @setting(1, 'send string', string='s', returns='s')
     def send_string(self, c, string):
@@ -39,6 +42,7 @@ class ReceiverServer(LabradServer):
         data['analysis'] = analysis
         params = yield self.client.yesr20_conductor.get_previous_parameters()
         data['parameters'] = json.loads(params)
+        data['timestamp'] = time.time()
         yield self._record(data)
         returnValue(data)
     
@@ -48,27 +52,16 @@ class ReceiverServer(LabradServer):
             self.data.append(data)
         if len(self.data) > 1:
             print 'appending {}/{}'.format(len(self.data)-1, self.num_cycles)
-        if len(self.data) >= self.num_cycles+1:
             yield self._write()
+        if len(self.data) >= self.num_cycles+1:
+            print 'data written to {}'.format(self.filename)
+            self.data = []
     	    self.do_record = False
         else:
             yield None
 
     @inlineCallbacks
     def _write(self):
-        # write file to todays data folder
-        data_dir = 'Z:\\SrQ\\data\\'
-        todays_dir = data_dir + time.strftime('%Y%m%d')
-        if not os.path.exists(todays_dir):
-            os.mkdir(todays_dir)
-        
-        # append experiment run number
-        filename = todays_dir + '\\' + self.filename + '#0'
-        iteration = 0
-        while os.path.isfile(filename):
-            filename = filename.split('#')[0] + '#{}'.format(iteration)
-            iteration += 1
-
         # data [{}] -> {[]}
         cdata = self._compact_data(self.data[1:])
 
@@ -76,17 +69,30 @@ class ReceiverServer(LabradServer):
         sequence = yield self.client.yesr20_conductor.get_sequence()
         cdata['sequence'] = json.loads(sequence)
 
-        with open(filename, 'w+') as outfile:
+        with open(self.filename, 'w+') as outfile:
             json.dump(cdata, outfile)
-        self.data = []
-        
-        # try to beep
+
+    @inlineCallbacks
+    def _beep(self):
         try:
-            yield self.client.yesr9_beeper.beep()
+            yield self.client.yesr13_beeper.beep()
         except:
             print 'no beep'
+
+    def _set_filename(self, filename):
+        # write file to todays data folder
+        data_dir = 'Z:\\SrQ\\data\\'
+        todays_dir = data_dir + time.strftime('%Y%m%d')
+        if not os.path.exists(todays_dir):
+            os.mkdir(todays_dir)
         
-        print 'data written to {}'.format(filename)
+        # append experiment run number
+        self.filename = todays_dir + '\\' + filename + '#0'
+        iteration = 0
+        while os.path.isfile(self.filename):
+            self.filename = self.filename.split('#')[0] + '#{}'.format(iteration)
+            iteration += 1
+
 
     def _compact_data(self, data_list):
         if type(data_list[0]) == types.DictType:
@@ -98,7 +104,8 @@ class ReceiverServer(LabradServer):
     def record(self, c, filename, num_cycles):
         print 'starting record {} points'.format(num_cycles)
         self.data = []
-        self.filename = filename
+        self._set_filename(filename)
+        print 'saving data to {}'.format(self.filename)
         self.num_cycles = num_cycles
         self.do_record = True
 
@@ -107,6 +114,25 @@ class ReceiverServer(LabradServer):
         self.do_record = False
         if do_write:
             self._write()
+
+    @setting(4, 'send gage', string='s')
+    def send_gage(self, c, string):
+        data = {}
+        analysis = json.loads(string)
+        data['analysis'] = analysis
+        params = yield self.client.yesr20_conductor.get_previous_parameters()
+        data['parameters'] = json.loads(params)
+        data['timestamp'] = time.time()
+        yield self._record(data)
+        if self.display:
+            bac = np.array(analysis['bac'])
+            gnd = np.array(analysis['gnd']) - bac
+            exc = np.array(analysis['exc']) - bac
+            print exc / (gnd + exc)
+
+    @setting(5, 'set display', display='s')
+    def set_display(self, c, display):
+        self.display = display
 
 if __name__ == "__main__":
     __server__ = ReceiverServer()

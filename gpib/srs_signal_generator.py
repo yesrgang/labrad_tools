@@ -1,4 +1,5 @@
 import numpy as np
+import json
 from labrad.server import setting, Signal
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from twisted.internet.defer import inlineCallbacks, returnValue
@@ -15,8 +16,7 @@ class SRSSignalGeneratorWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def get_frequency(self):
         ans = yield self.query('FREQ?')
-	self.frequency = float(ans)
-#        returnValue(float(ans)*1e-6) # keep things in MHz 
+        self.frequency = float(ans)
 
     @inlineCallbacks
     def set_frequency(self, frequency):
@@ -25,8 +25,7 @@ class SRSSignalGeneratorWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def get_amplitude(self):
         ans = yield self.query('AMPL?')
-	self.amplitude = float(ans[:-2])
-#        returnValue(float(ans))
+        self.amplitude = float(ans[:-2])
 
     @inlineCallbacks
     def set_amplitude(self, amplitude):
@@ -55,15 +54,16 @@ class SRSSignalGeneratorServer(GPIBManagedServer):
     @inlineCallbacks
     def initServer(self):
         yield GPIBManagedServer.initServer(self)
-#	self.load_configuration()
 
     @setting(9, 'select device by name', name='s', returns='s')    
-    def select_device_by_name(self, c, name):
-	gpib_device_id = self.instruments[name].gpib_device_id
+    def select_device_by_name(self, c, name=None):
+        if not name:
+            returnValue(json.dumps(self.instruments.keys()))
+    	gpib_device_id = self.instruments[name].gpib_device_id
         yield self.select_device(c, gpib_device_id)
         dev = self.selectedDevice(c)
         dev.set_configuration(self.instruments[name])
-	dev.instrument_name = name
+        dev.instrument_name = name
         returnValue(str(self.instruments[name].__dict__))
 
     @setting(10, 'state', state='b', returns='b')

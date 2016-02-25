@@ -36,7 +36,7 @@ def set_frequency(frequency):
 
 
 #set_frequency(27.115e6)
-set_ramprate(18.6e-3 )
+set_ramprate(18.6e-3 ) # in [Hz/s]
 
 
 

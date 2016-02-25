@@ -21,7 +21,7 @@ class RFControlConfig(object):
 class ManyChannels(QtGui.QWidget):
     def __init__(self, reactor, cxn=None):
         QtGui.QDialog.__init__(self)
-	self.channels = ['813 z AOM', '813 x AOM', '813 z AOM']
+	self.channels = ['813 x AOM', '813 y AOM', '813 z AOM']
 	self.reactor = reactor
 	self.cxn = cxn
 	self.connect()

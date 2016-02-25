@@ -77,15 +77,15 @@ class ConductorServer(LabradServer):
             self.device_parameters.update(device_parameters)
         returnValue(json.dumps(self.device_parameters))
     
-    @setting(3, 'update device parameter values', device_parameters='s', raturns='s')
-    def update_device_parameter_values(self, c, device_parameters='s', returns='s'):
+    @setting(3, 'update device parameter values', device_parameters='s', returns='s')
+    def update_device_parameter_values(self, c, device_parameters='s'):
         """update device parameter value only
         
         give device parameters {device: {parameter: {value: *value}}}
         """
-        for dev in json.loads(device_parameters):
-            for par in dev:
-                self.device_parameters[dev][par]['value'] = par['value']
+        for devname, dev in json.loads(device_parameters):
+            for parname, par in dev:
+                self.device_parameters[devname][parname]['value'] = par['value']
         return self.device_parameters
 
     @setting(4, 'remove device', device_name='s', returns='b')

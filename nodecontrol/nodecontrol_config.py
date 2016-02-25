@@ -16,6 +16,8 @@ node_dict = {
         'DS345',
         'E4432B',
         'N5181A',
+        'ag33500b_ramper',
+        'ag33500b_stepper',
         'digital_sequencer',
         'analog_sequencer',
         'conductor',

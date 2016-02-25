@@ -6,7 +6,7 @@ class AG33500BConfiguration(object):
 class ServerConfig(object):
     def __init__(self):
         self.update_id = 698016 
-        self.name = '%LABRADNODE% 33500B'
+        self.name = '33500B'
         self.deviceName = 'Agilent Technologies 33522B'
     	self.device_confs = {
             'clock drift': AG33500BConfiguration(
@@ -41,6 +41,7 @@ class ServerConfig(object):
                 update_parameters=['frequency'],
                 init_commands=[
                     "SOUR2:FUNC SIN",
+                    "SOUR2:FREQ:MODE CW",
                     "SOUR2:FREQ 27.1792e6",
                     "SOUR2:VOLT 500e-3",
                     "SOUR2:VOLT:OFFS 0",
