@@ -21,10 +21,10 @@ class RFControlConfig(object):
 class ManyChannels(QtGui.QWidget):
     def __init__(self, reactor, cxn=None):
         QtGui.QDialog.__init__(self)
-	self.channels = ['HODT AOM', 'VODT AOM', 'dimple AOM']
-	self.reactor = reactor
-	self.cxn = cxn
-	self.connect()
+        self.channels = ['HODT AOM', 'VODT AOM', 'dimple AOM']
+        self.reactor = reactor
+        self.cxn = cxn
+        self.connect()
     
     @inlineCallbacks
     def connect(self):
@@ -47,8 +47,7 @@ class ManyChannels(QtGui.QWidget):
             self.layout.addWidget(w)
 	    h = w.height()
 	    wid = w.width()
-	self.setFixedSize(650, 120) #wid*len(self.channels), h)
-	#elf.layout.setSpacing(0)
+        self.setFixedSize(650, 120) #wid*len(self.channels), h)
         self.setLayout(self.layout)
 
 

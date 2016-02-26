@@ -14,7 +14,7 @@ class DDSServer(SerialDeviceServer):
     name = '%LABRADNODE% DDS Server'
 
     def __init__(self, configuration):
-	SerialDeviceServer.__init__(self)
+        SerialDeviceServer.__init__(self)
         self.load_configuration(configuration)
         self.update = Signal(self.update_id, 'signal: update', 's')
     
@@ -56,10 +56,10 @@ class DDSServer(SerialDeviceServer):
 
     def instruction_set(self, address, register, data):
         ins = [58, address, len(data)+1, register] + data
-	ins_sum = sum(ins[1:])
-	ins_sum_bin = bin(ins_sum)[2:].zfill(8)
-	lowest_byte = ins_sum_bin[-8:]
-	checksum = int('0b'+str(lowest_byte), 0)
+        ins_sum = sum(ins[1:])
+        ins_sum_bin = bin(ins_sum)[2:].zfill(8)
+        lowest_byte = ins_sum_bin[-8:]
+        checksum = int('0b'+str(lowest_byte), 0)
         ins.append(checksum)
         return [chr(i) for i in ins]
 
@@ -76,6 +76,7 @@ class DDSServer(SerialDeviceServer):
             self.dds[name].frequency = frequency
         for b in self.instruction_set(self.dds[name].address, self.dds[name].freg, self.dds[name].ftw()):
             yield self.serial_server.write(b)
+        x = yield self.serial_server.read_line()
         yield self.notify_listeners(name)
         returnValue(frequency)
     
@@ -87,6 +88,7 @@ class DDSServer(SerialDeviceServer):
             self.dds[name].amplitude = amplitude
         for c in self.instruction_set(self.dds[name].address, self.dds[name].areg, self.dds[name].atw()):
             self.serial_server.write(c)
+        x = yield self.serial_server.read_line()
         yield self.notify_listeners(name)
         returnValue(amplitude)
 

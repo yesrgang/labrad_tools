@@ -30,7 +30,7 @@ class DDSConfig(object):
         self.serial_server_name = 'yesr20_serial_server'
         self.port = 'COM6'
         self.timeout = T.Value(1, 's')
-        self.baudrate = 9600
+        self.baudrate = 4800
         self.stopbits=1
         self.bytesize=8
 
