@@ -179,4 +179,18 @@ class RampMaker(object):
         """
         to list of linear ramps [{dt, dv}]
         """
-        return np.concatenate([self.available_ramps[s['type']](s).to_lin() for s in self.sequence])
+        lins = np.concatenate([self.available_ramps[s['type']](s).to_lin() for s in self.sequence]).tolist()
+        return lins #combine_flat_ramps([], lins)
+
+def combine_flat_ramps(l, s):
+    if not l:
+        l = [s.pop(0)]
+    if s:
+        nxt = s.pop(0)
+        if nxt['dv'] == 0 and l[-1]['dv'] == 0:
+            l[-1]['dt'] += nxt['dt']
+            return combine_flat_ramps(l, s)
+        else:
+            return l + combine_flat_ramps([nxt], s)
+    else:
+        return l

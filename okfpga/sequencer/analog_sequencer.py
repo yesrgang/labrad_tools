@@ -164,6 +164,7 @@ class AnalogSequencerServer(LabradServer):
             self.set_board_mode(board, 'load')
             board.xem.WriteToPipeIn(0x80, byte_array)
             self.set_board_mode(board, 'idle')
+            print 'wrote {} ramps to {}'.format(len(byte_array)/6, board.device_id)
     
     def set_board_mode(self, board, mode):
         board.xem.SetWireInValue(board.mode_wire, board.mode_nums[mode])

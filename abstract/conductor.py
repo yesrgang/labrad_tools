@@ -123,13 +123,13 @@ class ConductorServer(LabradServer):
         current_parameters = {}
         for device, parameters in self.device_parameters.items():
             try:
+                current_parameters[device] = {}
                 for p, d in parameters.items():
                     if type(d['value']) is types.ListType:
                         value = d['value'][0]
                         d['value'].insert(len(d['value']), d['value'].pop(0))
                     else:
                         value = d['value']
-                    current_parameters[device] = {}
                     current_parameters[device][p] = value
                     self = self
                     eval(d['command'])(value)
