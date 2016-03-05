@@ -1,6 +1,7 @@
 import json
-import gc
+import time
 import numpy as np
+import os
 
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
@@ -12,7 +13,6 @@ from client_tools2 import SuperSpinBox
 from digital_widgets import DigitalSequencer
 from analog_widgets import AnalogSequencer
 from analog_editor import AnalogVoltageEditor
-
 from okfpga.sequencer.analog_ramps import RampMaker
 
 def merge_dicts(*dictionaries):
@@ -21,20 +21,22 @@ def merge_dicts(*dictionaries):
         merged_dictionary.update(d)
     return merged_dictionary
 
-class BrowseAndSave(QtGui.QWidget):
+class LoadSaveRun(QtGui.QWidget):
     def __init__(self):
-        super(BrowseAndSave, self).__init__(None)
+        super(LoadSaveRun, self).__init__(None)
         self.populate()
 
     def populate(self):
-        self.location_box = QtGui.QLineEdit()
-        self.browse_button = QtGui.QPushButton('Bro&wse')
-        self.save_button = QtGui.QPushButton('&Save')
+        self.locationBox = QtGui.QLineEdit()
+        self.loadButton = QtGui.QPushButton('Load')
+        self.saveButton = QtGui.QPushButton('Save')
+        self.runButton = QtGui.QPushButton('Run')
         self.layout = QtGui.QHBoxLayout()
         self.layout.setContentsMargins(0, 5, 0, 5)
-        self.layout.addWidget(self.location_box)
-        self.layout.addWidget(self.browse_button)
-        self.layout.addWidget(self.save_button)
+        self.layout.addWidget(self.locationBox)
+        self.layout.addWidget(self.loadButton)
+        self.layout.addWidget(self.saveButton)
+        self.layout.addWidget(self.runButton)
         self.setLayout(self.layout)
 
 class DurationRow(QtGui.QWidget):
@@ -50,25 +52,19 @@ class DurationRow(QtGui.QWidget):
         for db in self.boxes:
             self.layout.addWidget(db)
         self.setLayout(self.layout)
-        
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
 
-    def display_sequence(self, sequence):
-#        for b in self.boxes[::-1]:
-#            b.hide()
-#        for dt, b in zip(sequence[self.config.timing_channel], self.boxes):
-#            b.show()
-#            b.display(dt)
+    def displaySequence(self, sequence):
         shown = sum([1 for b in self.boxes if not b.isHidden()])
-	num_to_show = len(sequence[self.config.timing_channel])
-	if shown > num_to_show:
-            for b in self.boxes[num_to_show: shown][::-1]:
+        num_to_show = len(sequence[self.config.timing_channel])
+        if shown > num_to_show:
+            for b in self.boxes[num_to_show:shown][::-1]:
                 b.hide()
         elif shown < num_to_show:
             for b in self.boxes[shown:num_to_show]:
                 b.show()
-	for b, dt in zip(self.boxes[:num_to_show], sequence[self.config.timing_channel]):
+        for b, dt in zip(self.boxes[:num_to_show], sequence[self.config.timing_channel]):
             b.display(dt)
 
 
@@ -83,6 +79,7 @@ class AddDltButton(QtGui.QWidget):
         self.setLayout(self.layout)
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
+
 
 class AddDltRow(QtGui.QWidget):
     def __init__(self, config):
@@ -100,55 +97,30 @@ class AddDltRow(QtGui.QWidget):
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
     
-    def display_sequence(self, sequence):
-#        for b in self.buttons[::-1]:
-#            b.hide()
-#        for t, b in zip(sequence[self.config.timing_channel], self.buttons):
-#            b.show()
+    def displaySequence(self, sequence):
         shown = sum([1 for b in self.buttons if not b.isHidden()])
-	num_to_show = len(sequence[self.config.timing_channel])
-	if shown > num_to_show:
+        num_to_show = len(sequence[self.config.timing_channel])
+        if shown > num_to_show:
             for b in self.buttons[num_to_show: shown][::-1]:
                 b.hide()
         elif shown < num_to_show:
             for b in self.buttons[shown:num_to_show]:
                 b.show()
 
-class LoadAndSave(QtGui.QWidget):
-    def __init__(self):
-        super(LoadAndSave, self).__init__(None)
-        self.populate()
-
-    def populate(self):
-        self.location_box = QtGui.QLineEdit()
-        self.load_button = QtGui.QPushButton('&Load')
-        self.load_button.setFixedSize(80, 20)
-        self.save_button = QtGui.QPushButton('&Save')
-        self.save_button.setFixedSize(80, 20)
-        self.layout = QtGui.QHBoxLayout()
-        self.layout.addWidget(self.location_box)
-        self.layout.addWidget(self.load_button)
-        self.layout.addWidget(self.save_button)
-        self.setLayout(self.layout)
-        self.layout.setSpacing(5)
-        self.layout.setContentsMargins(10, 10, 10, 10)
-        self.setFixedHeight(40)
-
 
 class Sequencer(QtGui.QWidget):
-    sequence_parameters = {}
     def __init__(self, config, reactor=None, cxn=None):
         super(Sequencer, self).__init__(None)
+        self.sequence_parameters = {}
         self.config = config
         for key, value in config.__dict__.items():
             setattr(self, key, value)
-        self.digital_servername = config.digital_servername #'yesr20_digital_sequencer'
-        self.analog_servername = config.analog_servername #'yesr20_analog_sequencer'
+        self.digital_servername = config.digital_servername
+        self.analog_servername = config.analog_servername
         self.config = config
         self.cxn = cxn
         self.reactor = reactor
         self.connect()
-
 
     @inlineCallbacks
     def connect(self):
@@ -156,68 +128,69 @@ class Sequencer(QtGui.QWidget):
             self.cxn = connection()  
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
-        try:
-            dserver = yield self.cxn.get_server(self.digital_servername)
-            dc = yield dserver.get_channels()
-            self.digital_channels = json.loads(dc)
-	    tc = yield dserver.get_timing_channel()
-	    self.timing_channel = json.loads(tc)
-	    self.config.timing_channel = json.loads(tc)
-            aserver = yield self.cxn.get_server(self.analog_servername)
-            ac = yield aserver.get_channels()
-            self.analog_channels = json.loads(ac)
-	    self.channels = self.digital_channels + self.analog_channels + [self.timing_channel]
-	    conductor = yield self.cxn.get_server(self.conductor_servername)
-	    yield conductor.signal__update_sp(self.config.conductor_update_id)
-	    yield conductor.addListener(listener=self.update_parameters, source=None, ID=self.conductor_update_id)
-            self.populate()
-            self.default_sequence = dict([(nameloc, [{'type': 'lin', 'vf': 0, 'dt': 1}]) for nameloc in self.analog_channels] + [(nameloc, [0]) for nameloc in self.digital_channels] + [(self.timing_channel, [1])])
-            self.set_sequence(self.default_sequence)
-        except Exception, e:
-            print 'Error', e
-            self.setDisabled(True)
+        dserver = yield self.cxn.get_server(self.digital_servername)
+        dc = yield dserver.get_channels()
+        self.digital_channels = json.loads(dc)
+        tc = yield dserver.get_timing_channel()
+        self.timing_channel = json.loads(tc)
+        self.config.timing_channel = json.loads(tc)
+        aserver = yield self.cxn.get_server(self.analog_servername)
+        ac = yield aserver.get_channels()
+        self.analog_channels = json.loads(ac)
+        self.channels = self.digital_channels + self.analog_channels + [self.timing_channel]
+        conductor = yield self.cxn.get_server(self.conductor_servername)
+        yield conductor.signal__update_sp(self.config.conductor_update_id)
+        yield conductor.addListener(listener=self.update_parameters, 
+            source=None, ID=self.conductor_update_id)
+        self.populate()
+        self.default_sequence = dict(
+            [(nameloc, [{'type': 'lin', 'vf': 0, 'dt': 1}]) 
+                for nameloc in self.analog_channels]
+            + [(nameloc, [0]) for nameloc in self.digital_channels] 
+            + [(self.timing_channel, [1])])
+        self.setSequence(self.default_sequence)
 
     def populate(self):
-        self.browse_and_save = BrowseAndSave()
+        self.loadSaveRun = LoadSaveRun()
 
-        self.add_dlt_row = AddDltRow(self.config)
-        self.add_dlt_row.scroll_area = QtGui.QScrollArea()
-        self.add_dlt_row.scroll_area.setWidget(self.add_dlt_row)
-        self.add_dlt_row.scroll_area.setWidgetResizable(True)
-        self.add_dlt_row.scroll_area.setHorizontalScrollBarPolicy(1)
-        self.add_dlt_row.scroll_area.setVerticalScrollBarPolicy(1)
-        self.add_dlt_row.scroll_area.setFrameShape(0)
+        self.addDltRow = AddDltRow(self.config)
+        self.addDltRow.scrollArea = QtGui.QScrollArea()
+        self.addDltRow.scrollArea.setWidget(self.addDltRow)
+        self.addDltRow.scrollArea.setWidgetResizable(True)
+        self.addDltRow.scrollArea.setHorizontalScrollBarPolicy(1)
+        self.addDltRow.scrollArea.setVerticalScrollBarPolicy(1)
+        self.addDltRow.scrollArea.setFrameShape(0)
 
-        self.duration_row = DurationRow(self.config)
-        self.duration_row.scroll_area = QtGui.QScrollArea()
-        self.duration_row.scroll_area.setWidget(self.duration_row)
-        self.duration_row.scroll_area.setWidgetResizable(True)
-        self.duration_row.scroll_area.setHorizontalScrollBarPolicy(1)
-        self.duration_row.scroll_area.setVerticalScrollBarPolicy(1)
-        self.duration_row.scroll_area.setFrameShape(0)
+        self.durationRow = DurationRow(self.config)
+        self.durationRow.scrollArea = QtGui.QScrollArea()
+        self.durationRow.scrollArea.setWidget(self.durationRow)
+        self.durationRow.scrollArea.setWidgetResizable(True)
+        self.durationRow.scrollArea.setHorizontalScrollBarPolicy(1)
+        self.durationRow.scrollArea.setVerticalScrollBarPolicy(1)
+        self.durationRow.scrollArea.setFrameShape(0)
 
-        self.digital_sequencer = DigitalSequencer(self.digital_channels, self.config)
-        self.analog_sequencer = AnalogSequencer(self.analog_channels, self.config)
+        self.digitalSequencer = DigitalSequencer(self.digital_channels, self.config)
+        self.analogSequencer = AnalogSequencer(self.analog_channels, self.config)
 
-        self.hscroll_array = QtGui.QScrollArea()
-        self.hscroll_array.setWidget(QtGui.QWidget())
-        self.hscroll_array.setHorizontalScrollBarPolicy(2)
-        self.hscroll_array.setVerticalScrollBarPolicy(1)
-        self.hscroll_array.setWidgetResizable(True)
-        self.hscroll_array.setFrameShape(0)
+        self.hscrollArray = QtGui.QScrollArea()
+        self.hscrollArray.setWidget(QtGui.QWidget())
+        self.hscrollArray.setHorizontalScrollBarPolicy(2)
+        self.hscrollArray.setVerticalScrollBarPolicy(1)
+        self.hscrollArray.setWidgetResizable(True)
+        self.hscrollArray.setFrameShape(0)
         
-        self.hscroll_name = QtGui.QScrollArea()
-        self.hscroll_name.setWidget(QtGui.QWidget())
-        self.hscroll_name.setHorizontalScrollBarPolicy(2)
-        self.hscroll_name.setVerticalScrollBarPolicy(1)
-        self.hscroll_name.setWidgetResizable(True)
-        self.hscroll_name.setFrameShape(0)
+        self.hscrollName = QtGui.QScrollArea()
+        self.hscrollName.setWidget(QtGui.QWidget())
+        self.hscrollName.setHorizontalScrollBarPolicy(2)
+        self.hscrollName.setVerticalScrollBarPolicy(1)
+        self.hscrollName.setWidgetResizable(True)
+        self.hscrollName.setFrameShape(0)
         
         self.splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
-        self.splitter.addWidget(self.digital_sequencer)
-        self.splitter.addWidget(self.analog_sequencer)
+        self.splitter.addWidget(self.digitalSequencer)
+        self.splitter.addWidget(self.analogSequencer)
 
-        """spacer widgets"""
+        #spacer widgets
         self.northwest = QtGui.QWidget()
         self.northeast = QtGui.QWidget()
         self.southwest = QtGui.QWidget()
@@ -225,14 +198,14 @@ class Sequencer(QtGui.QWidget):
 
         self.layout = QtGui.QGridLayout()
         self.layout.addWidget(self.northwest, 0, 0, 2, 1)
-        self.layout.addWidget(self.browse_and_save, 0, 1)
+        self.layout.addWidget(self.loadSaveRun, 0, 1)
         self.layout.addWidget(self.northeast, 0, 2, 2, 1)
-        self.layout.addWidget(self.duration_row.scroll_area, 1, 1)
+        self.layout.addWidget(self.durationRow.scrollArea, 1, 1)
         self.layout.addWidget(self.splitter, 2, 0, 1, 3)
         self.layout.addWidget(self.southwest, 3, 0, 1, 1)
-        self.layout.addWidget(self.add_dlt_row.scroll_area, 3, 1)
-        self.layout.addWidget(self.hscroll_name, 4, 0)
-        self.layout.addWidget(self.hscroll_array, 4, 1)
+        self.layout.addWidget(self.addDltRow.scrollArea, 3, 1)
+        self.layout.addWidget(self.hscrollName, 4, 0)
+        self.layout.addWidget(self.hscrollArray, 4, 1)
         self.layout.addWidget(self.southeast, 3, 2, 2, 1)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
@@ -240,84 +213,85 @@ class Sequencer(QtGui.QWidget):
         self.setWindowTitle('sequencer control')
 
         self.setLayout(self.layout)
-        self.set_sizes()
-        self.connect_widgets()
-#        self.setStyleSheet('QWidget {background-color: yellow}')
+        self.setSizes()
+        self.connectWidgets()
 
-
-    def set_sizes(self):
+    def setSizes(self):
         self.northwest.setFixedSize(self.namecolumn_width, self.durationrow_height)
-        self.browse_and_save.setFixedWidth(10*self.spacer_width)
+        self.loadSaveRun.setFixedWidth(10*self.spacer_width)
         self.northeast.setFixedSize(20, self.durationrow_height)
         
-        for c in self.digital_sequencer.array.columns:
+        for c in self.digitalSequencer.array.columns:
             for b in c.buttons.values():
                 b.setFixedSize(self.spacer_width, self.spacer_height)
-            height = sum([c.layout.itemAt(i).widget().height() for i in range(c.layout.count()-1)]) # -1 because there is a generic widget in the last spot
+            # -1 because there is a generic widget in the last spot
+            height = sum([c.layout.itemAt(i).widget().height() for i in range(c.layout.count()-1)]) 
             c.setFixedSize(self.spacer_width, height)
-        da_width = sum([c.width() for c in self.digital_sequencer.array.columns if not c.isHidden()])
-        da_height = self.digital_sequencer.array.columns[0].height()
-        self.digital_sequencer.array.setFixedSize(da_width, da_height)
+        da_width = sum([c.width() for c in self.digitalSequencer.array.columns if not c.isHidden()])
+        da_height = self.digitalSequencer.array.columns[0].height()
+        self.digitalSequencer.array.setFixedSize(da_width, da_height)
 
-        for nl in self.digital_sequencer.name_column.labels.values():
+        for nl in self.digitalSequencer.nameColumn.labels.values():
             nl.setFixedHeight(self.spacer_height)
         nc_width = self.namelabel_width
-        nc_height = self.digital_sequencer.array.height()
-        self.digital_sequencer.name_column.setFixedSize(nc_width, nc_height)
-        self.digital_sequencer.name_column.scroll_area.setFixedWidth(self.namecolumn_width)
+        nc_height = self.digitalSequencer.array.height()
+        self.digitalSequencer.nameColumn.setFixedSize(nc_width, nc_height)
+        self.digitalSequencer.nameColumn.scrollArea.setFixedWidth(self.namecolumn_width)
         
-        self.digital_sequencer.vscroll.widget().setFixedSize(0, self.digital_sequencer.array.height())
-        self.digital_sequencer.vscroll.setFixedWidth(20)
-
-        self.analog_sequencer.array.setFixedSize(self.digital_sequencer.array.width(), self.analog_height*len(self.analog_channels))
-        self.analog_sequencer.vscroll.widget().setFixedSize(0, self.analog_sequencer.array.height())
-        self.analog_sequencer.vscroll.setFixedWidth(20)
+        self.digitalSequencer.vscroll.widget().setFixedSize(0, self.digitalSequencer.array.height())
+        self.digitalSequencer.vscroll.setFixedWidth(20)
         
-        for nl in self.analog_sequencer.name_column.labels.values():
+        width = self.digitalSequencer.array.width()
+        height = self.analog_height*len(self.analog_channels)
+        self.analogSequencer.array.setFixedSize(width, height)
+        self.analogSequencer.vscroll.widget().setFixedSize(0, self.analogSequencer.array.height())
+        self.analogSequencer.vscroll.setFixedWidth(20)
+        
+        for nl in self.analogSequencer.nameColumn.labels.values():
             nl.setFixedSize(self.namelabel_width, self.analog_height)
         nc_width = self.namelabel_width
-        nc_height = self.analog_sequencer.array.height()
-        self.analog_sequencer.name_column.setFixedSize(nc_width, nc_height)
-        self.analog_sequencer.name_column.scroll_area.setFixedWidth(self.namecolumn_width)
+        nc_height = self.analogSequencer.array.height()
+        self.analogSequencer.nameColumn.setFixedSize(nc_width, nc_height)
+        self.analogSequencer.nameColumn.scrollArea.setFixedWidth(self.namecolumn_width)
         
-        for b in self.duration_row.boxes:
+        for b in self.durationRow.boxes:
             b.setFixedSize(self.spacer_width, self.durationrow_height)
-        dr_width = sum([db.width() for db in self.duration_row.boxes if not db.isHidden()])
-        self.duration_row.setFixedSize(dr_width, self.durationrow_height)
-        self.duration_row.scroll_area.setFixedHeight(self.durationrow_height)
+        dr_width = sum([db.width() for db in self.durationRow.boxes if not db.isHidden()])
+        self.durationRow.setFixedSize(dr_width, self.durationrow_height)
+        self.durationRow.scrollArea.setFixedHeight(self.durationrow_height)
        
         self.southwest.setFixedSize(self.namecolumn_width, self.durationrow_height)
         self.southeast.setFixedWidth(20)
         
-        for b in self.add_dlt_row.buttons:
+        for b in self.addDltRow.buttons:
             b.setFixedSize(self.spacer_width, 15)
-        self.add_dlt_row.setFixedSize(dr_width, self.durationrow_height)
-        self.add_dlt_row.scroll_area.setFixedHeight(self.durationrow_height)
+        self.addDltRow.setFixedSize(dr_width, self.durationrow_height)
+        self.addDltRow.scrollArea.setFixedHeight(self.durationrow_height)
         
-        self.hscroll_array.widget().setFixedSize(self.digital_sequencer.array.width(), 0)
-        self.hscroll_array.setFixedHeight(20)
-        self.hscroll_name.widget().setFixedSize(self.namelabel_width, 0)
-        self.hscroll_name.setFixedSize(self.namecolumn_width, 20)
+        self.hscrollArray.widget().setFixedSize(self.digitalSequencer.array.width(), 0)
+        self.hscrollArray.setFixedHeight(20)
+        self.hscrollName.widget().setFixedSize(self.namelabel_width, 0)
+        self.hscrollName.setFixedSize(self.namecolumn_width, 20)
 
-    def connect_widgets(self):
-        self.hscroll_array.horizontalScrollBar().valueChanged.connect(self.adjust_for_hscroll_array)
-        self.hscroll_name.horizontalScrollBar().valueChanged.connect(self.adjust_for_hscroll_name)
+    def connectWidgets(self):
+        self.hscrollArray.horizontalScrollBar().valueChanged.connect(self.adjustForHScrollArray)
+        self.hscrollName.horizontalScrollBar().valueChanged.connect(self.adjustForHScrollName)
 
-        self.browse_and_save.save_button.clicked.connect(self.save_sequence)
-        self.browse_and_save.save_button.clicked.connect(self.run_sequence)
-        self.browse_and_save.browse_button.clicked.connect(self.browse)
+        self.loadSaveRun.saveButton.clicked.connect(self.saveSequence)
+        self.loadSaveRun.runButton.clicked.connect(self.runSequence)
+        self.loadSaveRun.loadButton.clicked.connect(self.browse)
 
-        for i, b in enumerate(self.add_dlt_row.buttons):
-            b.add.clicked.connect(self.add_column(i))
-            b.dlt.clicked.connect(self.dlt_column(i))
+        for i, b in enumerate(self.addDltRow.buttons):
+            b.add.clicked.connect(self.addColumn(i))
+            b.dlt.clicked.connect(self.dltColumn(i))
 
-        for l in self.digital_sequencer.name_column.labels.values():
-            l.clicked.connect(self.open_digital_manual(l.nameloc))
+        for l in self.digitalSequencer.nameColumn.labels.values():
+            l.clicked.connect(self.openDigitalManual(l.nameloc))
 
-        for l in self.analog_sequencer.name_column.labels.values():
-            l.clicked.connect(self.edit_analog_voltage(l.nameloc))
+        for l in self.analogSequencer.nameColumn.labels.values():
+            l.clicked.connect(self.editAnalogVoltage(l.nameloc))
 
-    def open_digital_manual(self, channel_name):
+    def openDigitalManual(self, channel_name):
         def odm():
             config = dcc.ControlConfig()
             config.name = str(channel_name.split('@')[0])
@@ -331,136 +305,132 @@ class Sequencer(QtGui.QWidget):
             widget.move(pos)
         return odm
 
-    def edit_analog_voltage(self, channel_name):
-#    	@inlineCallbacks
-#        def eav():
-#            ave_args = (channel_name, self.get_sequence(), self.ramp_maker, self.config, self.reactor, self.cxn)
-#	    ave = AnalogVoltageEditor(*ave_args)
-#            sequence = ave.getEditedSequence(*ave_args)
-#	    conductor = yield self.cxn.get_server(self.conductor_servername)
-#	    yield conductor.removeListener(listener=ave.receive_parameters, ID=ave.config.conductor_update_id)
-#            self.set_sequence(sequence)
-#        return eav
+    def editAnalogVoltage(self, channel_name):
     	@inlineCallbacks
         def eav():
-            ave_args = (channel_name, self.get_sequence(), self.ramp_maker, self.config, self.reactor, self.cxn)
-	    ave = AnalogVoltageEditor(*ave_args)
-	    if ave.exec_():
-                print '!'
+            ave_args = (channel_name, self.getSequence(), self.rampMaker, self.config, self.reactor, self.cxn)
+            ave = AnalogVoltageEditor(*ave_args)
+            if ave.exec_():
                 sequence = ave.getEditedSequence().copy()
-                self.set_sequence(sequence)
+                self.setSequence(sequence)
             conductor = yield self.cxn.get_server(self.conductor_servername)
             yield conductor.removeListener(listener=ave.receive_parameters, ID=ave.config.conductor_update_id)
-	    ave.setParent(None)
-            ave.deleteLater()
-	    ave = None
-	    gc.collect()
+            # remove comments if memory hog
+            #ave.setParent(None)
+            #ave.deleteLater()
+	        #ave = None
+	        #gc.collect()
         return eav
 
-    def adjust_for_dvscroll(self):
-        val = self.digital_vscroll.verticalScrollBar().value()
-        self.digital_name_scroll.verticalScrollBar().setValue(val)
-        self.digital_scroll.verticalScrollBar().setValue(val)
+    def adjustForDVScroll(self):
+        val = self.digitalVScroll.verticalScrollBar().value()
+        self.digitalNameScroll.verticalScrollBar().setValue(val)
+        self.digitalScroll.verticalScrollBar().setValue(val)
     
-    def adjust_for_avscroll(self):
-        val = self.analog_vscroll.verticalScrollBar().value()
-        self.analog_name_scroll.verticalScrollBar().setValue(val)
-        self.analog_array_scroll.verticalScrollBar().setValue(val)
+    def adjustForAVScroll(self):
+        val = self.analogVScroll.verticalScrollBar().value()
+        self.analogNameScroll.verticalScrollBar().setValue(val)
+        self.analogArrayScroll.verticalScrollBar().setValue(val)
 
-    def adjust_for_hscroll_array(self):
-        val = self.hscroll_array.horizontalScrollBar().value()
-        self.duration_row.scroll_area.horizontalScrollBar().setValue(val)
-        self.digital_sequencer.array.scroll_area.horizontalScrollBar().setValue(val)
-        self.analog_sequencer.array.scroll_area.horizontalScrollBar().setValue(val)
-        self.add_dlt_row.scroll_area.horizontalScrollBar().setValue(val)
+    def adjustForHScrollArray(self):
+        val = self.hscrollArray.horizontalScrollBar().value()
+        self.durationRow.scrollArea.horizontalScrollBar().setValue(val)
+        self.digitalSequencer.array.scrollArea.horizontalScrollBar().setValue(val)
+        self.analogSequencer.array.scrollArea.horizontalScrollBar().setValue(val)
+        self.addDltRow.scrollArea.horizontalScrollBar().setValue(val)
     
-    def adjust_for_hscroll_name(self):
-        val = self.hscroll_name.horizontalScrollBar().value()
-        self.digital_sequencer.name_column.scroll_area.horizontalScrollBar().setValue(val)
-        self.analog_sequencer.name_column.scroll_area.horizontalScrollBar().setValue(val)
+    def adjustForHScrollName(self):
+        val = self.hscrollName.horizontalScrollBar().value()
+        self.digitalSequencer.nameColumn.scrollArea.horizontalScrollBar().setValue(val)
+        self.analogSequencer.nameColumn.scrollArea.horizontalScrollBar().setValue(val)
     
     def browse(self):
-        file_name = QtGui.QFileDialog().getOpenFileName(directory='.')
-        self.browse_and_save.location_box.setText(file_name)
-        self.load_sequence(file_name)
+        filepath = QtGui.QFileDialog().getOpenFileName(directory=self.sequence_directory())
+        if filepath:
+            self.loadSaveRun.locationBox.setText(filepath)
+            self.load_sequence(filepath)
     
-    def save_sequence(self):
-        file_name = self.browse_and_save.location_box.text()
-	with open(file_name, 'w+') as outfile:
-            sequence = self.get_sequence()
+    def saveSequence(self):
+        filename = self.loadSaveRun.locationBox.text().split('/')[-1]
+        filepath = self.sequence_directory() + filename
+        if not os.path.exists(self.sequence_directory()):
+            os.makedirs(self.sequence_directory())
+        with open(filepath, 'w+') as outfile:
+            sequence = self.getSequence()
             json.dump(sequence, outfile)
 
     @inlineCallbacks
-    def run_sequence(self, c):
-        sequence = json.dumps(self.get_sequence())
-#        aserver = yield self.cxn.get_server(self.analog_servername)
-#        yield aserver.run_sequence(sequence)
-#        dserver = yield self.cxn.get_server(self.digital_servername)
-#        yield dserver.run_sequence(sequence)
+    def runSequence(self, c):
+        self.saveSequence()
+        sequence = json.dumps(self.getSequence())
         conductor = yield self.cxn.get_server(self.conductor_servername)
-	yield conductor.load_sequence(sequence)
+        yield conductor.load_sequence(sequence)
 
-    def load_sequence(self, file_name):
-	with open(file_name, 'r') as infile:
-	    sequence = json.load(infile)
-	    self.set_sequence(sequence)
+    def load_sequence(self, filepath):
+        with open(filepath, 'r') as infile:
+            sequence = json.load(infile)
+        if sequence.has_key('sequence'):
+            sequence = sequence['sequence']
+            filepath = self.sequence_directory() + filepath.split('/')[-1].split('#')[0]
+        self.setSequence(sequence)
+        self.loadSaveRun.locationBox.setText(filepath)
 
-    def set_sequence(self, sequence):
-        self.display_sequence(sequence)
+    def setSequence(self, sequence):
+        self.displaySequence(sequence)
 
     @inlineCallbacks
-    def get_sequence_paramaters(self):
+    def getSequence_paramaters(self):
         conductor = yield self.cxn.get_server(self.conductor_servername)
-	sp = yield conductor.set_sequence_parameters()
+	sp = yield conductor.setSequence_parameters()
 	self.sequence_parameters = json.loads(sp)
 
     @inlineCallbacks
     def update_parameters(self, c, signal):
         conductor = yield self.cxn.get_server(self.conductor_servername)
-        plottable_sequence = yield conductor.evaluate_sequence_parameters(json.dumps(self.get_sequence()))
-	self.analog_sequencer.display_sequence(json.loads(plottable_sequence)) 
+        plottable_sequence = yield conductor.evaluate_sequence_parameters(json.dumps(self.getSequence()))
+	self.analogSequencer.displaySequence(json.loads(plottable_sequence)) 
 
     @inlineCallbacks
-    def display_sequence(self, sequence):
+    def displaySequence(self, sequence):
         conductor = yield self.cxn.get_server(self.conductor_servername)
         plottable_sequence = yield conductor.evaluate_sequence_parameters(json.dumps(sequence))
-	self.analog_sequencer.set_sequence(sequence)
-        self.analog_sequencer.display_sequence(json.loads(plottable_sequence))
-        self.digital_sequencer.display_sequence(sequence)
-        self.duration_row.display_sequence(sequence)
-        self.add_dlt_row.display_sequence(sequence)
-        self.set_sizes()
+        self.analogSequencer.setSequence(sequence)
+        self.analogSequencer.displaySequence(json.loads(plottable_sequence))
+        self.digitalSequencer.displaySequence(sequence)
+        self.durationRow.displaySequence(sequence)
+        self.addDltRow.displaySequence(sequence)
+        self.setSizes()
 
-    def get_sequence(self):
-        durations = [b.value() for b in self.duration_row.boxes if not b.isHidden()]
-	timing_sequence = {self.timing_channel: durations}
-        digital_logic = [c.get_logic() for c in self.digital_sequencer.array.columns if not c.isHidden()]
+    def getSequence(self):
+        durations = [b.value() for b in self.durationRow.boxes if not b.isHidden()]
+        timing_sequence = {self.timing_channel: durations}
+        digital_logic = [c.getLogic() for c in self.digitalSequencer.array.columns if not c.isHidden()]
         digital_sequence = {key: [dl[key] for dl in digital_logic] for key in self.digital_channels}
-        analog_sequence = {key: [dict(s.items() + {'dt': dt}.items()) for s, dt in zip(self.analog_sequencer.sequence[key], durations)] for key in self.analog_channels}
+        analog_sequence = {key: [dict(s.items() + {'dt': dt}.items()) for s, dt in zip(self.analogSequencer.sequence[key], durations)] for key in self.analog_channels}
         sequence = dict(digital_sequence.items() + analog_sequence.items() + timing_sequence.items())
         return sequence
     
-    def add_column(self, i):
+    def addColumn(self, i):
         def ac():
-            sequence = self.get_sequence()
+            sequence = self.getSequence()
 	    for c in self.channels:
                 sequence[c].insert(i, sequence[c][i])
-            self.set_sequence(sequence)
+            self.setSequence(sequence)
         return ac
 
-    def dlt_column(self, i):
+    def dltColumn(self, i):
         def dc():
-            sequence = self.get_sequence()
+            sequence = self.getSequence()
 	    for c in self.channels:
                 sequence[c].pop(i)
-            self.set_sequence(sequence)
+            self.setSequence(sequence)
         return dc
 
     def undo(self):
-        self.display_sequence()
+        self.displaySequence()
 
     def redo(self):
-        self.display_sequence()
+        self.displaySequence()
 
     def keyPressEvent(self, c):
         super(Sequencer, self).keyPressEvent(c)
@@ -470,11 +440,13 @@ class Sequencer(QtGui.QWidget):
             if c.key() == QtCore.Qt.Key_R:
                 self.redo()
             if c.key() == QtCore.Qt.Key_S:
-                self.save_sequence()
-                self.run_sequence(c)
+                self.saveSequence()
             if c.key() == QtCore.Qt.Key_Return:
-                self.save_sequence()
-                self.run_sequence(c)
+                self.runSequence(c)
+            if c.key() in [QtCore.Qt.Key_Q, QtCore.Qt.Key_W]:
+                self.reactor.stop()
+            if c.key() == QtCore.Qt.Key_B:
+                self.browse()
 
     def closeEvent(self, x):
         self.reactor.stop()
@@ -483,17 +455,18 @@ class SequencerConfig(object):
     def __init__(self):
         self.digital_servername = 'yesr20_digital_sequencer'
         self.analog_servername = 'yesr20_analog_sequencer'
-	self.conductor_servername = 'yesr20_conductor'
-	self.conductor_update_id = 689222
+        self.conductor_servername = 'yesr20_conductor'
+        self.sequence_directory = lambda: 'Z:\\SrQ\\data\\{}\\sequences\\'.format(time.strftime('%Y%m%d'))
+        self.conductor_update_id = 689222
         self.spacer_width = 65
         self.spacer_height = 15
-	self.namecolumn_width = 130
-	self.namelabel_width = 200
-	self.durationrow_height = 20
-	self.analog_height = 50
+        self.namecolumn_width = 130
+        self.namelabel_width = 200
+        self.durationrow_height = 20
+        self.analog_height = 50
         self.max_columns = 100
         self.digital_colors = ['#ff0000', '#ff7700', '#ffff00', '#00ff00', '#0000ff', '#8a2be2']
-	self.ramp_maker = RampMaker
+        self.rampMaker = RampMaker
 
 if __name__ == '__main__':
     a = QtGui.QApplication([])

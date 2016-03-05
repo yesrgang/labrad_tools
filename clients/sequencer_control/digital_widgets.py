@@ -14,6 +14,7 @@ class Spacer(QtGui.QFrame):
         self.setFrameShape(1)
         self.setLineWidth(0)
 
+
 class SequencerButton(QtGui.QFrame):
     def __init__(self):
         super(SequencerButton, self).__init__(None)
@@ -43,7 +44,7 @@ class DigitalColumn(QtGui.QWidget):
         super(DigitalColumn, self).__init__(None)
         self.channels = channels
         self.config = config
-	self.position = position
+        self.position = position
         self.populate()
 
     def populate(self):
@@ -59,12 +60,13 @@ class DigitalColumn(QtGui.QWidget):
         self.layout.addWidget(QtGui.QWidget())
         self.setLayout(self.layout)
 
-    def get_logic(self):
+    def getLogic(self):
         return {nl: int(self.buttons[nl].is_checked) for nl in self.channels}
 
-    def set_logic(self, sequence):
+    def setLogic(self, sequence):
         for nameloc in self.channels:
             self.buttons[nameloc].setChecked(sequence[nameloc][self.position])
+
 
 class DigitalArray(QtGui.QWidget):
     def __init__(self, channels, config):
@@ -82,22 +84,18 @@ class DigitalArray(QtGui.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.layout)
 
-    def display_sequence(self, sequence): 
-#        for c in self.columns[::-1]:
-#            c.hide()
-#	for c in self.columns[:len(sequence[self.channels[0]])]:
-#            c.show()
-#            c.set_logic(sequence)
+    def displaySequence(self, sequence): 
         shown_columns = sum([1 for c in self.columns if not c.isHidden()])
-	num_to_show = len(sequence['digital@T'])
-	if shown_columns > num_to_show:
+        num_to_show = len(sequence['digital@T'])
+        if shown_columns > num_to_show:
             for c in self.columns[num_to_show: shown_columns][::-1]:
                 c.hide()
         elif shown_columns < num_to_show:
             for c in self.columns[shown_columns:num_to_show]:
                 c.show()
-	for c in self.columns[:num_to_show]:
-            c.set_logic(sequence)
+        for c in self.columns[:num_to_show]:
+            c.setLogic(sequence)
+
 
 class NameBox(QtGui.QLabel):
     clicked = QtCore.pyqtSignal()
@@ -107,7 +105,7 @@ class NameBox(QtGui.QLabel):
         name, loc = nameloc.split('@')
         self.setText(loc+': '+name)
         self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter  )
-	self.name = name
+        self.name = name
 
     def mousePressEvent(self, x):
         self.clicked.emit()
@@ -139,21 +137,21 @@ class DigitalSequencer(QtGui.QWidget):
         self.populate()
 
     def populate(self):
-        self.name_column = DigitalNameColumn(self.channels, self.config)
-        self.name_column.scroll_area = QtGui.QScrollArea()
-        self.name_column.scroll_area.setWidget(self.name_column)
-        self.name_column.scroll_area.setWidgetResizable(True)
-        self.name_column.scroll_area.setHorizontalScrollBarPolicy(1)
-        self.name_column.scroll_area.setVerticalScrollBarPolicy(1)
-        self.name_column.scroll_area.setFrameShape(0)
+        self.nameColumn = DigitalNameColumn(self.channels, self.config)
+        self.nameColumn.scrollArea = QtGui.QScrollArea()
+        self.nameColumn.scrollArea.setWidget(self.nameColumn)
+        self.nameColumn.scrollArea.setWidgetResizable(True)
+        self.nameColumn.scrollArea.setHorizontalScrollBarPolicy(1)
+        self.nameColumn.scrollArea.setVerticalScrollBarPolicy(1)
+        self.nameColumn.scrollArea.setFrameShape(0)
 
         self.array = DigitalArray(self.channels, self.config)
-        self.array.scroll_area = QtGui.QScrollArea()
-        self.array.scroll_area.setWidget(self.array)
-        self.array.scroll_area.setWidgetResizable(True)
-        self.array.scroll_area.setHorizontalScrollBarPolicy(1)
-        self.array.scroll_area.setVerticalScrollBarPolicy(1)
-        self.array.scroll_area.setFrameShape(0)
+        self.array.scrollArea = QtGui.QScrollArea()
+        self.array.scrollArea.setWidget(self.array)
+        self.array.scrollArea.setWidgetResizable(True)
+        self.array.scrollArea.setHorizontalScrollBarPolicy(1)
+        self.array.scrollArea.setVerticalScrollBarPolicy(1)
+        self.array.scrollArea.setFrameShape(0)
 
         self.vscroll = QtGui.QScrollArea()
         self.vscroll.setWidget(QtGui.QWidget())
@@ -162,20 +160,22 @@ class DigitalSequencer(QtGui.QWidget):
         self.vscroll.setFrameShape(0)
         
         self.layout = QtGui.QHBoxLayout()
-        self.layout.addWidget(self.name_column.scroll_area)
-        self.layout.addWidget(self.array.scroll_area)
+        self.layout.addWidget(self.nameColumn.scrollArea)
+        self.layout.addWidget(self.array.scrollArea)
         self.layout.addWidget(self.vscroll)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
         self.setLayout(self.layout)
 
-        self.connect_widgets()
+        self.connectWidgets()
 
-    def display_sequence(self, sequence):
-        self.array.display_sequence(sequence)
+    def displaySequence(self, sequence):
+        self.array.displaySequence(sequence)
     
-    def connect_widgets(self):
-        self.vscrolls = [self.name_column.scroll_area.verticalScrollBar(), self.array.scroll_area.verticalScrollBar(), self.vscroll.verticalScrollBar()]
+    def connectWidgets(self):
+        self.vscrolls = [self.nameColumn.scrollArea.verticalScrollBar(),
+                self.array.scrollArea.verticalScrollBar(),
+                self.vscroll.verticalScrollBar()]
         for vs in self.vscrolls:
             vs.valueChanged.connect(self.adjust_for_vscroll(vs))
 
