@@ -39,17 +39,17 @@ class Agilent34980AWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def read_active_channels(self):
         values = []
-	active_channels = [address for address, channel in sorted(self.channels.items()) if channel.is_active]
-	ac_str = str(active_channels)[1:-1].replace("'", "").replace(' ', '')
-	print ac_str
-	try:
+        active_channels = [address for address, channel in sorted(self.channels.items()) if channel.is_active]
+        ac_str = str(active_channels)[1:-1].replace("'", "").replace(' ', '')
+        print ac_str
+        try:
             ans = yield self.query('meas? ' + '(@{})'.format(ac_str))
         except T.Error as e:
             print e.message
-	    ans = ''
+            ans = ''
         print 'answer: ', ans
-	ans_list = eval('['+ans+']')
-	values = [float(a) for a in ans_list]
+        ans_list = eval('['+ans+']')
+        values = [float(a) for a in ans_list]
 #        for address, channel in self.channels.items():
 #            if channel.is_active:
 #                try:
@@ -65,10 +65,10 @@ class Agilent34980AWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def measure_channel(self, channel_name):
         for address, channel in self.channels.items():
-            if channel.name is channel_name:
+            if channel.name == channel_name:
                 ans = yield self.query(channel.query_string + '(@{})'.format(str(address)))
                 value = channel.a2v(ans)
-        returnValue(value)
+                returnValue(value)
 
 
 class Agilent34980AServer(GPIBManagedServer):
@@ -101,7 +101,7 @@ class Agilent34980AServer(GPIBManagedServer):
         dev = self.selectedDevice(c)
         dev.set_configuration(self.instruments[name])
         dev.instrument_name = name
-	dev.timeout = T.Value(10, 's')
+        dev.timeout = T.Value(10, 's')
         returnValue(str(self.instruments[name].__dict__))
     
     def _load_instruments(self):
