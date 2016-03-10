@@ -12,8 +12,8 @@ class ServerConfig(object):
 	self.voltage_range = (0., 100.)
 
         self.digital_lock_period = 5 # [s]
-        self.get_dmm_str = "yield self.client._34980a.measure_channel('Blue Spec. Err.')"
-        self.init_dmm_str = "yield self.client._34980a.select_device_by_name('srq monitor')"
+        self.get_dmm_str = "self.client._34980a.measure_channel('Blue Spec. Err.')"
+        self.init_dmm_str = "self.client._34980a.select_device_by_name('srq monitor')"
         self.pid_sampling_interval = self.digital_lock_period
         self.pid_prop_gain = -5e-2
         self.pid_int_gain = 5e-2

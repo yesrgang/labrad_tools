@@ -50,6 +50,10 @@ class TLB6700Control(QtGui.QGroupBox):
         self.state_button.setCheckable(1)
         self.state_button.setFixedWidth(self.spinbox_width)
 
+        self.lock_button = QtGui.QPushButton()
+        self.lock_button.setCheckable(1)
+        self.lock_button.setFixedWidth(self.spinbox_width)
+
         self.piezo_voltage_box = SuperSpinBox(self.piezo_voltage_range,
                                               self.piezo_voltage_units,
                                               self.piezo_voltage_digits)
@@ -65,18 +69,25 @@ class TLB6700Control(QtGui.QGroupBox):
         if self.layout is None:
             self.layout = QtGui.QGridLayout()
 
-        self.layout.addWidget(QtGui.QLabel('<b>'+self.name+'</b>'), 1, 0, 1, 1,
+        self.layout.addWidget(QtGui.QLabel('<b>'+self.name+'</b>'), 1, 0,
                               QtCore.Qt.AlignHCenter)
         self.layout.addWidget(self.state_button, 1, 1)
-        self.layout.addWidget(QtGui.QLabel('Piezo Voltage: '), 2, 0, 1, 1,
+        
+        self.layout.addWidget(QtGui.QLabel('Digital PID: '), 2, 0,
                               QtCore.Qt.AlignRight)
-        self.layout.addWidget(self.piezo_voltage_box, 2, 1)
-        self.layout.addWidget(QtGui.QLabel('Diode Curent: '), 3, 0, 1, 1,
+        self.layout.addWidget(self.lock_button, 2, 1)
+        
+        self.layout.addWidget(QtGui.QLabel('Piezo Voltage: '), 3, 0,
                               QtCore.Qt.AlignRight)
-        self.layout.addWidget(self.diode_current_box, 3, 1)
+        self.layout.addWidget(self.piezo_voltage_box, 3, 1)
+        
+        self.layout.addWidget(QtGui.QLabel('Diode Curent: '), 4, 0,
+                              QtCore.Qt.AlignRight)
+        self.layout.addWidget(self.diode_current_box, 4, 1)
         self.setLayout(self.layout)
-	self.setWindowTitle(self.servername + ' control')
-        self.setFixedSize(120 + self.spinbox_width, 100)
+        
+        self.setWindowTitle(self.servername + ' control')
+        self.setFixedSize(120 + self.spinbox_width, 125)
 
     @inlineCallbacks
     def connectSignals(self):
@@ -88,6 +99,7 @@ class TLB6700Control(QtGui.QGroupBox):
         yield self.cxn.add_on_disconnect(self.servername, self.disable)
 
         self.state_button.released.connect(self.onNewState)
+        self.lock_button.released.connect(self.onNewLockState)
         self.piezo_voltage_box.returnPressed.connect(self.onNewPiezoVoltage)
         self.diode_current_box.returnPressed.connect(self.onNewPower)
         self.setMouseTracking(True)
@@ -110,6 +122,12 @@ class TLB6700Control(QtGui.QGroupBox):
         else:
             self.state_button.setChecked(0)
             self.state_button.setText('Off')
+        if update['lock_state']:
+            self.lock_button.setChecked(1)
+            self.lock_button.setText('On')
+        else:
+            self.lock_button.setChecked(0)
+            self.lock_button.setText('Off')
         self.piezo_voltage_box.display(update['piezo_voltage'])
         self.diode_current_box.display(update['diode_current'])
         self.free = True
@@ -126,6 +144,13 @@ class TLB6700Control(QtGui.QGroupBox):
             server = yield self.cxn.get_server(self.servername)
             is_on = yield server.laser_state()
             yield server.laser_state(not is_on)
+
+    @inlineCallbacks
+    def onNewLockState(self):
+        if self.free:
+            server = yield self.cxn.get_server(self.servername)
+            is_on = yield server.set_digital_lock_state()
+            yield server.set_digital_lock_state(not is_on)
 
     @inlineCallbacks
     def writeValues(self):

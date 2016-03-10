@@ -16,13 +16,17 @@ timeout = 20
 ### END NODE INFO
 """
 
-from labrad.server import LabradServer, setting, Signal
+import json
+import ctypes as c
+import numpy as np
+from time import sleep
+
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet import reactor
-from time import sleep
-import numpy as np
-import ctypes as c
-import json
+from labrad.errors import Error as labradError
+from labrad.server import LabradServer, setting, Signal
+
+from pid import PID
 
 class TLB6700Server(LabradServer):
     name = '%LABRADNODE% TLB-6700'
@@ -30,12 +34,13 @@ class TLB6700Server(LabradServer):
     def __init__(self, configuration):
         LabradServer.__init__(self)
         
-        self.update = Signal(self.update_id, 'signal: update', 's')
         self.digital_lock_state = False
         self.digital_lock_delayed_call = None
         
         self.load_configuration(configuration)
         self.init_pid()
+
+        self.update = Signal(self.update_id, 'signal: update', 's')
 
 
     def load_configuration(self, configuration):
@@ -47,7 +52,7 @@ class TLB6700Server(LabradServer):
             sampling_interval=self.pid_sampling_interval,
             prop_gain=self.pid_prop_gain,
             int_gain=self.pid_int_gain,
-            miin_max=self.pid_min_max,
+            min_max=self.pid_min_max,
             )
 
     def initServer(self):
@@ -61,7 +66,12 @@ class TLB6700Server(LabradServer):
 
     @inlineCallbacks
     def notify_listeners(self):
-        values = {"diode_current": self.current, "piezo_voltage": self.voltage, "laser_state": self.state}
+        values = {
+            "diode_current": self.current, 
+            "piezo_voltage": self.voltage, 
+            "laser_state": self.state, 
+            "lock_state": self.digital_lock_state,
+        }
         yield self.update(json.dumps(values))
 
     def send(self, command_string):
@@ -87,7 +97,9 @@ class TLB6700Server(LabradServer):
             voltage = sorted([self.voltage_range[0], voltage, self.voltage_range[1]])[1]
             self.send('source:voltage:piezo {}'.format(voltage))
         self.voltage = float(self.send('source:voltage:piezo?'))
-        return self.voltage
+        if voltage is not None:
+            yield self.notify_listeners()
+        returnValue(self.voltage)
 
     @setting(2, 'diode current', current='v: current in mA', returns='v')
     def diode_current(self, c, current=None):
@@ -95,62 +107,67 @@ class TLB6700Server(LabradServer):
             current = sorted([self.current_range[0], current, self.current_range[1]])[1]
             self.send('source:current:diode {}'.format(current))
         self.current = float(self.send('source:current:diode?'))
-        return self.current
+        if current is not None:
+            yield self.notify_listeners()
+        returnValue(self.current)
 
     @setting(3, 'laser state', state='i', returns='i')
     def laser_state(self, c, state=None):
         if state is not None:
             start_current = self.diode_current(None)
             if state: # turn on laser
-	        self.send('output:state {}'.format(int(state)))
-		stop_current = self.default_current
+                self.send('output:state {}'.format(int(state)))
+                stop_current = self.default_current
             else :
-		stop_current = 0.
+                stop_current = 0.
             currents = np.linspace(start_current, stop_current, self.ramp_points)
             for cur in currents:
                 sleep(float(self.ramp_duration)/float(self.ramp_points))
                 self.diode_current(None, cur)
-	    self.send('output:state {}'.format(int(state)))
-	self.state = int(self.send('output:state?'))
-	return self.state
+            self.send('output:state {}'.format(int(state)))
+        self.state = int(self.send('output:state?'))
+        if state is not None:
+            yield self.notify_listeners()
+        returnValue(self.state)
 	
     @setting(4, 'request values')
     def request_values(self, c):
         self.laser_state(c)
-	self.piezo_voltage(c)
-	self.diode_current(c)
-	yield self.notify_listeners()
+        self.piezo_voltage(c)
+        self.diode_current(c)
+        self.set_digital_lock_state(c)
+        yield self.notify_listeners()
 
     @setting(5, 'get configuration')
     def get_configuration(self, c):
         values = {'diode_current_range': self.current_range, 'piezo_voltage_range': self.voltage_range}
-	return json.dumps(values)
+        return json.dumps(values)
 
-    @setting(6, 'digital lock state', state='b', returns='b')
+    @setting(6, 'set digital lock state', state='b', returns='b')
     def set_digital_lock_state(self, c, state=None):
         if state is not None:
-            self.pid.offset = self.piezo_voltage(None)
+            self.pid.offset = yield self.piezo_voltage(None)
             self.digital_lock_state = state
             if state:
                 yield self.tick_digital_lock()
             elif hasattr(self.digital_lock_delayed_call, 'cancel'):
                 self.digital_lock_delayed_call.cancel()
-        return self.digital_lock_state
+        yield self.notify_listeners()
+        returnValue(self.digital_lock_state)
     
     @inlineCallbacks
     def tick_digital_lock(self):
         try:
-            error = eval(self.get_dmm_str)
-        except labrad.errors.DeviceNotSelectedError:
-            eval(self.init_dmm_str)
-            error = eval(self.get_dmm_str)
+            error = yield eval(self.get_dmm_str)
+        except labradError:
+            yield eval(self.init_dmm_str)
+            error = yield eval(self.get_dmm_str)
         piezo_voltage = self.pid.tick(error)
         yield self.piezo_voltage(None, piezo_voltage)
         if self.digital_lock_state:
             self.digital_lock_delayed_call = reactor.callLater(self.digital_lock_period, self.tick_digital_lock)
+   
 
-
-    
 if __name__ == "__main__":
     configuration = __import__('blue_master_config').ServerConfig()
     __server__ = TLB6700Server(configuration)
