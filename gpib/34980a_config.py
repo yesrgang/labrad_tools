@@ -19,15 +19,15 @@ class ServerConfig(object):
         self.measurement_period = 60 # [s]
         
         srq_channels = {
-            '1001': DCVoltageConfig(name='1001', is_active=True),
-            '1002': DCVoltageConfig(name='1002', is_active=True),
-            '1003': DCVoltageConfig(name='1003', is_active=True),
-            '1004': DCVoltageConfig(name='1004', is_active=True),
-            '1005': DCVoltageConfig(name='1005', is_active=True),
-            '1006': DCVoltageConfig(name='1006', is_active=True),
-            '1007': DCVoltageConfig(name='1007', is_active=True),
-            '1008': DCVoltageConfig(name='1008', is_active=True),
-            '1009': DCVoltageConfig(name='1009', is_active=True),
+            '1001': DCVoltageConfig(name='Blue Spec. Err.', is_active=False),
+#            '1002': DCVoltageConfig(name='1002', is_active=True),
+#            '1003': DCVoltageConfig(name='1003', is_active=True),
+#            '1004': DCVoltageConfig(name='1004', is_active=True),
+#            '1005': DCVoltageConfig(name='1005', is_active=True),
+#            '1006': DCVoltageConfig(name='1006', is_active=True),
+#            '1007': DCVoltageConfig(name='1007', is_active=True),
+#            '1008': DCVoltageConfig(name='1008', is_active=True),
+#            '1009': DCVoltageConfig(name='1009', is_active=True),
             }
        
         self.instruments = {

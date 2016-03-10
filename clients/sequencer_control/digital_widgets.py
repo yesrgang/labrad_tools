@@ -106,9 +106,21 @@ class NameBox(QtGui.QLabel):
         self.setText(loc+': '+name)
         self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter  )
         self.name = name
+        self.off_color = '#ffffff'
+        self.auto_color = '#dddddd'
 
     def mousePressEvent(self, x):
         self.clicked.emit()
+
+    def displayModeState(self, x):
+        if x['mode'] == 'manual':
+            if x['manual_state']:
+                self.setStyleSheet('QWidget {background-color: %s}' % self.on_color)
+            else:
+                self.setStyleSheet('QWidget {background-color: %s}' % self.off_color)
+        else:
+            self.setStyleSheet('QWidget {background-color: %s}' % self.auto_color)
+
 
 class DigitalNameColumn(QtGui.QWidget):
     def __init__(self, channels, config):
@@ -126,6 +138,7 @@ class DigitalNameColumn(QtGui.QWidget):
             if not i%16 and i != 0:
                 self.layout.addWidget(Spacer(self.config))
             self.layout.addWidget(self.labels[nl])
+            self.labels[nl].on_color = self.config.digital_colors[i%len(self.config.digital_colors)]
         self.layout.addWidget(QtGui.QWidget())
         self.setLayout(self.layout)
 

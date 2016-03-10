@@ -131,6 +131,9 @@ class Sequencer(QtGui.QWidget):
         dserver = yield self.cxn.get_server(self.digital_servername)
         dc = yield dserver.get_channels()
         self.digital_channels = json.loads(dc)
+        yield dserver.signal__update(self.config.digital_update_id)
+        yield dserver.addListener(listener=self.update_digital,
+            source=None, ID=self.digital_update_id)
         tc = yield dserver.get_timing_channel()
         self.timing_channel = json.loads(tc)
         self.config.timing_channel = json.loads(tc)
@@ -149,6 +152,7 @@ class Sequencer(QtGui.QWidget):
             + [(nameloc, [0]) for nameloc in self.digital_channels] 
             + [(self.timing_channel, [1])])
         self.setSequence(self.default_sequence)
+        yield dserver.notify_listeners()
 
     def populate(self):
         self.loadSaveRun = LoadSaveRun()
@@ -286,7 +290,8 @@ class Sequencer(QtGui.QWidget):
             b.dlt.clicked.connect(self.dltColumn(i))
 
         for l in self.digitalSequencer.nameColumn.labels.values():
-            l.clicked.connect(self.openDigitalManual(l.nameloc))
+            #l.clicked.connect(self.openDigitalManual(l.nameloc))
+            l.clicked.connect(self.onDigitalNameClick(l.nameloc))
 
         for l in self.analogSequencer.nameColumn.labels.values():
             l.clicked.connect(self.editAnalogVoltage(l.nameloc))
@@ -305,6 +310,23 @@ class Sequencer(QtGui.QWidget):
             widget.move(pos)
         return odm
 
+    def onDigitalNameClick(self, channel_name):
+        channel_name = str(channel_name)
+        @inlineCallbacks
+        def odnc():
+            if QtGui.qApp.mouseButtons() & QtCore.Qt.RightButton:
+                server = yield self.cxn.get_server(self.digital_servername)
+                mode = yield server.channel_mode(channel_name)
+                if mode == 'manual':
+                    yield server.channel_mode(channel_name, 'auto')
+                else:
+                    yield server.channel_mode(channel_name, 'manual')
+            elif QtGui.qApp.mouseButtons() & QtCore.Qt.LeftButton:
+                server = yield self.cxn.get_server(self.digital_servername)
+                state = yield server.channel_manual_state(channel_name)
+                yield server.channel_manual_state(channel_name, not state)
+        return odnc
+
     def editAnalogVoltage(self, channel_name):
     	@inlineCallbacks
         def eav():
@@ -315,11 +337,6 @@ class Sequencer(QtGui.QWidget):
                 self.setSequence(sequence)
             conductor = yield self.cxn.get_server(self.conductor_servername)
             yield conductor.removeListener(listener=ave.receive_parameters, ID=ave.config.conductor_update_id)
-            # remove comments if memory hog
-            #ave.setParent(None)
-            #ave.deleteLater()
-	        #ave = None
-	        #gc.collect()
         return eav
 
     def adjustForDVScroll(self):
@@ -381,14 +398,19 @@ class Sequencer(QtGui.QWidget):
     @inlineCallbacks
     def getSequence_paramaters(self):
         conductor = yield self.cxn.get_server(self.conductor_servername)
-	sp = yield conductor.setSequence_parameters()
-	self.sequence_parameters = json.loads(sp)
+        sp = yield conductor.setSequence_parameters()
+        self.sequence_parameters = json.loads(sp)
 
     @inlineCallbacks
     def update_parameters(self, c, signal):
         conductor = yield self.cxn.get_server(self.conductor_servername)
         plottable_sequence = yield conductor.evaluate_sequence_parameters(json.dumps(self.getSequence()))
-	self.analogSequencer.displaySequence(json.loads(plottable_sequence)) 
+        self.analogSequencer.displaySequence(json.loads(plottable_sequence)) 
+    
+    def update_digital(self, c, signal):
+        signal = json.loads(signal)
+        for l in self.digitalSequencer.nameColumn.labels.values():
+            l.displayModeState(signal[l.nameloc])
 
     @inlineCallbacks
     def displaySequence(self, sequence):
@@ -458,6 +480,7 @@ class SequencerConfig(object):
         self.conductor_servername = 'yesr20_conductor'
         self.sequence_directory = lambda: 'Z:\\SrQ\\data\\{}\\sequences\\'.format(time.strftime('%Y%m%d'))
         self.conductor_update_id = 689222
+        self.digital_update_id = 689223
         self.spacer_width = 65
         self.spacer_height = 15
         self.namecolumn_width = 130

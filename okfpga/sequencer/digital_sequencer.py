@@ -30,7 +30,7 @@ class DigitalSequencerServer(LabradServer):
         LabradServer.__init__(self)
         self.config_name = config_name
         self.load_configuration()
-	self.update = Signal(self.update_id, 'signal: update', 's')
+        self.update = Signal(self.update_id, 'signal: update', 's')
 
     def load_configuration(self):
         config = __import__(self.config_name).DigitalSequencerConfig()
@@ -216,7 +216,7 @@ class DigitalSequencerServer(LabradServer):
     @setting(8, 'notify listeners')
     def notify_listeners(self, c):
         d = {}
-	for b in self.boards.values():
+        for b in self.boards.values():
             for c in b.channels:
                 d[c.key] = c.__dict__
         self.update(json.dumps(d))

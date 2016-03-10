@@ -39,36 +39,25 @@ class Agilent34980AWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def read_active_channels(self):
         values = []
-	active_channels = [address for address, channel in sorted(self.channels.items()) if channel.is_active]
-	ac_str = str(active_channels)[1:-1].replace("'", "").replace(' ', '')
-	print ac_str
-	try:
+        active_channels = [address for address, channel in sorted(self.channels.items()) if channel.is_active]
+        ac_str = str(active_channels)[1:-1].replace("'", "").replace(' ', '')
+        try:
             ans = yield self.query('meas? ' + '(@{})'.format(ac_str))
         except T.Error as e:
             print e.message
-	    ans = ''
-        print 'answer: ', ans
-	ans_list = eval('['+ans+']')
-	values = [float(a) for a in ans_list]
-#        for address, channel in self.channels.items():
-#            if channel.is_active:
-#                try:
-#                    ans = yield self.query(channel.query_string + '(@{})'.format(str(address)))
-#                except T.Error as e:
-#                    print 'timeout error. can we just ignore this?'
-#		    print e.message
-#		    returnValue([])
-#                value = channel.a2v(ans)
-#                values.append((channel.name, value))
+            ans = ''
+        ans_list = eval('['+ans+']')
+        values = [float(a) for a in ans_list]
         returnValue(zip(sorted(self.channels.keys()), values))
     
     @inlineCallbacks
     def measure_channel(self, channel_name):
         for address, channel in self.channels.items():
-            if channel.name is channel_name:
+            if channel.name == channel_name:
                 ans = yield self.query(channel.query_string + '(@{})'.format(str(address)))
+                print ans
                 value = channel.a2v(ans)
-        returnValue(value)
+                returnValue(value)
 
 
 class Agilent34980AServer(GPIBManagedServer):
