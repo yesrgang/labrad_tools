@@ -9,6 +9,15 @@ class ServerConfig(object):
 	self.default_current = 157.0
 	self.ramp_duration = 3.0
 	self.ramp_points = 30
-	
 	self.voltage_range = (0., 100.)
+
+        self.digital_lock_period = 5 # [s]
+        self.get_dmm_str = "yield self.client._34980a.measure_channel('Blue Spec. Err.')"
+        self.init_dmm_str = "yield self.client._34980a.select_device_by_name('srq monitor')"
+        self.pid_sampling_interval = self.digital_lock_period
+        self.pid_prop_gain = -5e-2
+        self.pid_int_gain = 5e-2
+        self.pid_min_max = (69, 72)
+
+
 

@@ -18,6 +18,7 @@ timeout = 20
 
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet import reactor
 from time import sleep
 import numpy as np
 import ctypes as c
@@ -28,12 +29,26 @@ class TLB6700Server(LabradServer):
 
     def __init__(self, configuration):
         LabradServer.__init__(self)
-        self.load_configuration(configuration)
+        
         self.update = Signal(self.update_id, 'signal: update', 's')
+        self.digital_lock_state = False
+        self.digital_lock_delayed_call = None
+        
+        self.load_configuration(configuration)
+        self.init_pid()
+
 
     def load_configuration(self, configuration):
         for key, value in configuration.__dict__.items():
             setattr(self, key, value)
+
+    def init_pid(self):
+        self.pid = PID(
+            sampling_interval=self.pid_sampling_interval,
+            prop_gain=self.pid_prop_gain,
+            int_gain=self.pid_int_gain,
+            miin_max=self.pid_min_max,
+            )
 
     def initServer(self):
         self.dll = c.WinDLL(self.dll_filename)
@@ -110,6 +125,31 @@ class TLB6700Server(LabradServer):
     def get_configuration(self, c):
         values = {'diode_current_range': self.current_range, 'piezo_voltage_range': self.voltage_range}
 	return json.dumps(values)
+
+    @setting(6, 'digital lock state', state='b', returns='b')
+    def set_digital_lock_state(self, c, state=None):
+        if state is not None:
+            self.pid.offset = self.piezo_voltage(None)
+            self.digital_lock_state = state
+            if state:
+                yield self.tick_digital_lock()
+            elif hasattr(self.digital_lock_delayed_call, 'cancel'):
+                self.digital_lock_delayed_call.cancel()
+        return self.digital_lock_state
+    
+    @inlineCallbacks
+    def tick_digital_lock(self):
+        try:
+            error = eval(self.get_dmm_str)
+        except labrad.errors.DeviceNotSelectedError:
+            eval(self.init_dmm_str)
+            error = eval(self.get_dmm_str)
+        piezo_voltage = self.pid.tick(error)
+        yield self.piezo_voltage(None, piezo_voltage)
+        if self.digital_lock_state:
+            self.digital_lock_delayed_call = reactor.callLater(self.digital_lock_period, self.tick_digital_lock)
+
+
     
 if __name__ == "__main__":
     configuration = __import__('blue_master_config').ServerConfig()
