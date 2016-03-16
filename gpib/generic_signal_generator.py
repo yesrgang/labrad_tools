@@ -23,10 +23,6 @@ from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from twisted.internet.defer import inlineCallbacks, returnValue
 from influxdb import InfluxDBClient
 
-#STATE_ID = 698013
-#FREQUENCY_ID = 698014
-#POWER_ID = 698015
-#
 class GenericSignalGeneratorWrapper(GPIBDeviceWrapper):
     def initialize(self):
         pass
@@ -146,10 +142,3 @@ class GenericSignalGeneratorServer(GPIBManagedServer):
     def get_system_configuration(self, c):
         conf = self.load_configuration()
         return str(conf)
-
-
-#if __name__ == '__main__':
-#    configuration_name = 'hpetc_signal_generator_config'
-#    __server__ = GenericSignalGeneratorServer(configuration_name)
-#    from labrad import util
-#    util.runServer(__server__)
