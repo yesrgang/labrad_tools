@@ -90,7 +90,7 @@ class Agilent34980AServer(GPIBManagedServer):
         dev = self.selectedDevice(c)
         dev.set_configuration(self.instruments[name])
         dev.instrument_name = name
-	dev.timeout = T.Value(10, 's')
+        dev.timeout = T.Value(10, 's')
         returnValue(str(self.instruments[name].__dict__))
     
     def _load_instruments(self):
