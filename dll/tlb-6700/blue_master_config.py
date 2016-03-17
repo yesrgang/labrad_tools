@@ -15,9 +15,9 @@ class ServerConfig(object):
         self.get_dmm_str = "self.client._34980a.measure_channel('Blue Spec. Err.')"
         self.init_dmm_str = "self.client._34980a.select_device_by_name('srq monitor')"
         self.pid_sampling_interval = self.digital_lock_period
-        self.pid_prop_gain = -5e-2
-        self.pid_int_gain = 5e-2
-        self.pid_min_max = (69, 72)
+        self.pid_prop_gain = .01
+        self.pid_int_gain = .1
+        self.pid_min_max = (65, 82)
 
 
 

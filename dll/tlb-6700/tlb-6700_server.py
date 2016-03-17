@@ -20,6 +20,7 @@ import json
 import ctypes as c
 import numpy as np
 from time import sleep
+from collections import deque
 
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet import reactor
@@ -114,7 +115,7 @@ class TLB6700Server(LabradServer):
     @setting(3, 'laser state', state='i', returns='i')
     def laser_state(self, c, state=None):
         if state is not None:
-            start_current = self.diode_current(None)
+            start_current = yield self.diode_current(None)
             if state: # turn on laser
                 self.send('output:state {}'.format(int(state)))
                 stop_current = self.default_current
@@ -123,7 +124,7 @@ class TLB6700Server(LabradServer):
             currents = np.linspace(start_current, stop_current, self.ramp_points)
             for cur in currents:
                 sleep(float(self.ramp_duration)/float(self.ramp_points))
-                self.diode_current(None, cur)
+                yield self.diode_current(None, cur)
             self.send('output:state {}'.format(int(state)))
         self.state = int(self.send('output:state?'))
         if state is not None:
@@ -150,10 +151,25 @@ class TLB6700Server(LabradServer):
             self.digital_lock_state = state
             if state:
                 yield self.tick_digital_lock()
-            elif hasattr(self.digital_lock_delayed_call, 'cancel'):
-                self.digital_lock_delayed_call.cancel()
+            else:
+                self.pid.rbuffer = deque([0, 0, 0], maxlen=3)
+                if hasattr(self.digital_lock_delayed_call, 'cancel'):
+                    self.digital_lock_delayed_call.cancel()
         yield self.notify_listeners()
         returnValue(self.digital_lock_state)
+
+    @setting(7, 'set digital lock gains', gains='s', returns='s')
+    def set_digital_lock_gains(self, c, gains=None):
+        if gains is not None:
+            gains = json.loads(gains)
+            if gains.has_key('p'):
+                self.pid.prop_gain = gains['p']
+            if gains.has_key('i'):
+                self.pid.int_gain = gains['i']
+            if gains.has_key('d'):
+                self.pid.diff_gain = gains['d']
+            self.pid.update_filter_coefficients()
+        return json.dumps({'p': self.pid.prop_gain, 'i': self.pid.int_gain, 'd': self.pid.diff_gain})
     
     @inlineCallbacks
     def tick_digital_lock(self):

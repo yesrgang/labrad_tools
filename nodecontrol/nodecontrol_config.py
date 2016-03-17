@@ -12,6 +12,7 @@ node_dict = {
         'PRO8000',
         'Serial Server',
         '6DDS',
+        '34980A',
         'TLB-6700',
         'DS345',
         'E4432B',

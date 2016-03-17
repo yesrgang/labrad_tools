@@ -61,6 +61,8 @@ class PID:
         w.append(x - a_1*w[-1] - a_2*w[-2])
         y  = b_0*w[-1] + b_1*w[-2] + b_2*w[-3]
 
+        print x, y
+
         # offset
         y += self.offset
 
