@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = PRO8000
+name = pro8000
 version = 1.0
 description = 
-instancename = PRO8000
+instancename = pro8000
 
 [startup]
 cmdline = %PYTHON% %FILE%

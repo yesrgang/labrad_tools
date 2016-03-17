@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = N5181A
+name = n5181a
 version = 1.0
 description = 
-instancename = N5181A
+instancename = n5181a
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -28,7 +28,7 @@ class ServerConfig(object):
         self.state_id = 698013 
 	self.frequency_id = 698014
 	self.amplitude_id = 698015
-        self.name = 'N5181A'
+        self.name = 'n5181a'
         self.deviceName = 'Agilent Technologies N5181A'
     	self.instruments = {
         'beta': DeviceConfiguration(
@@ -50,7 +50,7 @@ class ServerConfig(object):
                     "fields": {"value": f}}]
 
 if __name__ == '__main__':
-    configuration_name = 'n5181a_server'
+    configuration_name = 'n5181a'
     __server__ = HPSignalGeneratorServer(configuration_name)
     from labrad import util
     util.runServer(__server__)
