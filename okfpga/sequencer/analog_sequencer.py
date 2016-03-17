@@ -259,22 +259,20 @@ class AnalogSequencerServer(LabradServer):
     
     @setting(11, 'fix sequence keys', sequence='s', returns='s')
     def fix_sequence_keys(self, c, sequence):
-        sequence =  Sequence(sequence)
+        sequence = json.loads(sequence)
         sequence_keyfix =  self._fix_sequence_keys(sequence)
-        return sequence_keyfix.dump()
+        return json.dumps(sequence_keyfix)
     
     def _fix_sequence_keys(self, sequence):
         # take sequence name@loc to configuration name@loc
-        sequence_keyfix = {}
         for key in sequence.keys():
             name, loc =key.split('@')
 	    for board in self.boards.values():
                 for c in board.channels:
-                    if c.name == name:
-                        sequence_keyfix[c.key] = sequence[key]
-                    elif c.loc == loc:
-                        sequence_keyfix.set_default(c.key, sequence[key])
-        return Sequence(sequence_keyfix)
+                    if c.loc == loc:
+                        s = sequence.pop(key)
+                        sequence.update({c.key: s})
+        return sequence
 
 
 if __name__ == "__main__":

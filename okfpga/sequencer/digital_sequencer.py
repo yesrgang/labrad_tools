@@ -223,23 +223,34 @@ class DigitalSequencerServer(LabradServer):
 
     @setting(9, 'fix sequence keys', sequence='s', returns='s')
     def fix_sequence_keys(self, c, sequence):
-        sequence =  Sequence(sequence)
+        sequence = json.loads(sequence)
         sequence_keyfix =  self._fix_sequence_keys(sequence)
-        return sequence_keyfix.dump()
+        return json.dumps(sequence)
+    
+#    def _fix_sequence_keys(self, sequence):
+#        # take sequence name@loc to configuration name@loc
+#        sequence_keyfix = {}
+#        for key in sequence.keys():
+#            name, loc =key.split('@')
+#	    for board in self.boards.values():
+#                for c in board.channels:
+#                    if c.name == name:
+#                        sequence_keyfix[c.key] = sequence[key]
+#                    elif c.loc == loc:
+#                        sequence_keyfix.set_default(c.key, sequence[key])
+#	sequence_keyfix[self.timing_channel.name] = sequence[self.timing_channel.name]
+#        return Sequence(sequence_keyfix)
     
     def _fix_sequence_keys(self, sequence):
         # take sequence name@loc to configuration name@loc
-        sequence_keyfix = {}
         for key in sequence.keys():
             name, loc =key.split('@')
 	    for board in self.boards.values():
                 for c in board.channels:
-                    if c.name == name:
-                        sequence_keyfix[c.key] = sequence[key]
-                    elif c.loc == loc:
-                        sequence_keyfix.set_default(c.key, sequence[key])
-	sequence_keyfix[self.timing_channel.name] = sequence[self.timing_channel.name]
-        return Sequence(sequence_keyfix)
+                    if c.loc == loc:
+                        s = sequence.pop(key)
+                        sequence.update({c.key: s})
+        return sequence
 
 if __name__ == "__main__":
     config_name = 'digital_sequencer_config'

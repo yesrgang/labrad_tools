@@ -365,7 +365,7 @@ class Sequencer(QtGui.QWidget):
         filepath = QtGui.QFileDialog().getOpenFileName(directory=self.sequence_directory())
         if filepath:
             self.loadSaveRun.locationBox.setText(filepath)
-            self.load_sequence(filepath)
+            self.loadSequence(filepath)
     
     def saveSequence(self):
         filename = self.loadSaveRun.locationBox.text().split('/')[-1]
@@ -381,24 +381,27 @@ class Sequencer(QtGui.QWidget):
         self.saveSequence()
         sequence = json.dumps(self.getSequence())
         conductor = yield self.cxn.get_server(self.conductor_servername)
-        yield conductor.load_sequence(sequence)
-
-    def load_sequence(self, filepath):
+        yield conductor.loadSequence(sequence)
+    
+    @inlinecallbacks
+    def loadSequence(self, filepath):
         with open(filepath, 'r') as infile:
             sequence = json.load(infile)
         if sequence.has_key('sequence'):
             sequence = sequence['sequence']
             filepath = self.sequence_directory() + filepath.split('/')[-1].split('#')[0]
+        sequence = yield self.conductor.fix_sequence_keys(sequence)
         self.setSequence(sequence)
         self.loadSaveRun.locationBox.setText(filepath)
 
     def setSequence(self, sequence):
+        self.analogSequencer.setSequence(sequence)
         self.displaySequence(sequence)
 
     @inlineCallbacks
-    def getSequence_paramaters(self):
+    def get_sequence_paramaters(self):
         conductor = yield self.cxn.get_server(self.conductor_servername)
-        sp = yield conductor.setSequence_parameters()
+        sp = yield conductor.set_sequence_parameters()
         self.sequence_parameters = json.loads(sp)
 
     @inlineCallbacks
@@ -416,7 +419,6 @@ class Sequencer(QtGui.QWidget):
     def displaySequence(self, sequence):
         conductor = yield self.cxn.get_server(self.conductor_servername)
         plottable_sequence = yield conductor.evaluate_sequence_parameters(json.dumps(sequence))
-        self.analogSequencer.setSequence(sequence)
         self.analogSequencer.displaySequence(json.loads(plottable_sequence))
         self.digitalSequencer.displaySequence(sequence)
         self.durationRow.displaySequence(sequence)
@@ -424,12 +426,21 @@ class Sequencer(QtGui.QWidget):
         self.setSizes()
 
     def getSequence(self):
-        durations = [b.value() for b in self.durationRow.boxes if not b.isHidden()]
+        durations = [b.value() for b in self.durationRow.boxes 
+                if not b.isHidden()]
         timing_sequence = {self.timing_channel: durations}
-        digital_logic = [c.getLogic() for c in self.digitalSequencer.array.columns if not c.isHidden()]
-        digital_sequence = {key: [dl[key] for dl in digital_logic] for key in self.digital_channels}
-        analog_sequence = {key: [dict(s.items() + {'dt': dt}.items()) for s, dt in zip(self.analogSequencer.sequence[key], durations)] for key in self.analog_channels}
-        sequence = dict(digital_sequence.items() + analog_sequence.items() + timing_sequence.items())
+        digital_logic = [c.getLogic() 
+                for c in self.digitalSequencer.array.columns 
+                if not c.isHidden()]
+        digital_sequence = {key: [dl[key] 
+                for dl in digital_logic] 
+                for key in self.digital_channels}
+        analog_sequence = {key: [dict(s.items() + {'dt': dt}.items()) 
+                for s, dt in zip(self.analogSequencer.sequence[key], durations)]
+                for key in self.analog_channels}
+        sequence = dict(digital_sequence.items() 
+                        + analog_sequence.items() 
+                        + timing_sequence.items())
         return sequence
     
     def addColumn(self, i):

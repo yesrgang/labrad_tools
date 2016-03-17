@@ -211,17 +211,26 @@ class ConductorServer(LabradServer):
 
     @setting(9, 'load sequence', sequence='s', returns='s')
     def load_sequence(self, c, sequence):
-        sequence_keyfix = {}
-        for sequencer in self.sequencers:
-            server = getattr(self.client, sequencer)
-            s = yield server.fix_sequence_keys(sequence)
-            sequence_keyfix.update(json.loads(s))
+#        sequence_keyfix = {}
+#        for sequencer in self.sequencers:
+#            server = getattr(self.client, sequencer)
+#            s = yield server.fix_sequence_keys(sequence)
+#            sequence_keyfix.update(json.loads(s))
+        sequence_keyfix = yield self.fix_sequence_keys(sequence)
         self.sequence = Sequence(sequence_keyfix)
         returnValue(self.sequence.dump())
 
     @setting(10, 'get sequence', returns='s')
     def get_sequence(self, c):
         return self.sequence.dump()
+
+    @setting(11, 'fix sequence keys', sequence='s', returns='s')
+    def fix_sequence_keys(self, c, sequence):
+        for sequencer in self.sequencers:
+            server = getattr(self.client, sequencer)
+            ans = yield server.fix_sequence_keys(json.dumps(sequence))
+            sequence = json.loads(ans)
+        returnValue(json.dumps(sequence))
     
     def write_to_db(self):
         reactor.callLater(120, self.write_to_db)
