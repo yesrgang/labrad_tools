@@ -73,7 +73,7 @@ class DigitalSequencerServer(LabradServer):
         return int(board.clk_frequency*time)
 
     def make_sequence(self, board, sequence):
-        sequence = self._fix_sequence_keys(sequence)
+        #sequence = self._fix_sequence_keys(sequence)
 
         # make sure trigger happens on first run
         for c in board.channels:

@@ -1,3 +1,23 @@
+"""
+### BEGIN NODE INFO
+[info]
+name = ds345
+version = 1.0
+description = 
+instancename = ds345
+
+[startup]
+cmdline = %PYTHON% %FILE%
+timeout = 20
+
+[shutdown]
+message = 987654321
+timeout = 5
+### END NODE INFO
+"""
+
+from srs_signal_generator import SRSSignalGeneratorServer
+
 class DeviceConfiguration(object):
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
@@ -8,7 +28,7 @@ class ServerConfig(object):
         self.state_id = 698016 
         self.frequency_id = 698017
         self.amplitude_id = 698018
-        self.name = 'DS345'
+        self.name = 'ds345'
         self.deviceName = 'StanfordResearchSystems DS345'
     	self.instruments = {
             'Spin Pol. AOM': DeviceConfiguration(
@@ -29,4 +49,8 @@ class ServerConfig(object):
                 amplitude_range=(-36, 20),
             ),
         }
-                       
+if __name__ == '__main__':
+    configuration_name = 'ds345'
+    __server__ = SRSSignalGeneratorServer(configuration_name)
+    from labrad import util
+    util.runServer(__server__)  

@@ -179,7 +179,7 @@ class ConductorServer(LabradServer):
                     try:
                         dqs = self.dbquerystr.format(str(x))
                         from_db = self.dbclient.query(dqs)
-                        print 'dbresult', from_db
+                        print 'taking {} from db'.format(x)
                         value = from_db.get_points().next()['value']
                         self.sequence_parameters[x] = value
                     except:
@@ -216,7 +216,7 @@ class ConductorServer(LabradServer):
 #            server = getattr(self.client, sequencer)
 #            s = yield server.fix_sequence_keys(sequence)
 #            sequence_keyfix.update(json.loads(s))
-        sequence_keyfix = yield self.fix_sequence_keys(sequence)
+        sequence_keyfix = yield self.fix_sequence_keys(c, sequence)
         self.sequence = Sequence(sequence_keyfix)
         returnValue(self.sequence.dump())
 
@@ -226,6 +226,7 @@ class ConductorServer(LabradServer):
 
     @setting(11, 'fix sequence keys', sequence='s', returns='s')
     def fix_sequence_keys(self, c, sequence):
+        sequence = json.loads(sequence)
         for sequencer in self.sequencers:
             server = getattr(self.client, sequencer)
             ans = yield server.fix_sequence_keys(json.dumps(sequence))

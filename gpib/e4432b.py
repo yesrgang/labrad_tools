@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = E4432B
+name = e4432b
 version = 1.0
 description = 
-instancename = E4432B
+instancename = e4432b
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -28,7 +28,7 @@ class ServerConfig(object):
         self.state_id = 698013 
 	self.frequency_id = 698014
 	self.amplitude_id = 698015
-        self.name = 'E4432B'
+        self.name = 'e4432b'
         self.deviceName = 'Hewlett-Packard ESG-D3000B'
     	self.instruments = {
         'alpha': DeviceConfiguration(
@@ -50,7 +50,7 @@ class ServerConfig(object):
                     "fields": {"value": f}}]
 
 if __name__ == '__main__':
-    configuration_name = 'e4432b_server'
+    configuration_name = 'e4432b'
     __server__ = HPSignalGeneratorServer(configuration_name)
     from labrad import util
     util.runServer(__server__)

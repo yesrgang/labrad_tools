@@ -381,17 +381,18 @@ class Sequencer(QtGui.QWidget):
         self.saveSequence()
         sequence = json.dumps(self.getSequence())
         conductor = yield self.cxn.get_server(self.conductor_servername)
-        yield conductor.loadSequence(sequence)
+        yield conductor.load_sequence(sequence)
     
-    @inlinecallbacks
+    @inlineCallbacks
     def loadSequence(self, filepath):
         with open(filepath, 'r') as infile:
             sequence = json.load(infile)
         if sequence.has_key('sequence'):
             sequence = sequence['sequence']
             filepath = self.sequence_directory() + filepath.split('/')[-1].split('#')[0]
-        sequence = yield self.conductor.fix_sequence_keys(sequence)
-        self.setSequence(sequence)
+        conductor = yield self.cxn.get_server(self.conductor_servername)
+        sequence = yield conductor.fix_sequence_keys(json.dumps(sequence))
+        self.setSequence(json.loads(sequence))
         self.loadSaveRun.locationBox.setText(filepath)
 
     def setSequence(self, sequence):
