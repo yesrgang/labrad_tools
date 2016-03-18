@@ -36,7 +36,7 @@ class LDC340Control(QtGui.QGroupBox):
     @inlineCallbacks
     def get_server_configuration(self):
         server = yield self.cxn.get_server(self.servername)
-        serverconf_str = yield server.get_configuration()
+        serverconf_str = yield server.select_device_by_name(self.name)
         for key, value in json.loads(serverconf_str).items():
             setattr(self, key, value)
 
@@ -146,7 +146,7 @@ class ControlConfig(object):
         self.update_id = 461027
         self.update_time = 100 # [ms]
 
-        self.current_units = [(0, 'mA')]
+        self.current_units = [(-3, 'mA')]
         self.current_digits = 2
         self.spinbox_width = 80
 
