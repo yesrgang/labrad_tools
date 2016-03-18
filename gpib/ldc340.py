@@ -109,10 +109,12 @@ class LDC340Server(GPIBManagedServer):
     @setting(9, 'select device by name', name='s', returns='s')    
     def select_device_by_name(self, c, name=None):
         if name is not None:
-	    gpib_device_id = self.device_configurations[name].gpib_device_id
+            conf = self.device_configurations[name]
+            gpib_device_id = conf.gpib_device_id
             yield self.select_device(c, gpib_device_id)
             dev = self.selectedDevice(c)
-	    confd = self.device_configurations[name].__dict__
+            dev.set_configuration(conf)
+            confd = self.device_configurations[name].__dict__
             returnValue(json.dumps(confd))
         else:
             returnValue(json.dumps(self.device_configurations.keys()))

@@ -22,6 +22,6 @@ node_dict = {
         'digital_sequencer',
         'analog_sequencer',
         'conductor',
-        'receiver',
+        #'receiver',
     ],
 }
