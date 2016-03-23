@@ -13,7 +13,7 @@ class LDC340Config(object):
                 gpib_device_id='yesr10 GPIB Bus - GPIB0::10',
                 current_range=(0, .1),
                 dial_steps=20,
-                def_current=.08,
+                def_current=.095,
                 update_parameters=['current', 'power', 'state'],
             ),
         }
