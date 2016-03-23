@@ -1,2 +1,4 @@
 *.pyc
 *~
+Errors.Log
+LabRAD.ini
