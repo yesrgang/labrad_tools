@@ -7,4 +7,5 @@ start pythonw clients\pro8000_control.py
 start pythonw clients\spin_aom_control.py
 start pythonw clients\1064_aom_control.py
 start pythonw clients\813_aom_control.py
-
+start pythonw clients\repumper_control.py
+start python abstract\receiver.py

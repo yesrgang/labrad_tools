@@ -17,7 +17,7 @@ else:
             print '\nWorking on {} \n '.format(node)
             cxn.servers[node].refresh_servers()
         #if node server is up, start all possible servers on it that are not already running
-            running_servers = np.array(cxn.servers[node].running_servers().asarray)
+            running_servers = np.array(list(cxn.servers[node].running_servers()))
             for server in node_dict[node]:
                 if server in running_servers: 
                     print server + ' is already running'
