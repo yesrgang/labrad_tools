@@ -87,7 +87,7 @@ class SequenceParameterControl(QtGui.QGroupBox):
         yield server.signal__update(self.update_id, context=self.context)
         yield server.addListener(listener=self.receive_update, source=None,
                                  ID=self.update_id, context=self.context)
-	yield server.notify_listeners()
+        yield server.notify_listeners()
 
 
     def disable(self):

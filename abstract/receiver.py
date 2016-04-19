@@ -40,10 +40,12 @@ class ReceiverServer(LabradServer):
         data = {}
         analysis = json.loads(string[1:-1].replace("'",'"'))
         data['analysis'] = analysis
+#        print analysis
         params = yield self.client.yesr20_conductor.get_previous_parameters()
         data['parameters'] = json.loads(params)
         data['timestamp'] = time.time()
         yield self._record(data)
+#        print data
         returnValue(data)
     
     @inlineCallbacks 

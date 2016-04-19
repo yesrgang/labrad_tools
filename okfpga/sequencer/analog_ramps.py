@@ -12,6 +12,14 @@ def G(t1, t2):
     """
     return lambda t: H(t2-t) - H(t1-t) 
 
+def round_dt(dt):
+    return float('{0:.7f}'.format(dt))
+#    return dt
+
+def round_dv(dv):
+    return float('{0:.7f}'.format(dv))
+#    return dv
+
 def lin_ramp(p):
     """
     returns continuous finction defined over ['ti', 'tf'].
@@ -109,7 +117,7 @@ class ExpRamp(object):
         """
         p = self.p
         seq = exp_ramp(p, ret_seq=True)
-        return [{'dt': s['tf']-s['ti'], 'dv': s['vf']-s['vi']} for s in seq]
+        return [{'dt': round_dt(s['tf']-s['ti']), 'dv': round_dv(s['vf']-s['vi'])} for s in seq]
 
 class SExpRamp(object):
     required_parameters = [

@@ -26,7 +26,7 @@ class AnalogSequencerConfig(object):
     def __init__(self):
         self.name = '%LABRADNODE%_analog_sequencer'
         self.update_id = 698023
-	self.mode = 'idle'
+        self.mode = 'idle'
         self.boards = {
             'E': DACBoard(
                 device_id='sr2 dac1',
@@ -39,8 +39,8 @@ class AnalogSequencerConfig(object):
                     DACChannel(loc='E05', name='MOT Coil', mode='auto', manual_voltage=0),
                     DACChannel(loc='E06', name='HODT Intensity', mode='auto', manual_voltage=0),
                     DACChannel(loc='E07', name='VODT Intensity', mode='auto', manual_voltage=0),
-		    ],
-                 ),
+                ],
+            ),
             'F': DACBoard(
                 device_id='srq analog 2',
                 channels=[
@@ -52,6 +52,19 @@ class AnalogSequencerConfig(object):
                     DACChannel(loc='F05', name='Beta Phase Lock', mode='auto', manual_voltage=0),
                     DACChannel(loc='F06', name='Spin Pol. Intensity', mode='auto', manual_voltage=0),
                     DACChannel(loc='F07', name='DACF07', mode='auto', manual_voltage=0),
-		    ],
-                ),
-            }
+                ],
+            ),
+            'G': DACBoard(
+                device_id='srq analog 3',
+                channels=[
+                    DACChannel(loc='G00', name='DACG00', mode='auto', manual_voltage=0),
+                    DACChannel(loc='G01', name='DACG01', mode='auto', manual_voltage=0),
+                    DACChannel(loc='G02', name='DACG02', mode='auto', manual_voltage=0),
+                    DACChannel(loc='G03', name='DACG03', mode='auto', manual_voltage=0),
+                    DACChannel(loc='G04', name='DACG04', mode='auto', manual_voltage=0),
+                    DACChannel(loc='G05', name='DACG05', mode='auto', manual_voltage=0),
+                    DACChannel(loc='G06', name='DACG06', mode='auto', manual_voltage=0),
+                    DACChannel(loc='G07', name='DACF07', mode='auto', manual_voltage=0),
+                ],
+            ),
+        }

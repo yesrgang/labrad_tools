@@ -141,8 +141,10 @@ class AnalogSequencerServer(LabradServer):
             ramps = RampMaker(sequence[c.key]).get_programmable()
             T = 0
             for r in ramps:
+                #T = float('{0:.7f}'.format(T)) # round to ns
                 unsorted_ramps.append((T, c.loc, r))
-                T += r['dt']
+                #T += r['dt']
+                T += self.time_to_ticks(board, r['dt'])
 
         # order ramps by when the happen, then physical location on board
         sorted_ramps = sorted(unsorted_ramps)
@@ -152,6 +154,10 @@ class AnalogSequencerServer(LabradServer):
         for r in sorted_ramps:
             ba += [int(eval(hex(self.ramp_rate(board, r[2]['dv'], r[2]['dt']))) >> i & 0xff) for i in range(0, 16, 8)]
             ba += [int(eval(hex(self.time_to_ticks(board, r[2]['dt']))) >> i & 0xff) for i in range(0, 32, 8)]
+#            dv = float('{0:.3f}'.format(r[2]['dv'])) # round to mV
+#            dt = float('{0:.6f}'.format(r[2]['dt'])) # round to us
+#            ba += [int(eval(hex(self.ramp_rate(board, dv, dt))) >> i & 0xff) for i in range(0, 16, 8)]
+#            ba += [int(eval(hex(self.time_to_ticks(board, dt))) >> i & 0xff) for i in range(0, 32, 8)]
         
         # add dead space
         ba += [0]*24
@@ -264,13 +270,17 @@ class AnalogSequencerServer(LabradServer):
     
     def _fix_sequence_keys(self, sequence):
         # take sequence name@loc to configuration name@loc
+        locs = [key.split('@')[1] for key in sequence.keys()]
+
         for key in sequence.keys():
-            name, loc =key.split('@')
-	    for board in self.boards.values():
+            name, loc = key.split('@')
+            for board in self.boards.values():
                 for c in board.channels:
                     if c.loc == loc:
                         s = sequence.pop(key)
                         sequence.update({c.key: s})
+                    elif c.loc not in locs:
+                        sequence.update({c.key: [{'type': 'lin', 'vf': 0, 'dt': dt} for dt in sequence['digital@T']]})
         return sequence
 
 

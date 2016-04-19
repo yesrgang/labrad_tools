@@ -211,17 +211,26 @@ class ConductorServer(LabradServer):
         previous_parameters.update(self.previous_device_parameters[0])
         return json.dumps(previous_parameters)
 
-    @setting(9, 'load sequence', sequence='s', returns='s')
+    @setting(9, 'get current sequence parameters', returns='s')
+    def get_current_sequence_parameters(self, c):
+        csp = {}
+        for k, v in self.sequence_parameters.items():
+            if type(v).__name__ == 'list':
+                v = v[0]
+            csp[k] = v
+        return json.dumps(csp)
+
+    @setting(11, 'load sequence', sequence='s', returns='s')
     def load_sequence(self, c, sequence):
         sequence_keyfix = yield self.fix_sequence_keys(c, sequence)
         self.sequence = Sequence(sequence_keyfix)
         returnValue(self.sequence.dump())
 
-    @setting(10, 'get sequence', returns='s')
+    @setting(12, 'get sequence', returns='s')
     def get_sequence(self, c):
         return self.sequence.dump()
 
-    @setting(11, 'fix sequence keys', sequence='s', returns='s')
+    @setting(13, 'fix sequence keys', sequence='s', returns='s')
     def fix_sequence_keys(self, c, sequence):
         sequence = json.loads(sequence)
         for sequencer in self.sequencers:
@@ -279,4 +288,7 @@ class ConductorServer(LabradServer):
             print "failed to save parameters to database"
 
 if __name__ == "__main__":
+    from labrad import util
     config_name = 'conductor_config'
+    server = ConductorServer(config_name)
+    util.runServer(server)
