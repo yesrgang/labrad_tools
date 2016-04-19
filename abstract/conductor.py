@@ -95,8 +95,8 @@ class ConductorServer(LabradServer):
         
         give device parameters {device: {parameter: {value: *value}}}
         """
-        for devname, dev in json.loads(device_parameters):
-            for parname, par in dev:
+        for devname, dev in json.loads(device_parameters).items():
+            for parname, par in dev.items():
                 self.device_parameters[devname][parname]['value'] = par['value']
         return self.device_parameters
 
