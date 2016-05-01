@@ -103,6 +103,11 @@ class AG33500BServer(GPIBManagedServer):
                     dev = self.devices[key]
                     dev.set_configuration(conf)
                     dev.set_defaults()
+                    if hasattr(dev, 't_ramp'):
+                        for command in dev.get_counter_frequency:
+                            f = yield eval(command)
+                        yield dev.set_ramp(f, f)
+
 
     @setting(9, 'select device by name', name='s', returns='s')    
     def select_device_by_name(self, c, name):
