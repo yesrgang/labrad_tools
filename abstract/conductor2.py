@@ -198,15 +198,6 @@ class ConductorServer(LabradServer):
             self.in_communication.release()
         returnValue(sequence)
 
-    def do_advance(self, x):
-        """ get next values from current experiment """
-        if type(x).__name__ == 'list':
-            return x.pop(0)
-        elif type(x).__name__ == 'dict':
-            return {k: self.do_advance(v) for k, v in x.items()}
-        else:
-            return x
-
     @setting(9, 'send data', data='s', returns='s')
     def send_data(self, c, data):
         data = json.loads(data)
@@ -251,6 +242,15 @@ class ConductorServer(LabradServer):
             if not type(x2).__name__ == 'list':
                 x2 = [x2]
             return x1 + x2
+
+    def do_advance(self, x):
+        """ get next values from current experiment """
+        if type(x).__name__ == 'list':
+            return x.pop(0)
+        elif type(x).__name__ == 'dict':
+            return {k: self.do_advance(v) for k, v in x.items()}
+        else:
+            return x
 
     @inlineCallbacks
     def advance(self):
