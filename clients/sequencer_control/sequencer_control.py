@@ -392,6 +392,7 @@ class Sequencer(QtGui.QWidget):
             filepath = self.sequence_directory() + filepath.split('/')[-1].split('#')[0]
         conductor = yield self.cxn.get_server(self.conductor_servername)
         sequence = yield conductor.fix_sequence_keys(json.dumps(sequence))
+        print sequence
         self.setSequence(json.loads(sequence))
         self.loadSaveRun.locationBox.setText(filepath)
 
