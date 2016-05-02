@@ -184,7 +184,7 @@ class AnalogVoltageEditor(QtGui.QDialog):
             self.cxn = connection()  
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
-        yield self.get_sequence_parameters()
+#        yield self.get_sequence_parameters()
         yield self.populate()
         self.connect_signals()
 

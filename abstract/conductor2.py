@@ -17,6 +17,7 @@ class ConductorServer(LabradServer):
     update_sp = Signal(698123, 'signal: update_sp', 'b')
     parameters_updated = Signal(698124, 'signal: parameters_updated', 'b')
     def __init__(self, config_name):
+        self.data = {}
         self.experiment_queue = deque([])
         self.experiment = {}
         self.parameters = {}
@@ -24,6 +25,7 @@ class ConductorServer(LabradServer):
         self.parameters_history = deque([])
         self.history = deque([{}], maxlen=5)
         self.devices = {}
+        self.do_save = 0
 
         self.config_name = config_name
         self.load_configuration()
@@ -146,10 +148,8 @@ class ConductorServer(LabradServer):
     @inlineCallbacks
     def evaluate_device_parameters(self):
         for device, parameters in self.devices.items():
-            print device
             for parameter, d in parameters.items():
                 value = self.parameters[device][parameter]
-                print value
                 for update_command in d['update commands']:
                     yield eval(update_command)(value)
 
@@ -207,14 +207,58 @@ class ConductorServer(LabradServer):
         else:
             return x
 
+    @setting(9, 'send data', data='s', returns='s')
+    def send_data(self, c, data):
+        data = json.loads(data)
+        for d in data.values():
+            d['timestamp'] = time.time()
+        self.data.update(data)
+        return json.dumps(data)
+
+    def write_data(self):
+        data = {}
+        update = {}
+        if os.path.isfile(self.data_path):
+            with open(self.data_path, 'r') as infile:
+                data = json.load(infile)
+        else:
+            for data_source in []:
+                self.data.pop(data_source)
+        with open(self.data_path, 'w') as outfile:
+            update['data'] = self.data
+            self.data = {}
+            update['parameters'] = self.parameters
+            if data:
+                updated = self.append_data(data, update)
+            else:
+                updated = update
+            json.dump(updated, outfile)
+
+    def append_data(self, x1, x2):
+        if type(x2).__name__ == 'dict':
+            for k in x2:
+                if not x1.has_key(k):
+                    if type(x2[k]).__name__ == 'dict':
+                        x1[k] = {}
+                    else:
+                        x1[k] = None
+            appended = {k: self.append_data(x1[k], x2[k]) for k in x2}
+            x1.update(appended)
+            return x1
+        else:
+            if not type(x1).__name__ == 'list':
+                x1 = [x1]
+            if not type(x2).__name__ == 'list':
+                x2 = [x2]
+            return x1 + x2
+
     @inlineCallbacks
     def advance(self):
+        do_save = 1
         try:
             if not self.experiment:
                 raise IndexError
             advanced = self.do_advance(self.experiment)
-            print 'advanced!'
-            print advanced
         except IndexError:
             if len(self.experiment_queue):
                 self.experiment = self.experiment_queue.popleft()
@@ -234,7 +278,8 @@ class ConductorServer(LabradServer):
                     self.data_path = data_path(iteration)
             else:
                 advanced = {}
-        
+                do_save = 0
+        self.do_save = do_save
         if advanced.has_key('parameters'):
             parameters = advanced.pop('parameters')
             yield self.update_parameters(None, parameters)
@@ -242,9 +287,12 @@ class ConductorServer(LabradServer):
             self.set_sequence(advanced.pop('sequence'))
         for k, v in advanced.items():
             setattr(self, k, v)
+
     
     @inlineCallbacks
     def run_sequence(self):
+        if self.do_save:
+            self.write_data()
         yield self.advance()
         yield self.evaluate_device_parameters()
         sequence = yield self.program_sequencers()
