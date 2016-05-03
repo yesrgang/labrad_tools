@@ -6,7 +6,7 @@ import numpy as np
 import json
 from client_tools2 import NeatSpinBox
 
-class SequenceParameterRow(QtGui.QWidget):
+class ParameterRow(QtGui.QWidget):
     def __init__(self, configuration):
         QtGui.QDialog.__init__(self)
         self.loadControlConfiguration(configuration)
@@ -31,7 +31,7 @@ class SequenceParameterRow(QtGui.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.layout)
 
-class SequenceParameterControl(QtGui.QGroupBox):
+class ParameterControl(QtGui.QGroupBox):
     hasNewValue = False
     free = True
 
@@ -65,7 +65,7 @@ class SequenceParameterControl(QtGui.QGroupBox):
         yield None
 
     def populateGUI(self):
-        self.parameterRows = [SequenceParameterRow(self.configuration) 
+        self.parameterRows = [ParameterRow(self.configuration) 
                 for i in range(self.numRows)]
 
         self.layout = QtGui.QVBoxLayout()
@@ -80,7 +80,7 @@ class SequenceParameterControl(QtGui.QGroupBox):
     @inlineCallbacks
     def connectSignals(self):
         server = yield self.cxn.get_server(self.servername)
-        yield server.signal__update_sp(self.update_id)
+        yield server.signal__parameters_updated(self.update_id)
         yield server.addListener(listener=self.receive_update, source=None,
                                  ID=self.update_id)
         yield self.cxn.add_on_connect(self.servername, self.reinit)
@@ -98,8 +98,9 @@ class SequenceParameterControl(QtGui.QGroupBox):
     @inlineCallbacks
     def do_update(self):
             server = yield self.cxn.get_server(self.servername)
-            parameters_json = yield server.get_current_sequence_parameters()
-            parameters = json.loads(parameters_json)
+#            parameters_json = yield server.get_current_sequence_parameters()
+            parameters_json = yield server.set_parameters()
+            parameters = json.loads(parameters_json)[self.device]
             for pr in self.parameterRows:
                 parameterName = str(pr.nameBox.text())
                 if parameterName in parameters.keys():
@@ -111,7 +112,9 @@ class SequenceParameterControl(QtGui.QGroupBox):
             name = str(parameterRow.nameBox.text())
             value = float(parameterRow.valueBox.value())
             server = yield self.cxn.get_server(self.servername)
-            yield server.update_sequence_parameters(json.dumps({name: value}))
+            #yield server.update_sequence_parameters(json.dumps({name: value}))
+            yield server.update_parameters(json.dumps({self.device: {name: value}}))
+            parameterRow.valueBox.display(value)
         return wv
 
     @inlineCallbacks	
@@ -139,6 +142,7 @@ class ControlConfig(object):
         self.boxWidth = 80
         self.boxHeight = 20
         self.numRows = 10
+        self.device = 'sequence'
 
 if __name__ == '__main__':
     import sys
@@ -146,6 +150,6 @@ if __name__ == '__main__':
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-    widget = SequenceParameterControl(ControlConfig(), reactor)
+    widget = ParameterControl(ControlConfig(), reactor)
     widget.show()
     reactor.run()

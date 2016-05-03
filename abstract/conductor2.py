@@ -88,17 +88,18 @@ class ConductorServer(LabradServer):
         """
         if parameters is not None:
             self.parameters = json.loads(parameters)
-        returnValue(json.dumps(self.parameters))
+        return json.dumps(self.parameters)
     
     @setting(4, 'update parameters', parameters='s', returns='s')
     def update_parameters(self, c, parameters=None):
         if parameters is not None:
+            parameters = json.loads(parameters)
             for device_name, device in parameters.items():
                 if not self.parameters.has_key(device_name):
                     self.parameters[device_name] = {}
                 for parameter_name, value in device.items():
                     self.parameters[device_name][parameter_name] = value
-        returnValue(json.dumps(self.parameters))
+        return json.dumps(self.parameters)
 
     @setting(5, 'fix sequence keys', sequence='s', returns='s')
     def fix_sequence_keys(self, c, sequence):
@@ -144,6 +145,20 @@ class ConductorServer(LabradServer):
         """
         self.experiment_queue.append(json.loads(experiment))
         return len(self.experiment_queue)
+
+    @setting(10, 'set experiment queue', experiment_queue='s', returns='i')
+    def set_experiment_queue(self, c, experiment_queue=None):
+        if experiment_queue:
+            experiment_queue = json.loads(experiment_queue)
+            for experiment in experiment_queue:
+                self.experiment_queue.append(experiment)
+        else:
+            self.experiment_queue = deque([])
+        return len(self.experiment_queue)
+
+    @setting(11, 'stop experiment')
+    def stop_experiment(self, c):
+        self.experiment = {}
 
     @inlineCallbacks
     def evaluate_device_parameters(self):
@@ -233,6 +248,11 @@ class ConductorServer(LabradServer):
             else:
                 updated = update
             json.dump(updated, outfile)
+    
+    def do_display(self):
+        if self.experiment.has_key('display'):
+            exec(str(self.experiment['display']))
+            display(self.data)
 
     def append_data(self, x1, x2):
         if type(x2).__name__ == 'dict':
@@ -265,24 +285,27 @@ class ConductorServer(LabradServer):
                 advanced = self.do_advance(self.experiment)
                 if not advanced.has_key('append data'):
                     advanced.update({'append data': 0})
-                if not advanced['append data']:
-                    self.data_directory = lambda: 'Z:\\SrQ\\data\\' + time.strftime('%Y%m%d') + '\\'
-                    data_directory = self.data_directory()
-                    if not os.path.exists(data_directory):
-                        os.mkdir(data_directory)
-                    data_name = advanced.pop('name')
-                    data_path = lambda i: data_directory + data_name + '#{}'.format(i)
-                    iteration = 0 
-                    while os.path.isfile(data_path(iteration)):
-                        iteration += 1
-                    self.data_path = data_path(iteration)
+                self.data_directory = lambda: 'Z:\\SrQ\\data\\' + time.strftime('%Y%m%d') + '\\'
+                data_directory = self.data_directory()
+                if not os.path.exists(data_directory):
+                    os.mkdir(data_directory)
+                data_name = advanced.pop('name')
+                data_path = lambda i: data_directory + data_name + '#{}'.format(i)
+                iteration = 0 
+                while os.path.isfile(data_path(iteration)):
+                    iteration += 1
+                if advanced['append data']:
+                    iteration -= 1
+                self.data_path = data_path(iteration)
+                print 'saving data to {}'.format(self.data_path)
             else:
+                print 'experiment queue is empty'
                 advanced = {}
                 do_save = 0
         self.do_save = do_save
         if advanced.has_key('parameters'):
             parameters = advanced.pop('parameters')
-            yield self.update_parameters(None, parameters)
+            yield self.update_parameters(None, json.dumps(parameters))
         if advanced.has_key('sequence'):
             self.set_sequence(advanced.pop('sequence'))
         for k, v in advanced.items():
@@ -292,6 +315,7 @@ class ConductorServer(LabradServer):
     @inlineCallbacks
     def run_sequence(self):
         if self.do_save:
+            self.do_display()
             self.write_data()
         yield self.advance()
         yield self.evaluate_device_parameters()
