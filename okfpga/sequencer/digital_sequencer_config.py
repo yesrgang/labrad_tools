@@ -74,7 +74,7 @@ class DigitalSequencerConfig(object):
                     PulseChannelConfig(loc='B01', name='H Clock AOM', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B02', name='Beta Phase', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B03', name='LC Wave', mode='auto', manual_state=0, invert=0),
-                    PulseChannelConfig(loc='B04', name='Clock Servo Enable', mode='auto', manual_state=0, invert=0),
+                    PulseChannelConfig(loc='B04', name='Clock Servo Enable', mode='manual', manual_state=1, invert=0),
                     PulseChannelConfig(loc='B05', name='Spin Pol. Drive', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B06', name='HODT Shutter', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B07', name='VODT Shutter', mode='auto', manual_state=0, invert=0),

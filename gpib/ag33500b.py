@@ -106,7 +106,7 @@ class AG33500BServer(GPIBManagedServer):
                     if hasattr(dev, 't_ramp'):
                         for command in dev.get_counter_frequency:
                             f = yield eval(command)
-                        yield dev.set_ramp(f, f)
+                        yield dev.set_ramp(float(f), float(f))
 
 
     @setting(9, 'select device by name', name='s', returns='s')    

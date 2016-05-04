@@ -43,12 +43,10 @@ class RigolDS1054ZWrapper(GPIBDeviceWrapper):
         rawdata = yield self.query(':WAV:DATA?')
         dt = yield self.query(":WAV:XINC?")
         t0 = yield self.query(":WAV:XOR?")
-        
+
         data = [float(x) for x in rawdata.split(',')[1:]]
         t = [(float(t0) + x * float(dt)) for x in range(len(data))]
-        
-        print t
-        
+
         returnValue( (t, data) )
 
         
@@ -104,23 +102,7 @@ class RigolDS1054ZServer(GPIBManagedServer):
     @setting(11, 'start loop', channel='i', returns='s')
     def start_loop(self, c, channel):
         self.running_loop = yield self.get_data_forever(channel, c)
-        
-    # @setting(12, 'stop loop', channel='i', returns='s')
-    # def stop_loop(self):
-    #     running_loop.cancel()
-        
-    # @setting(12, 'send update')
-    # def send_update(self, c):
-    #     dev = self.selectedDevice(c)
-    #     update_d = {}
-    #     for param in dev.update_parameters:
-    #         try:
-    #             value = yield getattr(dev, 'get_'+param)()
-    #             update_d[param] = value
-    #         except AttributeError:
-    #             print 'device has no attribute get_{}'.format(param)
-    #     self.update(json.dumps(update_d))
-
+    
     @setting(13, 'get system configuration')
     def get_system_configuration(self, c):
         conf =  self.load_configuration()

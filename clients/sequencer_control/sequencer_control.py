@@ -142,7 +142,7 @@ class Sequencer(QtGui.QWidget):
         self.analog_channels = json.loads(ac)
         self.channels = self.digital_channels + self.analog_channels + [self.timing_channel]
         conductor = yield self.cxn.get_server(self.conductor_servername)
-        yield conductor.signal__update_sp(self.config.conductor_update_id)
+        yield conductor.signal__parameters_updated(self.config.conductor_update_id)
         yield conductor.addListener(listener=self.update_parameters, 
             source=None, ID=self.conductor_update_id)
         self.populate()
@@ -381,7 +381,7 @@ class Sequencer(QtGui.QWidget):
         self.saveSequence()
         sequence = json.dumps(self.getSequence())
         conductor = yield self.cxn.get_server(self.conductor_servername)
-        yield conductor.load_sequence(sequence)
+        yield conductor.set_sequence(sequence)
     
     @inlineCallbacks
     def loadSequence(self, filepath):
@@ -392,7 +392,6 @@ class Sequencer(QtGui.QWidget):
             filepath = self.sequence_directory() + filepath.split('/')[-1].split('#')[0]
         conductor = yield self.cxn.get_server(self.conductor_servername)
         sequence = yield conductor.fix_sequence_keys(json.dumps(sequence))
-        print sequence
         self.setSequence(json.loads(sequence))
         self.loadSaveRun.locationBox.setText(filepath)
 

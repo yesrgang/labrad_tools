@@ -17,11 +17,11 @@ timeout = 20
 """
 
 import json
-import ok
 import os
-import types
+import time
 
 from collections import deque
+
 from influxdb import InfluxDBClient
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
@@ -33,14 +33,18 @@ from okfpga.sequencer.sequence import Sequence
 
 class ConductorServer(LabradServer):
     update_sp = Signal(698123, 'signal: update_sp', 'b')
+    parameters_updated = Signal(698124, 'signal: parameters_updated', 'b')
     def __init__(self, config_name):
-        self.device_parameters = {}
-        self.sequence_parameters = {}
-        self.current_sequence_parameters = {}
-        self.previous_sequence_parameters = [None, None, None]
-        self.previous_device_parameters = [None, None, None]
-        self.sequence = {}
-        
+        self.data = {}
+        self.experiment_queue = deque([])
+        self.experiment = {}
+        self.parameters = {}
+        self.parameters['sequence'] = {}
+        self.parameters_history = deque([])
+        self.history = deque([{}], maxlen=5)
+        self.devices = {}
+        self.do_save = 0
+
         self.config_name = config_name
         self.load_configuration()
         self.in_communication = DeferredLock()
@@ -49,6 +53,7 @@ class ConductorServer(LabradServer):
     @inlineCallbacks
     def initServer(self):
         yield LabradServer.initServer(self)
+        yield self.set_sequence(None, json.dumps(self.default_sequence))
         yield self.run_sequence()
         if self.db_write_period:
             self.dbclient = InfluxDBClient.from_DSN(os.getenv('INFLUXDBDSN'))
@@ -59,178 +64,62 @@ class ConductorServer(LabradServer):
         for key, value in config.__dict__.items():
             setattr(self, key, value)
 
-    @setting(1, 'set device parameters', device_parameters='s', returns='s')
-    def set_device_parameters(self, c, device_parameters=None):
-        """ replace server device parameters with input.
+    @setting(1, 'register device', configuration='s', returns='s')
+    def register_device(self, c, configuration):
+        """ register device
 
-        device parameters is 
-        "{*device_name: {*parameter_name: {"command": *command, "value": *value}}}"
-        
-        *command is something like "lambda value: sever_name.setting(value)"
+        configuration = {*device_name: {
+            *parameter: {
+                'init commands': [*init_command],
+                'update commands': [lambda v: *update_command(v)],
+                'default value': *default_value,
+            }
+        }
         """
-        if device_parameters is not None:
-            device_parameters = json.loads(device_parameters)
-            yield self.initialize_device_parameters(device_parameters)
-            self.device_parameters = device_parameters
-        returnValue(json.dumps(self.device_parameters))
+        configuration = json.loads(configuration)
+        for device, parameters in configuration.items():
+            self.parameters[device] = {}
+            for parameter, d in parameters.items():
+                value = d['default value']
+                for init_command in d['init commands']:
+                    yield eval(init_command)
+                for update_command in d['update commands']:
+                    yield eval(update_command)(value)
+                self.parameters[device][parameter] = value
+        self.devices.update(configuration)
+        returnValue(json.dumps(self.devices))
 
-    @setting(2, 'update device parameters', device_parameters='s', returns='s')
-    def update_device_parameters(self, c, device_parameters=None):
-        """ edit existing device parameters
+    @setting(2, 'remove device', device_name='s', returns='s')
+    def remove_device(self, c, device_name=None):
+        if device_name is not None:
+            device = self.devices.pop(device_name)
+            value = self.parameters['devices'].pop(device_name)
+        return json.dumps(self.devices)
 
-        device parameters is 
-        "{*device_name: {*parameter_name: {"command": *command, "value": *value}}}"
-        
-        *command is something like "lambda value: sever_name.setting(value)"
+    @setting(3, 'set parameters', parameters='s', returns='s')
+    def set_parameters(self, c, parameters=None):
+        """ set parameters
+
+        parameters = {*device_name: {*parameter: *value}}
+        e.g. {'Clock AOM': {'frequency': {'value': x}}}
+             {'sequence': {'T_evap': {'value': x}}}
         """
-        if device_parameters is not None:
-            device_parameters = json.loads(device_parameters)
-            yield self.initialize_device_parameters(device_parameters)
-            self.device_parameters.update(device_parameters)
-        returnValue(json.dumps(self.device_parameters))
+        if parameters is not None:
+            self.parameters = json.loads(parameters)
+        return json.dumps(self.parameters)
     
-    @setting(3, 'update device parameter values', device_parameters='s', returns='s')
-    def update_device_parameter_values(self, c, device_parameters='s'):
-        """update device parameter value only
-        
-        give device parameters {device: {parameter: {value: *value}}}
-        """
-        for devname, dev in json.loads(device_parameters).items():
-            for parname, par in dev.items():
-                self.device_parameters[devname][parname]['value'] = par['value']
-        return self.device_parameters
+    @setting(4, 'update parameters', parameters='s', returns='s')
+    def update_parameters(self, c, parameters=None):
+        if parameters is not None:
+            parameters = json.loads(parameters)
+            for device_name, device in parameters.items():
+                if not self.parameters.has_key(device_name):
+                    self.parameters[device_name] = {}
+                for parameter_name, value in device.items():
+                    self.parameters[device_name][parameter_name] = value
+        return json.dumps(self.parameters)
 
-    @setting(4, 'remove device', device_name='s', returns='b')
-    def remove_device(self, c, device_name):
-        parameters = self.device_parameters.pop(device_name)
-        if parameters:
-            return True
-        else: 
-            return False
-
-    @inlineCallbacks
-    def initialize_device_parameters(self, device_parameters):
-        value = None
-        for device, parameters in device_parameters.items():
-            for p, d in parameters.items():
-                if type(d['value']) is types.ListType:
-                    value = d['value'][0]
-                else:
-                    value = d['value']
-            yield eval(d['init command'])
-            yield eval(d['command'])(value)
-
-    def evaluate_device_parameters(self):
-        value = None
-        current_parameters = {}
-        for device, parameters in self.device_parameters.items():
-            try:
-                current_parameters[device] = {}
-                for p, d in parameters.items():
-                    if type(d['value']) is types.ListType:
-                        value = d['value'][0]
-                        d['value'].insert(len(d['value']), d['value'].pop(0))
-                    else:
-                        value = d['value']
-                    current_parameters[device][p] = value
-                    self = self
-                    eval(d['command'])(value)
-            except Exception, e:
-                print 'unable to program {}'.format(device)
-                print 'due to error {}, removing device'.format(e)
-                self.device_parameters.pop(device)
-        self.previous_device_parameters.pop(0)
-        self.previous_device_parameters.append(current_parameters)
-    
-    @setting(5, 'set sequence parameters', sequence_parameters='s', returns='s')
-    def set_sequence_parameters(self, c, sequence_parameters=None):
-        """
-        parameters is dictionary {name: value}
-        """
-        if sequence_parameters is not None:
-            self.sequence_parameters = json.loads(sequence_parameters)
-        yield self.update_sp(True)
-        returnValue(json.dumps(self.sequence_parameters))
-    
-    @setting(6, 'update sequence parameters', sequence_parameters='s', returns='s')
-    def update_sequence_parameters(self, c, sequence_parameters=None):
-        """
-        parameters is dictionary {name: value}
-        """
-        if sequence_parameters is not None:
-            self.sequence_parameters.update(json.loads(sequence_parameters))
-        yield self.update_sp(True)
-        returnValue(json.dumps(self.sequence_parameters))
-    
-    @setting(7, 'evaluate sequence parameters', sequence='s', returns='s') 
-    def evaluate_sequence_parameters(self, c, sequence):
-        sequence = Sequence(sequence)
-        return json.dumps(self._evaluate_sequence_parameters(sequence.sequence))
-
-    def _evaluate_sequence_parameters(self, x):
-        if type(x).__name__ in ['str', 'unicode']:
-            if x[0] == '*':
-                value = None
-                if self.sequence_parameters.has_key(x):
-                    csp = self.sequence_parameters[x]
-                    if type(csp).__name__ == 'list':
-                        value =  csp[0]
-                    else:
-                        value = csp
-                else:
-                    try:
-                        dqs = self.db_query_str.format(str(x))
-                        from_db = self.dbclient.query(dqs)
-                        print 'taking {} from db'.format(x)
-                        value = from_db.get_points().next()['value']
-                        self.sequence_parameters[x] = value
-                    except:
-                        raise Exception('could not sub var {}'.format(x))
-                self.current_sequence_parameters[x] = value
-                return value
-            else:
-                return x
-        elif type(x).__name__ == 'list':
-            return [self._evaluate_sequence_parameters(xx) for xx in x]
-        elif type(x).__name__ == 'dict':
-            return {k: self._evaluate_sequence_parameters(v) for k, v in x.items()}
-        else:
-            return x
-
-    def advance_sequence_parameters(self):
-        for p, v in self.sequence_parameters.items():
-            if type(v) is types.ListType:
-                v.insert(len(v), v.pop(0))
-        self.previous_sequence_parameters.pop(0)
-        self.previous_sequence_parameters.append(self.current_sequence_parameters)
-
-    @setting(8, 'get previous parameters', returns='s')
-    def get_previous_parameters(self, c):
-        previous_parameters = {}
-        previous_parameters.update(self.previous_sequence_parameters[0])
-        previous_parameters.update(self.previous_device_parameters[0])
-        return json.dumps(previous_parameters)
-
-    @setting(9, 'get current sequence parameters', returns='s')
-    def get_current_sequence_parameters(self, c):
-        csp = {}
-        for k, v in self.sequence_parameters.items():
-            if type(v).__name__ == 'list':
-                v = v[0]
-            csp[k] = v
-        return json.dumps(csp)
-
-    @setting(11, 'load sequence', sequence='s', returns='s')
-    def load_sequence(self, c, sequence):
-        sequence_keyfix = yield self.fix_sequence_keys(c, sequence)
-        self.sequence = Sequence(sequence_keyfix)
-        returnValue(self.sequence.dump())
-
-    @setting(12, 'get sequence', returns='s')
-    def get_sequence(self, c):
-        return self.sequence.dump()
-
-    @setting(13, 'fix sequence keys', sequence='s', returns='s')
+    @setting(5, 'fix sequence keys', sequence='s', returns='s')
     def fix_sequence_keys(self, c, sequence):
         sequence = json.loads(sequence)
         for sequencer in self.sequencers:
@@ -238,10 +127,115 @@ class ConductorServer(LabradServer):
             ans = yield server.fix_sequence_keys(json.dumps(sequence))
             sequence = json.loads(ans)
         returnValue(json.dumps(sequence))
+
+    def combine_sequences(self, sequence_list):
+        combined_sequence = sequence_list.pop(0)
+        for sequence in sequence_list:
+            for k in sequence.keys():
+                combined_sequence[k] += sequence[k]
+        return combined_sequences
+
+
+    def read_sequence_file(self, sequence_filename):
+        if not os.path.exists(sequence_filename):
+            sequence_filename = self.data_directory() + 'sequences\\' + sequence_filename
+        with open(sequence_filename, 'r') as infile:
+            sequence = json.load(infile)
+        return sequence
+
+    @setting(6, 'set sequence', sequence='s', returns='s')
+    def set_sequence(self, c, sequence):
+        try:
+            sequence = json.loads(sequence)
+            if type(sequence).__name__ == 'list':
+                for s in sequence:
+                    try:
+                        s = self.read_sequence_file(s)
+                    except:
+                        pass
+                sequence = self.combine_sequences(sequence)
+        except:
+            sequence = self.read_sequence_file(sequence)
+
+        fixed_sequence = yield self.fix_sequence_keys(c, json.dumps(sequence))
+        self.sequence = json.loads(fixed_sequence)
+        returnValue(fixed_sequence)
+
+    @setting(7, 'queue experiment', experiment='s', returns='i')
+    def queue_experiment(self, c, experiment):
+        """ load experiment into queue
+
+        experiments are json object 
+        keys...
+            'name': some string
+            'sequence': can be sequence, sequence path, or list of either. 
+                      lists are concatenated to form larger sequence.
+            'parameters': {name: value}
+            'append data': bool, save data to previous file?
+        """
+        self.experiment_queue.append(json.loads(experiment))
+        return len(self.experiment_queue)
+
+    @setting(10, 'set experiment queue', experiment_queue='s', returns='i')
+    def set_experiment_queue(self, c, experiment_queue=None):
+        if experiment_queue:
+            experiment_queue = json.loads(experiment_queue)
+            for experiment in experiment_queue:
+                self.experiment_queue.append(experiment)
+        else:
+            self.experiment_queue = deque([])
+        return len(self.experiment_queue)
+
+    @setting(11, 'stop experiment')
+    def stop_experiment(self, c):
+        self.experiment = {}
+
+    @inlineCallbacks
+    def evaluate_device_parameters(self):
+        for device, parameters in self.devices.items():
+            for parameter, d in parameters.items():
+                value = self.parameters[device][parameter]
+                for update_command in d['update commands']:
+                    yield eval(update_command)(value)
+
+    def do_evaluate_sequence_parameters(self, x):
+        if type(x).__name__ in ['str', 'unicode']:
+            if x[0] == '*':
+                value = None
+                if self.parameters['sequence'].has_key(x):
+                    value = self.parameters['sequence'][x]
+                else:
+                    try:
+                        dqs = self.db_query_str.format(str(x))
+                        print 'taking {} from db'.format(x)
+                        from_db = self.dbclient.query(dqs)
+                        value = from_db.get_points().next()['value']
+                        self.parameters['sequence'][x] = value
+                    except:
+                        raise Exception('could not sub var {}'.format(x))
+                return value
+            else:
+                return x
+        elif type(x).__name__ == 'list':
+            return [self.do_evaluate_sequence_parameters(xx) for xx in x]
+        elif type(x).__name__ == 'dict':
+            return {k: self.do_evaluate_sequence_parameters(v) for k, v in x.items()}
+        else:
+            return x
     
+    @setting(8, 'evaluate sequence parameters', sequence='s', returns='s')
+    def evaluate_sequence_parameters(self, c, sequence=None):
+        if sequence is None:
+            evaluated_sequence = self.do_evaluate_sequence_parameters(self.sequence)
+        else:
+            sequence = json.loads(sequence)
+            evaluated_sequence = self.do_evaluate_sequence_parameters(sequence)
+            evaluated_sequence = json.dumps(evaluated_sequence)
+        return evaluated_sequence
+
     @inlineCallbacks
     def program_sequencers(self):
-        sequence = self._evaluate_sequence_parameters(self.sequence.sequence)
+        sequence = self.evaluate_sequence_parameters(None)
         for sequencer in self.sequencers:
             server = getattr(self.client, sequencer)
             self.in_communication.acquire()
@@ -249,26 +243,122 @@ class ConductorServer(LabradServer):
             self.in_communication.release()
         returnValue(sequence)
 
+    def do_advance(self, x):
+        """ get next values from current experiment """
+        if type(x).__name__ == 'list':
+            return x.pop(0)
+        elif type(x).__name__ == 'dict':
+            return {k: self.do_advance(v) for k, v in x.items()}
+        else:
+            return x
+
+    @setting(9, 'send data', data='s', returns='s')
+    def send_data(self, c, data):
+        data = json.loads(data)
+        for d in data.values():
+            d['timestamp'] = time.time()
+        self.data.update(data)
+        return json.dumps(data)
+
+    def write_data(self):
+        data = {}
+        update = {}
+        if os.path.isfile(self.data_path):
+            with open(self.data_path, 'r') as infile:
+                data = json.load(infile)
+        else:
+            for data_source in []:
+                self.data.pop(data_source)
+        with open(self.data_path, 'w') as outfile:
+            update['data'] = self.data
+            self.data = {}
+            update['parameters'] = self.parameters
+            if data:
+                updated = self.append_data(data, update)
+            else:
+                updated = update
+            json.dump(updated, outfile)
+    
+    def do_display(self):
+        if self.experiment.has_key('display'):
+            exec(str(self.experiment['display']))
+            display(self.data)
+
+    def append_data(self, x1, x2):
+        if type(x2).__name__ == 'dict':
+            for k in x2:
+                if not x1.has_key(k):
+                    if type(x2[k]).__name__ == 'dict':
+                        x1[k] = {}
+                    else:
+                        x1[k] = None
+            appended = {k: self.append_data(x1[k], x2[k]) for k in x2}
+            x1.update(appended)
+            return x1
+        else:
+            if not type(x1).__name__ == 'list':
+                x1 = [x1]
+            if not type(x2).__name__ == 'list':
+                x2 = [x2]
+            return x1 + x2
+
+    @inlineCallbacks
+    def advance(self):
+        do_save = 1
+        try:
+            if not self.experiment:
+                raise IndexError
+            advanced = self.do_advance(self.experiment)
+        except IndexError:
+            if len(self.experiment_queue):
+                self.data = {}
+                self.experiment = self.experiment_queue.popleft()
+                advanced = self.do_advance(self.experiment)
+                if not advanced.has_key('append data'):
+                    advanced.update({'append data': 0})
+#                self.data_directory = lambda: 'Z:\\SrQ\\data\\' + time.strftime('%Y%m%d') + '\\'
+                data_directory = self.data_directory()
+                if not os.path.exists(data_directory):
+                    os.mkdir(data_directory)
+                data_name = advanced.pop('name')
+                data_path = lambda i: data_directory + data_name + '#{}'.format(i)
+                iteration = 0 
+                while os.path.isfile(data_path(iteration)):
+                    iteration += 1
+                if advanced['append data']:
+                    iteration -= 1
+                self.data_path = data_path(iteration)
+                print 'saving data to {}'.format(self.data_path)
+            else:
+                print 'experiment queue is empty'
+                advanced = {}
+                do_save = 0
+        self.do_save = do_save
+        if advanced.has_key('parameters'):
+            parameters = advanced.pop('parameters')
+            yield self.update_parameters(None, json.dumps(parameters))
+        if advanced.has_key('sequence'):
+            self.set_sequence(None, advanced.pop('sequence'))
+        for k, v in advanced.items():
+            setattr(self, k, v)
+
+    
     @inlineCallbacks
     def run_sequence(self):
-        self.evaluate_device_parameters()
-        if self.sequence:
-            sequence = yield self.program_sequencers()
-            self.update_sp(True)
-            self.advance_sequence_parameters()
-            reactor.callLater(Sequence(sequence).get_duration(), self.run_sequence)
-        else:
-            reactor.callLater(5, self.run_sequence)
-    
+        if self.do_save:
+            self.do_display()
+            self.write_data()
+        yield self.advance()
+        yield self.evaluate_device_parameters()
+        sequence = yield self.program_sequencers()
+        yield self.parameters_updated(True)
+        self.history[0].update(self.parameters)
+        duration = sum(sequence['digital@T'])
+        reactor.callLater(duration, self.run_sequence)
+
     def write_to_db(self):
         reactor.callLater(self.db_write_period, self.write_to_db)
-        if not self.previous_sequence_parameters[0]:
-            return
-        
-        parameters = self.previous_sequence_parameters[0]
-        parameters.update({device_name + ' - ' + parameter_name: parameter
-            for device_name, device in self.previous_device_parameters[0].items()
-            for parameter_name, parameter in device.items()})
+        parameters = self.parameters
 
         def to_float(x):
             try:
@@ -277,11 +367,11 @@ class ConductorServer(LabradServer):
                 return 0.
 
         to_db = [{
-            "measurement": "sequence parameters",
-            "tags": {"name": k},
+            "measurement": "experiment parameters",
+            "tags": {"device": device_name, "parameter": p},
             "fields": {"value": to_float(v)},
-        } for k, v in parameters.items()]
-        
+        } for device_name, device in self.parameters.items() for p, v in device.items()]
+
         try:
             self.dbclient.write_points(to_db)
         except:
