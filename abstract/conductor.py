@@ -246,8 +246,13 @@ class ConductorServer(LabradServer):
         self.data.update(data)
         return json.dumps(data)
 
-    def write_data(self, new_data):
+    def write_data(self):
         data = {}
+        new_data = {
+                'parameters': self.parameters,
+                'data': self.data,
+        }
+        self.data = {}
         if os.path.isfile(self.data_path):
             with open(self.data_path, 'r') as infile:
                 data = json.load(infile)
@@ -345,13 +350,13 @@ class ConductorServer(LabradServer):
     
     @inlineCallbacks
     def run_sequence(self):
+        reactor.callLater(self.data_delay, self.do_display)
         if self.do_save:
-            self.do_display()
-            self.write_data()
+            reactor.callLater(self.data_delay, self.write_data)
         yield self.advance()
         yield self.evaluate_device_parameters()
         sequence = yield self.program_sequencers()
-        yield self.parameters_updatedrTrue)
+        yield self.parameters_updated(True)
         duration = sum(sequence['digital@T'])
         reactor.callLater(duration, self.run_sequence)
 
