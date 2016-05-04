@@ -29,20 +29,14 @@ from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
 from twisted.internet.task import LoopingCall
 from twisted.internet.threads import deferToThread
 
-from okfpga.sequencer.sequence import Sequence
-
 class ConductorServer(LabradServer):
-    update_sp = Signal(698123, 'signal: update_sp', 'b')
     parameters_updated = Signal(698124, 'signal: parameters_updated', 'b')
     def __init__(self, config_name):
-        self.data = {}
+        self.devices = {}
         self.experiment_queue = deque([])
         self.experiment = {}
-        self.parameters = {}
-        self.parameters['sequence'] = {}
-        self.parameters_history = deque([])
-        self.history = deque([{}], maxlen=5)
-        self.devices = {}
+        self.parameters = {'sequence': {}}
+        self.data = {}
         self.do_save = 0
 
         self.config_name = config_name
@@ -54,6 +48,7 @@ class ConductorServer(LabradServer):
     def initServer(self):
         yield LabradServer.initServer(self)
         yield self.set_sequence(None, json.dumps(self.default_sequence))
+        yield self.register_device(None, json.dumps(self.default_devices) )
         yield self.run_sequence()
         if self.db_write_period:
             self.dbclient = InfluxDBClient.from_DSN(os.getenv('INFLUXDBDSN'))
@@ -135,7 +130,6 @@ class ConductorServer(LabradServer):
                 combined_sequence[k] += sequence[k]
         return combined_sequences
 
-
     def read_sequence_file(self, sequence_filename):
         if not os.path.exists(sequence_filename):
             sequence_filename = self.data_directory() + 'sequences\\' + sequence_filename
@@ -168,10 +162,11 @@ class ConductorServer(LabradServer):
         experiments are json object 
         keys...
             'name': some string
-            'sequence': can be sequence, sequence path, or list of either. 
+            'sequence': can be sequence, sequence path, or json.dumps(list of either).
                       lists are concatenated to form larger sequence.
             'parameters': {name: value}
             'append data': bool, save data to previous file?
+            'loop': bool, inserts experiment back into begining of queue
         """
         self.experiment_queue.append(json.loads(experiment))
         return len(self.experiment_queue)
@@ -243,15 +238,6 @@ class ConductorServer(LabradServer):
             self.in_communication.release()
         returnValue(sequence)
 
-    def do_advance(self, x):
-        """ get next values from current experiment """
-        if type(x).__name__ == 'list':
-            return x.pop(0)
-        elif type(x).__name__ == 'dict':
-            return {k: self.do_advance(v) for k, v in x.items()}
-        else:
-            return x
-
     @setting(9, 'send data', data='s', returns='s')
     def send_data(self, c, data):
         data = json.loads(data)
@@ -260,31 +246,20 @@ class ConductorServer(LabradServer):
         self.data.update(data)
         return json.dumps(data)
 
-    def write_data(self):
+    def write_data(self, new_data):
         data = {}
-        update = {}
         if os.path.isfile(self.data_path):
             with open(self.data_path, 'r') as infile:
                 data = json.load(infile)
-        else:
-            for data_source in []:
-                self.data.pop(data_source)
         with open(self.data_path, 'w') as outfile:
-            update['data'] = self.data
-            self.data = {}
-            update['parameters'] = self.parameters
             if data:
-                updated = self.append_data(data, update)
+                data = self.append_dictlist(data, new_data)
             else:
-                updated = update
-            json.dump(updated, outfile)
-    
-    def do_display(self):
-        if self.experiment.has_key('display'):
-            exec(str(self.experiment['display']))
-            display(self.data)
-
-    def append_data(self, x1, x2):
+                data = new_data
+            json.dump(data, outfile)
+ 
+    def append_dictlist(self, x1, x2):
+        """ recursivly append dict to {..{[]}..} """
         if type(x2).__name__ == 'dict':
             for k in x2:
                 if not x1.has_key(k):
@@ -292,7 +267,7 @@ class ConductorServer(LabradServer):
                         x1[k] = {}
                     else:
                         x1[k] = None
-            appended = {k: self.append_data(x1[k], x2[k]) for k in x2}
+            appended = {k: self.append_dictlist(x1[k], x2[k]) for k in x2}
             x1.update(appended)
             return x1
         else:
@@ -301,6 +276,20 @@ class ConductorServer(LabradServer):
             if not type(x2).__name__ == 'list':
                 x2 = [x2]
             return x1 + x2
+
+    def do_display(self):
+        if self.experiment.has_key('display'):
+            exec(str(self.experiment['display']))
+            display(self.data)
+
+    def do_advance(self, x):
+        """ get next values from current experiment """
+        if type(x).__name__ == 'list':
+            return x.pop(0)
+        elif type(x).__name__ == 'dict':
+            return {k: self.do_advance(v) for k, v in x.items()}
+        else:
+            return x
 
     @inlineCallbacks
     def advance(self):
@@ -311,12 +300,23 @@ class ConductorServer(LabradServer):
             advanced = self.do_advance(self.experiment)
         except IndexError:
             if len(self.experiment_queue):
+                # clear data
                 self.data = {}
+
+                # get next experiment from queue
                 self.experiment = self.experiment_queue.popleft()
+
+                # if this experiment should loop, append to begining of queue
+                if self.experiment.has_key('loop'):
+                    if self.experiment['loop']:
+                        self.experiment_queue.appendleft(self.experiment)
+
+                # get next values from current experiment
                 advanced = self.do_advance(self.experiment)
+
+                # determine where to save data
                 if not advanced.has_key('append data'):
                     advanced.update({'append data': 0})
-#                self.data_directory = lambda: 'Z:\\SrQ\\data\\' + time.strftime('%Y%m%d') + '\\'
                 data_directory = self.data_directory()
                 if not os.path.exists(data_directory):
                     os.mkdir(data_directory)
@@ -351,8 +351,7 @@ class ConductorServer(LabradServer):
         yield self.advance()
         yield self.evaluate_device_parameters()
         sequence = yield self.program_sequencers()
-        yield self.parameters_updated(True)
-        self.history[0].update(self.parameters)
+        yield self.parameters_updatedrTrue)
         duration = sum(sequence['digital@T'])
         reactor.callLater(duration, self.run_sequence)
 
