@@ -70,7 +70,7 @@ class DigitalSequencerConfig(object):
                     PulseChannelConfig(loc='A14', name='VODT AOM', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='A15', name='GaGe Trigger', mode='auto', manual_state=0, invert=1),
 
-                    PulseChannelConfig(loc='B00', name='V Clock AOM', mode='auto', manual_state=0, invert=0),
+                    PulseChannelConfig(loc='B00', name='V Clock AOM', mode='manual', manual_state=1, invert=0),
                     PulseChannelConfig(loc='B01', name='H Clock AOM', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B02', name='Beta Phase', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B03', name='LC Wave', mode='auto', manual_state=0, invert=0),

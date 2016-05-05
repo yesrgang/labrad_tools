@@ -32,11 +32,11 @@ from twisted.internet.threads import deferToThread
 class ConductorServer(LabradServer):
     parameters_updated = Signal(698124, 'signal: parameters_updated', 'b')
     def __init__(self, config_name):
+        self.data = {}
         self.devices = {}
         self.experiment_queue = deque([])
         self.experiment = {}
         self.parameters = {'sequence': {}}
-        self.data = {}
         self.do_save = 0
 
         self.config_name = config_name
@@ -128,27 +128,27 @@ class ConductorServer(LabradServer):
         for sequence in sequence_list:
             for k in sequence.keys():
                 combined_sequence[k] += sequence[k]
-        return combined_sequences
+        return combined_sequence
 
     def read_sequence_file(self, sequence_filename):
-        if not os.path.exists(sequence_filename):
-            sequence_filename = self.data_directory() + 'sequences\\' + sequence_filename
-        with open(sequence_filename, 'r') as infile:
-            sequence = json.load(infile)
-        return sequence
+        try:
+            if not os.path.exists(sequence_filename):
+                sequence_filename = self.data_directory() + 'sequences\\' + sequence_filename
+            with open(sequence_filename, 'r') as infile:
+                sequence = json.load(infile)
+            return sequence
+        except Exception, e:
+            return sequence_filename
 
     @setting(6, 'set sequence', sequence='s', returns='s')
     def set_sequence(self, c, sequence):
         try:
             sequence = json.loads(sequence)
-            if type(sequence).__name__ == 'list':
-                for s in sequence:
-                    try:
-                        s = self.read_sequence_file(s)
-                    except:
-                        pass
-                sequence = self.combine_sequences(sequence)
-        except:
+        except: 
+            print 'no load'
+        if type(sequence).__name__ == 'list':
+            sequence = self.combine_sequences([self.read_sequence_file(s) for s in sequence])
+        else:
             sequence = self.read_sequence_file(sequence)
 
         fixed_sequence = yield self.fix_sequence_keys(c, json.dumps(sequence))
@@ -183,6 +183,7 @@ class ConductorServer(LabradServer):
 
     @setting(11, 'stop experiment')
     def stop_experiment(self, c):
+        self.do_save = 0
         self.experiment = {}
 
     @inlineCallbacks
@@ -244,15 +245,15 @@ class ConductorServer(LabradServer):
         for d in data.values():
             d['timestamp'] = time.time()
         self.data.update(data)
+        print 'received data: ', data['gage']['gnd']
         return json.dumps(data)
 
-    def write_data(self):
+    def write_data(self, data_key):
         data = {}
         new_data = {
-                'parameters': self.parameters,
-                'data': self.data,
+                data_key: getattr(self, data_key)
         }
-        self.data = {}
+        print 'writing data ', data_key
         if os.path.isfile(self.data_path):
             with open(self.data_path, 'r') as infile:
                 data = json.load(infile)
@@ -266,12 +267,12 @@ class ConductorServer(LabradServer):
     def append_dictlist(self, x1, x2):
         """ recursivly append dict to {..{[]}..} """
         if type(x2).__name__ == 'dict':
-            for k in x2:
+            for k in x2.keys():
                 if not x1.has_key(k):
                     if type(x2[k]).__name__ == 'dict':
                         x1[k] = {}
                     else:
-                        x1[k] = None
+                        x1[k] = x2.pop(k)
             appended = {k: self.append_dictlist(x1[k], x2[k]) for k in x2}
             x1.update(appended)
             return x1
@@ -305,9 +306,6 @@ class ConductorServer(LabradServer):
             advanced = self.do_advance(self.experiment)
         except IndexError:
             if len(self.experiment_queue):
-                # clear data
-                self.data = {}
-
                 # get next experiment from queue
                 self.experiment = self.experiment_queue.popleft()
 
@@ -352,7 +350,8 @@ class ConductorServer(LabradServer):
     def run_sequence(self):
         reactor.callLater(self.data_delay, self.do_display)
         if self.do_save:
-            reactor.callLater(self.data_delay, self.write_data)
+            self.write_data('parameters')
+            reactor.callLater(self.data_delay, self.write_data, 'data')
         yield self.advance()
         yield self.evaluate_device_parameters()
         sequence = yield self.program_sequencers()
