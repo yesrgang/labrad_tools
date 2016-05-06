@@ -16,6 +16,7 @@ timeout = 20
 ### END NODE INFO
 """
 
+import copy
 import json
 import os
 import time
@@ -34,10 +35,11 @@ class ConductorServer(LabradServer):
     def __init__(self, config_name):
         self.data = {}
         self.devices = {}
+        self.do_save = 0
         self.experiment_queue = deque([])
         self.experiment = {}
         self.parameters = {'sequence': {}}
-        self.do_save = 0
+        self.received_data = {}
 
         self.config_name = config_name
         self.load_configuration()
@@ -88,7 +90,7 @@ class ConductorServer(LabradServer):
     def remove_device(self, c, device_name=None):
         if device_name is not None:
             device = self.devices.pop(device_name)
-            value = self.parameters['devices'].pop(device_name)
+            value = self.parameters.pop(device_name)
         return json.dumps(self.devices)
 
     @setting(3, 'set parameters', parameters='s', returns='s')
@@ -244,27 +246,18 @@ class ConductorServer(LabradServer):
         data = json.loads(data)
         for d in data.values():
             d['timestamp'] = time.time()
-        self.data.update(data)
-        print 'received data: ', data['gage']['gnd']
+        self.received_data.update(data)
         return json.dumps(data)
 
-    def write_data(self, data_key):
-        data = {}
-        new_data = {
-                data_key: getattr(self, data_key)
-        }
-        print 'writing data ', data_key
-        if os.path.isfile(self.data_path):
-            with open(self.data_path, 'r') as infile:
-                data = json.load(infile)
+    def update_data(self, data_key):
+       new_data = copy.deepcopy(getattr(self, data_key))
+       self.data = self.append_data(self.data, new_data)
+
+    def write_data(self):
         with open(self.data_path, 'w') as outfile:
-            if data:
-                data = self.append_dictlist(data, new_data)
-            else:
-                data = new_data
-            json.dump(data, outfile)
+            json.dump(self.data, outfile)
  
-    def append_dictlist(self, x1, x2):
+    def append_data(self, x1, x2):
         """ recursivly append dict to {..{[]}..} """
         if type(x2).__name__ == 'dict':
             for k in x2.keys():
@@ -272,8 +265,8 @@ class ConductorServer(LabradServer):
                     if type(x2[k]).__name__ == 'dict':
                         x1[k] = {}
                     else:
-                        x1[k] = x2.pop(k)
-            appended = {k: self.append_dictlist(x1[k], x2[k]) for k in x2}
+                        x1[k] = x2.pop(k) #!!!
+            appended = {k: self.append_data(x1[k], x2[k]) for k in x2}
             x1.update(appended)
             return x1
         else:
@@ -318,18 +311,24 @@ class ConductorServer(LabradServer):
                 advanced = self.do_advance(self.experiment)
 
                 # determine where to save data
-                if not advanced.has_key('append data'):
-                    advanced.update({'append data': 0})
+                if not advanced.has_key('append_data'):
+                    advanced.update({'append_data': 0})
                 data_directory = self.data_directory()
                 if not os.path.exists(data_directory):
                     os.mkdir(data_directory)
-                data_name = advanced.pop('name')
+                advanced.pop('name')
+                data_name = self.experiment.pop('name')
                 data_path = lambda i: data_directory + data_name + '#{}'.format(i)
                 iteration = 0 
                 while os.path.isfile(data_path(iteration)):
                     iteration += 1
-                if advanced['append data']:
+                if advanced.pop('append_data'):
+                    self.experiment.pop('append_data')
                     iteration -= 1
+                    with open(data_path(iteration), 'r') as infile:
+                        self.data = json.load(infile)
+                else: 
+                    self.data = {}
                 self.data_path = data_path(iteration)
                 print 'saving data to {}'.format(self.data_path)
             else:
@@ -339,19 +338,20 @@ class ConductorServer(LabradServer):
         self.do_save = do_save
         if advanced.has_key('parameters'):
             parameters = advanced.pop('parameters')
-            yield self.update_parameters(None, json.dumps(parameters))
+            p = yield self.update_parameters(None, json.dumps(parameters))
         if advanced.has_key('sequence'):
             self.set_sequence(None, advanced.pop('sequence'))
-        for k, v in advanced.items():
-            setattr(self, k, v)
+#        for k, v in advanced.items():
+#            setattr(self, k, v)
 
     
     @inlineCallbacks
     def run_sequence(self):
-        reactor.callLater(self.data_delay, self.do_display)
+        #reactor.callLater(self.data_delay, self.do_display)
         if self.do_save:
-            self.write_data('parameters')
-            reactor.callLater(self.data_delay, self.write_data, 'data')
+            self.update_data('parameters')
+            reactor.callLater(self.data_delay, self.update_data, 'received_data')
+            reactor.callLater(self.data_delay+.5, self.write_data)
         yield self.advance()
         yield self.evaluate_device_parameters()
         sequence = yield self.program_sequencers()

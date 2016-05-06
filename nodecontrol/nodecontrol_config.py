@@ -20,9 +20,10 @@ node_dict = {
         'n5181a',
         'ag33500b_ramper',
         'ag33500b_stepper',
+        'ds1054z',
         'digital_sequencer',
         'analog_sequencer',
-        'conductor',
+        #'conductor',
         #'receiver',
     ],
 }

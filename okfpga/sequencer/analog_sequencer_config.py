@@ -44,14 +44,14 @@ class AnalogSequencerConfig(object):
             'F': DACBoard(
                 device_id='srq analog 2',
                 channels=[
-                    DACChannel(loc='F00', name='Dimple Intensity', mode='auto', manual_voltage=0),
+                    DACChannel(loc='F00', name='Beta FM', mode='auto', manual_voltage=0),
                     DACChannel(loc='F01', name='813 H1 Intensity', mode='auto', manual_voltage=0),
                     DACChannel(loc='F02', name='813 H2 Intensity', mode='auto', manual_voltage=0),
                     DACChannel(loc='F03', name='813 V Intensity', mode='auto', manual_voltage=0),
                     DACChannel(loc='F04', name='Clock Intensity', mode='auto', manual_voltage=0),
-                    DACChannel(loc='F05', name='Beta Phase Lock', mode='auto', manual_voltage=0),
-                    DACChannel(loc='F06', name='Spin Pol. Intensity', mode='auto', manual_voltage=0),
-                    DACChannel(loc='F07', name='DACF07', mode='auto', manual_voltage=0),
+                    DACChannel(loc='F05', name='813H mixer', mode='auto', manual_voltage=0),
+                    DACChannel(loc='F06', name='813V mixer', mode='auto', manual_voltage=0),
+                    DACChannel(loc='F07', name='Spin pol Intensity', mode='auto', manual_voltage=0),
                 ],
             ),
             'G': DACBoard(

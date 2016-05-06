@@ -186,7 +186,7 @@ class ManyChannels(QtGui.QWidget):
 
 class ControlConfig(object):
     def __init__(self):
-        self.name = 'X Comp. Coil'
+        self.name = 'Spin Pol. Intensity'
         self.servername = 'yesr20_analog_sequencer'
         self.servername_alt = 'yesr20_analog_sequencer'
         self.update_id = 461023

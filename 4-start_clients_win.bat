@@ -1,3 +1,4 @@
+start pythonw abstract\conductor.py
 start pythonw clients\sequencer_control\sequencer_control.py
 start pythonw clients\alpha_rf_control.py
 start pythonw clients\beta_rf_control.py
@@ -7,4 +8,5 @@ start pythonw clients\pro8000_control.py
 start pythonw clients\spin_aom_control.py
 start pythonw clients\1064_aom_control.py
 start pythonw clients\813_aom_control.py
-start pythonw clients\repumper_control.py
+start pythonw clients\repump_control.py
+start pythonw clients\sequence_parameters_control.py

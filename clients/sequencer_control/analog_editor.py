@@ -238,7 +238,7 @@ class AnalogVoltageEditor(QtGui.QDialog):
 
         # labrad signals
         conductor = yield self.cxn.get_server(self.config.conductor_servername)
-        yield conductor.signal__update_sp(self.config.conductor_update_id)
+        yield conductor.signal__parameters_updated(self.config.conductor_update_id)
         yield conductor.addListener(listener=self.receive_parameters, source=None, ID=self.config.conductor_update_id)
 
     @inlineCallbacks
