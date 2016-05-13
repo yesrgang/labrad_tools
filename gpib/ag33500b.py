@@ -67,7 +67,7 @@ class AG33500BWrapper(GPIBDeviceWrapper):
         yield self.write('SOUR{}:VOLT {}'.format(self.cource, amplitude))
 
     @inlineCallbacks
-    def set_ramp(self, f_start, f_stop):
+    def set_ramprate(self, f_start, f_stop):
         self.ramp_rate = (f_stop-f_stop)/self.t_ramp
         yield self.write('SOUR{}:FREQ {}'.format(self.source, f_start))
         yield self.write('SOUR{}:FREQ:STAR {}'.format(self.source, f_start))
@@ -76,6 +76,13 @@ class AG33500BWrapper(GPIBDeviceWrapper):
         yield self.write('SOUR{}:FREQ:MODE SWE'.format(self.source))
         yield self.write('TRIG{}:SOUR IMM'.format(self.source))
 
+    @inlineCallbacks
+    def get_ramprate(self):
+        f_start = yield self.query('SOUR{}:FREQ:STAR?')
+        f_stop = yield self.write('SOUR{}:FREQ:STOP?')
+        T_ramp = yield self.write('SOUR{}:SWEEp:TIME?')
+        ramprate = (f_stop - f_start)/T_ramp
+        returnValue(ramprate)
 
 class AG33500BServer(GPIBManagedServer):
     """Provides basic control for HP signal generators"""
@@ -104,9 +111,13 @@ class AG33500BServer(GPIBManagedServer):
                     dev.set_configuration(conf)
                     dev.set_defaults()
                     if hasattr(dev, 't_ramp'):
-                        for command in dev.get_counter_frequency:
-                            f = yield eval(command)
-                        yield dev.set_ramp(float(f), float(f))
+#                        for command in dev.get_counter_frequency:
+#                            f_start = yield eval(command)
+                        ramprate = yield dev.get_ramprate()
+                        yield self.set_ramprate(dev, float(ramprate))
+#                        f_stop = float(f_start) + ramprate*dev.t_ramp
+#                        yield dev.set_ramprate(float(f_start), float(f_stop))
+#                        dev.delayed_call = reactor.callLater(dev.t_ramp/2., self.ramprate, c, ramprate)
 
 
     @setting(9, 'select device by name', name='s', returns='s')    
@@ -161,21 +172,26 @@ class AG33500BServer(GPIBManagedServer):
         conf = self.load_configuration()
         return str(conf)
 
-    @setting(16, 'set ramprate', ramprate='v', returns='v')
-    def set_ramprate(self, c, ramprate=0):
+    @setting(16, 'ramprate', ramprate='v', returns='v')
+    def ramprate(self, c, ramprate=None):
         dev = self.selectedDevice(c)
-        print '!'
+        if ramprate is not None:
+            yield self.set_ramprate(dev)
+        else:
+            ramprate = yield dev.get_ramprate()
+        returnValue(ramprate)
+    
+    @inlineCallbacks
+    def set_ramprate(self, dev, ramprate):
         for command in dev.get_counter_frequency:
             f_start = yield eval(command)
         f_stop = float(f_start) + ramprate*dev.t_ramp
-        yield dev.set_ramp(f_start, f_stop)
-        print 'reset ramprate. rate: {}, start {}'.format(ramprate, f_start)
+        yield dev.set_ramprate(f_start, f_stop)
         try:
             dev.delayed_call.cancel()
         except:
             pass
-        dev.delayed_call = reactor.callLater(dev.t_ramp/2., self.set_ramprate, c, ramprate)
-        returnValue(ramprate)
+        dev.delayed_call = reactor.callLater(dev.t_ramp/2., self.set_ramprate, dev, ramprate)
 
 if __name__ == '__main__':
     configuration_name = '33500b_config'
