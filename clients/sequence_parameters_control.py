@@ -121,15 +121,14 @@ class ParameterControl(QtGui.QGroupBox):
     def reinit(self): 
         self.setDisabled(False)
         server = yield self.cxn.get_server(self.servername)
-        yield server.signal__update(self.update_id, context=self.context)
+        yield server.signal__parameters_updated(self.update_id, context=self.context)
         yield server.addListener(listener=self.receive_update, source=None,
                                  ID=self.update_id, context=self.context)
-        yield server.notify_listeners()
-
 
     def disable(self):
         print 'oh no!'
         self.setDisabled(True)
+
 
     def closeEvent(self, x):
         self.reactor.stop()

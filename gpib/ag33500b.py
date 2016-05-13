@@ -78,9 +78,9 @@ class AG33500BWrapper(GPIBDeviceWrapper):
 
     @inlineCallbacks
     def get_ramprate(self):
-        f_start = yield self.query('SOUR{}:FREQ:STAR?')
-        f_stop = yield self.write('SOUR{}:FREQ:STOP?')
-        T_ramp = yield self.write('SOUR{}:SWEEp:TIME?')
+        f_start = yield self.query('SOUR{}:FREQ:STAR?'.format(self.source))
+        f_stop = yield self.query('SOUR{}:FREQ:STOP?'.format(self.source))
+        T_ramp = yield self.query('SOUR{}:SWEEp:TIME?'.format(self.source))
         ramprate = (f_stop - f_start)/T_ramp
         returnValue(ramprate)
 
@@ -111,6 +111,7 @@ class AG33500BServer(GPIBManagedServer):
                     dev.set_configuration(conf)
                     dev.set_defaults()
                     if hasattr(dev, 't_ramp'):
+                        pass
 #                        for command in dev.get_counter_frequency:
 #                            f_start = yield eval(command)
                         ramprate = yield dev.get_ramprate()
@@ -176,7 +177,7 @@ class AG33500BServer(GPIBManagedServer):
     def ramprate(self, c, ramprate=None):
         dev = self.selectedDevice(c)
         if ramprate is not None:
-            yield self.set_ramprate(dev)
+            yield self.set_ramprate(dev, ramprate)
         else:
             ramprate = yield dev.get_ramprate()
         returnValue(ramprate)

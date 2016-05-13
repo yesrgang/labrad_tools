@@ -341,6 +341,8 @@ class ConductorServer(LabradServer):
             p = yield self.update_parameters(None, json.dumps(parameters))
         if advanced.has_key('sequence'):
             self.set_sequence(None, advanced.pop('sequence'))
+        if advanced.has_key('display'):
+            self.display = advanced.pop['display']
 #        for k, v in advanced.items():
 #            setattr(self, k, v)
 
@@ -350,17 +352,17 @@ class ConductorServer(LabradServer):
         #reactor.callLater(self.data_delay, self.do_display)
         if self.do_save:
             self.update_data('parameters')
-            reactor.callLater(self.data_delay, self.update_data, 'received_data')
-            reactor.callLater(self.data_delay+.5, self.write_data)
+            self.update_data_call = reactor.callLater(self.data_delay, self.update_data, 'received_data')
+            self.write_data_call = reactor.callLater(self.data_delay+.5, self.write_data)
         yield self.advance()
-        yield self.evaluate_device_parameters()
         sequence = yield self.program_sequencers()
         yield self.parameters_updated(True)
         duration = sum(sequence['digital@T'])
-        reactor.callLater(duration, self.run_sequence)
+        self.run_sequence_call = reactor.callLater(duration, self.run_sequence)
+        yield self.evaluate_device_parameters()
 
     def write_to_db(self):
-        reactor.callLater(self.db_write_period, self.write_to_db)
+        self.write_to_db_call = reactor.callLater(self.db_write_period, self.write_to_db)
         parameters = self.parameters
 
         def to_float(x):
