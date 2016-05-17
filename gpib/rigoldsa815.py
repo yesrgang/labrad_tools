@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = ds1054z
+name = dsa815
 version = 1.0
 description = 
-instancename = ds1054z
+instancename = dsa815
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -25,7 +25,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet import reactor
 
 
-class RigolDS1054ZWrapper(GPIBDeviceWrapper):
+class RigolDSA815Wrapper(GPIBDeviceWrapper):
     def set_configuration(self, configuration):
         self.configuration = configuration
         for key, value in configuration.__dict__.items():
@@ -39,31 +39,44 @@ class RigolDS1054ZWrapper(GPIBDeviceWrapper):
 
     @inlineCallbacks
     def get_data(self, channel=1):
-        yield self.write(":WAV:SOUR CHAN{}".format(channel))
-        rawdata = yield self.query(':WAV:DATA?')
-        dt = yield self.query(":WAV:XINC?")
-        t0 = yield self.query(":WAV:XOR?")
+        """Channel 1 is alpha, channel 2 is beta"""
+        if channel == 1:
+            # alpha
+            yield self.write(':SENS:FREQ:SPAN 20e6')
+            yield self.write(':SENS:FREQ:CENT 100.96e6')
+        else channel = 2:
+            # beta
+            yield self.write(':SENS:FREQ:SPAN 20e6')
+            yield self.write(':SENS:FREQ:CENT 1.36226e9')
+            
+        # Get data
+        rawdata = yield self.query(':TRACe:DATA? TRACE1')
+        data = [float(x) for x in rawdata[12:].split(',')]
         
-        data = [float(x) for x in rawdata.split(',')[1:]]
-        t = [(float(t0) + x * float(dt)) for x in range(len(data))]
-
-        returnValue( (t, data) )
-
+        # Get frequency points from center and span
+        center = yield float(self.query(':TRACe:CENT?'))
+        span = yield float(self.query(':TRACe:SPAN?'))
+        
+        f = np.linspace(center - 0.5*span,
+                        center + 0.5*span,
+                        len(data)).tolist()
+        
+        returnValue ( (f, data) )
         
 
-class RigolDS1054ZServer(GPIBManagedServer):
-    """Control Rigol DS1054Z"""
-    deviceWrapper = RigolDS1054ZWrapper
-    update = Signal(854080, "signal: update", 's')
+class RigolDSA815Server(GPIBManagedServer):
+    """Control Rigol DSA815"""
+    deviceWrapper = RigolDSA815Wrapper
+    update = Signal(914526, "signal: update", 's')
 
     def __init__(self, configuration_filename):
         self.configuration_filename = configuration_filename
         self.load_configuration()
-        self.update = Signal(self.update_id, "signal: update", 's')
+        # self.update = Signal(self.update_id, "signal: update", 's')
         GPIBManagedServer.__init__(self)
     
     def load_configuration(self):
-        self.configuration = __import__(self.configuration_filename).RigolDS1054ZConfig()
+        self.configuration = __import__(self.configuration_filename).RigolDSA815Config()
         for key, value in self.configuration.__dict__.items():
             setattr(self, key, value)
         return self.configuration
@@ -85,12 +98,16 @@ class RigolDS1054ZServer(GPIBManagedServer):
         else:
             returnValue(json.dumps(self.device_configurations.keys()))
 
-    @setting(10, 'get data', channel='i', returns='s')
-    def get_data(self, c, channel=1):
+    @setting(10, 'get data', returns='s')
+    def get_data(self, c):
         dev = self.selectedDevice(c)
-        t, data = yield dev.get_data(channel)
-        json_string = json.dumps({'t': t,
-                                  'data': data})
+        f_alpha, data_alpha = yield dev.get_data(1)
+        f_beta, data_beta = yield dev.get_data(2)
+        json_string = json.dumps({'f_alpha': f_alpha,
+                                  'data_alpha': data_alpha,
+                                  'f_beta': f_beta,
+                                  'data_beta': data_beta,
+                                  })
         yield self.update(json_string)
         returnValue(json_string)
     
@@ -131,7 +148,7 @@ class RigolDS1054ZServer(GPIBManagedServer):
 	return json.dumps(conf.device_configurations(device_name).__dict__)
 
 if __name__ == '__main__':
-    configuration_name = 'rigolds1054z_configuration'
-    __server__ = RigolDS1054ZServer(configuration_name)
+    configuration_name = 'rigoldsa815_configuration'
+    __server__ = RigolDSA815Server(configuration_name)
     from labrad import util
     util.runServer(__server__)
