@@ -1,35 +1,28 @@
 from collections import deque
 
-class PID:
-    def __init__(self, current_value=0., setpoint=0., sampling_interval=1., overall_gain=1., prop_gain=1., int_gain=1., diff_gain=0., min_max=(float('-inf'),float('inf')), offset=0, rbuffer=[0, 0, 0]):
-        self.rbuffer = deque(rbuffer, maxlen=3)
-
-        self.current_value = current_value
-        self.setpoint      = setpoint
-
-        self.overall_gain  = overall_gain
-        self.min_max       = min_max
-        self.offset        = offset
-
-        self.sampling_interval = sampling_interval
-        self.prop_gain         = prop_gain
-        self.int_gain          = int_gain
-        self.diff_gain         = diff_gain
-
+class PID(object):
+    def __init__(self, **kwargs):
+        """ 
+        """
+        self.current_value = 0. 
+        self.setpoint = 0. 
+        self.sampling_interval = 1. 
+        self.overall_gain = 1. 
+        self.prop_gain = 1. 
+        self.int_gain = 1. 
+        self.diff_gain = 0.
+        self.range = [float('-inf'), float('inf')]
+        self.offset = 0
+        self.xbuffer = deque([0., 0., 0.], maxlen=3)
+        self.ybuffer = deque([0., 0., 0.], maxlen=3)
         self.error = 0.
 
-        self.set_params(sampling_interval, prop_gain, int_gain, diff_gain)
+        self.set_params(**kwargs)
 
-    def set_params(self, sampling_interval=False, overall_gain=False, prop_gain=False, int_gain=False, diff_gain=False):
-        self.sampling_interval = sampling_interval or self.sampling_interval
-        self.prop_gain         = prop_gain         or self.prop_gain
-        self.int_gain          = int_gain          or self.int_gain
-        self.diff_gain         = diff_gain         or self.diff_gain
-        self.overall_gain      = overall_gain      or self.overall_gain
-
-        self.update_filter_coefficients()
-
-    def update_filter_coefficients(self):
+    def set_params(self, **kwargs):
+        for kw in kwargs:
+            setattr(self, kw, kwargs[kw])
+        
         G = self.overall_gain
         T = self.sampling_interval
         p = G*self.prop_gain
@@ -41,11 +34,12 @@ class PID:
             'b_1': i*T - d*4./T,
             'b_2': i*T/2. - p + d*2./T,
             'a_1': 0.,
-            'a_2': -1.
+            'a_2': 1.
         }
 
     def tick(self, current_value=False):
-        if (current_value): self.current_value = current_value
+        if not type(current_value).__name__ == 'bool': 
+            self.current_value = current_value
         self.error = self.current_value - self.setpoint
 
         b_0 = self.filter_coefficients['b_0']
@@ -54,28 +48,27 @@ class PID:
         a_1 = self.filter_coefficients['a_1']
         a_2 = self.filter_coefficients['a_2']
 
-        w = self.rbuffer
         x = self.error
-
-        # bilinear transform of continous PID transfer function
-        w.append(x - a_1*w[-1] - a_2*w[-2])
-        y  = b_0*w[-1] + b_1*w[-2] + b_2*w[-3]
-
-        print x, y
+        x_ = self.xbuffer
+        y_ = self.ybuffer
+        y  = b_0*x + b_1*x_[-1] + b_2*x_[-2] + a_2*y_[-2]
 
         # offset
         y += self.offset
 
         # clamp
-        if y < self.min_max[0]: y = self.min_max[0]
-        if y > self.min_max[1]: y = self.min_max[1]
+        y = sorted([self.range[0], y, self.range[1]])[1]
 
         self.output = y
 
+        x_.append(x)
+        y_.append(y)
         return y
 
     def reset(self):
-        for i, e in enumerate(self.rbuffer): self.rbuffer[i] = 0.
+        for x in self.xbuffer:
+            x = 0
+        for y in self.ybuffer:
+            y = 0
 
         self.current_value = 0.
-        self.output        = 0.

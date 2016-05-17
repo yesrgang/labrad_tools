@@ -199,4 +199,3 @@ if __name__ == '__main__':
     __server__ = AG33500BServer(configuration_name)
     from labrad import util
     util.runServer(__server__)
-
