@@ -81,7 +81,7 @@ class AG33500BWrapper(GPIBDeviceWrapper):
         f_start = yield self.query('SOUR{}:FREQ:STAR?'.format(self.source))
         f_stop = yield self.query('SOUR{}:FREQ:STOP?'.format(self.source))
         T_ramp = yield self.query('SOUR{}:SWEEp:TIME?'.format(self.source))
-        ramprate = (f_stop - f_start)/T_ramp
+        ramprate = (float(f_stop) - float(f_start))/float(T_ramp)
         returnValue(ramprate)
 
 class AG33500BServer(GPIBManagedServer):
