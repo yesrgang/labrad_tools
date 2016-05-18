@@ -249,6 +249,10 @@ class ConductorServer(LabradServer):
         self.received_data.update(data)
         return json.dumps(data)
 
+    @setting(12, 'get data', returns='s')
+    def get_data(self, c):
+        return self.data
+
     def update_data(self, data_key):
        new_data = copy.deepcopy(getattr(self, data_key))
        self.data = self.append_data(self.data, new_data)

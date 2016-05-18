@@ -41,9 +41,8 @@ class DitherPID(object):
             'a_2': 1.
         }
 
-    def tick(self, input_dict):
-        for k, v in input_dict.items():
-            self.input_buffer[k].append(v)
+    def tick(self, side, value):
+        self.input_buffer[side].append(value)
 
         if np.product([bool(v) for v in self.input_buffer.values()]):
             self.update_output()
@@ -54,6 +53,7 @@ class DitherPID(object):
         in_r = self.input_buffer['right'].pop()
 
         self.error = in_l - in_r - self.input_offset
+        print 'err', self.error
 
         b_0 = self.filter_coefficients['b_0']
         b_1 = self.filter_coefficients['b_1']
@@ -65,6 +65,9 @@ class DitherPID(object):
         x_ = self.xbuffer
         y_ = self.ybuffer
         y  = b_0*x + b_1*x_[-1] + b_2*x_[-2] + a_2*y_[-2]
+        print 'y', y
+        x_.append(x)
+        y_.append(y)
 
         # offset
         y += self.output_offset
@@ -74,8 +77,6 @@ class DitherPID(object):
 
         self.output = y
 
-        x_.append(x)
-        y_.append(y)
         return y
 
     def reset(self):
@@ -97,7 +98,6 @@ class Dither(object):
             'left': -1.,
             'right': 1,
         }
-        self.side = deque(['left', 'right'])
 
         # non-defaults 
         self.update_parameters(**kwargs)
@@ -106,9 +106,7 @@ class Dither(object):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-    def tick(self, center):
-        side = self.side[0]
+    def tick(self, side, center):
         offset = self.modulation_depth * self.modulation_sign[side]
-        self.side.rotate()
-        
+        self.output = center + offset
         return center + offset
