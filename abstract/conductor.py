@@ -120,7 +120,7 @@ class ConductorServer(LabradServer):
                     self.parameters[device_name][parameter_name] = value
         return json.dumps(self.parameters)
 
-    @setting(14, 'enable parameter', parameters='s', returns='s')
+    @setting(5, 'enable parameter', parameters='s', returns='s')
     def enable_parameter(self, c, parameters=None):
         if parameters is not None:
             for device_name, device in json.loads(parameters).items():
@@ -133,7 +133,7 @@ class ConductorServer(LabradServer):
                 returns[device_name][parameter_name] = parameter['enabled']
         return json.dumps(returns)
 
-    @setting(5, 'fix sequence keys', sequence='s', returns='s')
+    @setting(6, 'fix sequence keys', sequence='s', returns='s')
     def fix_sequence_keys(self, c, sequence):
         sequence = json.loads(sequence)
         for sequencer in self.sequencers:
@@ -159,7 +159,7 @@ class ConductorServer(LabradServer):
         except Exception, e:
             return sequence_filename
 
-    @setting(6, 'set sequence', sequence='s', returns='s')
+    @setting(7, 'set sequence', sequence='s', returns='s')
     def set_sequence(self, c, sequence):
         try:
             sequence = json.loads(sequence)
@@ -174,7 +174,7 @@ class ConductorServer(LabradServer):
         self.sequence = json.loads(fixed_sequence)
         returnValue(fixed_sequence)
 
-    @setting(7, 'queue experiment', experiment='s', returns='i')
+    @setting(8, 'queue experiment', experiment='s', returns='i')
     def queue_experiment(self, c, experiment):
         """ load experiment into queue
 
@@ -190,7 +190,7 @@ class ConductorServer(LabradServer):
         self.experiment_queue.append(json.loads(experiment))
         return len(self.experiment_queue)
 
-    @setting(10, 'set experiment queue', experiment_queue='s', returns='i')
+    @setting(9, 'set experiment queue', experiment_queue='s', returns='i')
     def set_experiment_queue(self, c, experiment_queue=None):
         if experiment_queue:
             experiment_queue = json.loads(experiment_queue)
@@ -200,7 +200,7 @@ class ConductorServer(LabradServer):
             self.experiment_queue = deque([])
         return len(self.experiment_queue)
 
-    @setting(11, 'stop experiment')
+    @setting(10, 'stop experiment')
     def stop_experiment(self, c):
         self.do_save = 0
         self.experiment = {}
@@ -238,7 +238,7 @@ class ConductorServer(LabradServer):
         else:
             return x
     
-    @setting(8, 'evaluate sequence parameters', sequence='s', returns='s')
+    @setting(11, 'evaluate sequence parameters', sequence='s', returns='s')
     def evaluate_sequence_parameters(self, c, sequence=None):
         if sequence is None:
             evaluated_sequence = self.do_evaluate_sequence_parameters(self.sequence)
@@ -258,7 +258,7 @@ class ConductorServer(LabradServer):
             self.in_communication.release()
         returnValue(sequence)
 
-    @setting(9, 'send data', data='s', returns='s')
+    @setting(12, 'send data', data='s', returns='s')
     def send_data(self, c, data):
         data = json.loads(data)
         for d in data.values():
@@ -266,7 +266,7 @@ class ConductorServer(LabradServer):
         self.received_data.update(data)
         return json.dumps(data)
 
-    @setting(12, 'get data', returns='s')
+    @setting(13, 'get data', returns='s')
     def get_data(self, c):
         return self.data
 
