@@ -74,16 +74,20 @@ class ConductorServer(LabradServer):
         }
         """
         configuration = json.loads(configuration)
+        self.devices.update(configuration)
         for device, parameters in configuration.items():
             self.parameters[device] = {}
             for parameter, d in parameters.items():
+                if d.has_key('enabled'):
+                    self.devices[device][parameter]['enabled'] = d['enabled']
+                else:
+                    self.devices[device][parameter]['enabled'] = True
                 value = d['default value']
                 for init_command in d['init commands']:
                     yield eval(init_command)
                 for update_command in d['update commands']:
                     yield eval(update_command)(value)
                 self.parameters[device][parameter] = value
-        self.devices.update(configuration)
         returnValue(json.dumps(self.devices))
 
     @setting(2, 'remove device', device_name='s', returns='s')
@@ -115,6 +119,19 @@ class ConductorServer(LabradServer):
                 for parameter_name, value in device.items():
                     self.parameters[device_name][parameter_name] = value
         return json.dumps(self.parameters)
+
+    @setting(14, 'enable parameter', parameters='s', returns='s')
+    def enable_parameter(self, c, parameters=None):
+        if parameters is not None:
+            for device_name, device in json.loads(parameters).items():
+                for parameter_name, parameter in device.items():
+                    self.device[device_name][parameter_name]['enabled'] = parameter['enabled']
+        returns = {}
+        for device_name, device in self.devices.items():
+            returns[device_name] = {}
+            for parameter_name, parameter in device.items():
+                returns[device_name][parameter_name] = parameter['enabled']
+        return json.dumps(returns)
 
     @setting(5, 'fix sequence keys', sequence='s', returns='s')
     def fix_sequence_keys(self, c, sequence):
