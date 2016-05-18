@@ -56,11 +56,11 @@ s.init_pid(json.dumps(pid_config))
 s.init_dither(json.dumps(dither_config))
 #cxn.yesr20_conductor.register_device(json.dumps(conductor_config))
 
-l = json.dumps({'test': 'left'})
-r = json.dumps({'test': 'right'})
-for i in range(1000):
-    s.update(l)
-    s.advance(r)
-    s.update(r)
-    s.advance(l)
+lock_points = [('9/2', 'left'), ('9/2', 'left')]
+loop = Loop(
+    name='clock lock',
+    parameters=conductor_config,
+    loop=1,
+)
 
+loop.start()
