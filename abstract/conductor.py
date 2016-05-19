@@ -325,40 +325,43 @@ class ConductorServer(LabradServer):
             if len(self.experiment_queue):
                 # get next experiment from queue
                 self.experiment = self.experiment_queue.popleft()
-
+                
+                # need default loop 
+                if not self.experiment.has_key('loop'):
+                    self.experiment.update({'loop': 0})
+                
                 # if this experiment should loop, append to begining of queue
-                if self.experiment.has_key('loop'):
-                    if self.experiment['loop']:
-                        self.experiment_queue.appendleft(copy.deepcopy(self.experiment))
-
-                # get next values from current experiment
-                advanced = self.do_advance(self.experiment)
-
-                # determine where to save data
-                if not advanced.has_key('append_data'):
-                    advanced.update({'append_data': 0})
-                data_directory = self.data_directory()
-                if not os.path.exists(data_directory):
-                    os.mkdir(data_directory )
-                advanced.pop('name')
-                data_name = self.experiment.pop('name')
-                data_path = lambda i: data_directory + data_name + '#{}'.format(i)
-                iteration = 0 
-                while os.path.isfile(data_path(iteration)):
-                    iteration += 1
-                if advanced.pop('append_data'):
-                    self.experiment.pop('append_data')
-                    iteration -= 1
-                    try: 
-                        with open(data_path(iteration), 'r') as infile:
-                            self.data = json.load(infile)
-                    except: 
-                        iteration = 0
+                if self.experiment['loop']:
+                    self.experiment_queue.appendleft(copy.deepcopy(self.experiment))
+                    advanced = self.do_advance(self.experiment)
+                else:
+                    advanced = self.do_advance(self.experiment)
+                    
+                    # determine where to save data
+                    if not advanced.has_key('append_data'):
+                        advanced.update({'append_data': 0})
+                    data_directory = self.data_directory()
+                    if not os.path.exists(data_directory):
+                        os.mkdir(data_directory )
+                    data_name = advanced.pop('name')
+                    self.experiment.pop('name')
+                    data_path = lambda i: data_directory + data_name + '#{}'.format(i)
+                    iteration = 0 
+                    while os.path.isfile(data_path(iteration)):
+                        iteration += 1
+                    if advanced.pop('append_data'):
+                        self.experiment.pop('append_data')
+                        iteration -= 1
+                        iteration = max(iteration, 0)
+                        try: 
+                            with open(data_path(iteration), 'r') as infile:
+                                self.data = json.load(infile)
+                        except: 
+                            self.data = {}
+                    else: 
                         self.data = {}
-                else: 
-                    self.data = {}
-                self.data_path = data_path(iteration)
-                print 'saving data to {}'.format(self.data_path)
+                    self.data_path = data_path(iteration)
+                    print 'saving data to {}'.format(self.data_path)
             else:
                 print 'experiment queue is empty'
                 advanced = {}
