@@ -88,7 +88,7 @@ class ConductorServer(LabradServer):
                 for update_command in d['update commands']:
                     yield eval(update_command)(value)
                 self.parameters[device][parameter] = value
-        returnValue(json.dumps(self.devices))
+        returnValue('') #json.dumps(self.devices))
 
     @setting(2, 'remove device', device_name='s', returns='s')
     def remove_device(self, c, device_name=None):
@@ -120,12 +120,12 @@ class ConductorServer(LabradServer):
                     self.parameters[device_name][parameter_name] = value
         return json.dumps(self.parameters)
 
-    @setting(5, 'enable parameter', parameters='s', returns='s')
-    def enable_parameter(self, c, parameters=None):
+    @setting(5, 'enable parameters', parameters='s', returns='s')
+    def enable_parameters(self, c, parameters=None):
         if parameters is not None:
             for device_name, device in json.loads(parameters).items():
                 for parameter_name, parameter in device.items():
-                    self.device[device_name][parameter_name]['enabled'] = parameter['enabled']
+                    self.devices[device_name][parameter_name]['enabled'] = parameter
         returns = {}
         for device_name, device in self.devices.items():
             returns[device_name] = {}
@@ -210,8 +210,9 @@ class ConductorServer(LabradServer):
         for device, parameters in self.devices.items():
             for parameter, d in parameters.items():
                 value = self.parameters[device][parameter]
-                for update_command in d['update commands']:
-                    yield eval(update_command)(value)
+                if d['enabled']:
+                    for update_command in d['update commands']:
+                        yield eval(update_command)(value)
 
     def do_evaluate_sequence_parameters(self, x):
         if type(x).__name__ in ['str', 'unicode']:
@@ -268,11 +269,13 @@ class ConductorServer(LabradServer):
 
     @setting(13, 'get data', returns='s')
     def get_data(self, c):
-        return self.data
+        return json.dumps(self.data)
 
     def update_data(self, data_key):
-       new_data = copy.deepcopy(getattr(self, data_key))
-       self.data = self.append_data(self.data, new_data)
+        new_data = copy.deepcopy(getattr(self, data_key))
+        self.data = self.append_data(self.data, new_data)
+        if self.data.has_key('clock_servo'):
+            print self.data['clock_servo']
 
     def write_data(self):
         with open(self.data_path, 'w') as outfile:
@@ -326,7 +329,7 @@ class ConductorServer(LabradServer):
                 # if this experiment should loop, append to begining of queue
                 if self.experiment.has_key('loop'):
                     if self.experiment['loop']:
-                        self.experiment_queue.appendleft(self.experiment)
+                        self.experiment_queue.appendleft(copy.deepcopy(self.experiment))
 
                 # get next values from current experiment
                 advanced = self.do_advance(self.experiment)
@@ -336,7 +339,7 @@ class ConductorServer(LabradServer):
                     advanced.update({'append_data': 0})
                 data_directory = self.data_directory()
                 if not os.path.exists(data_directory):
-                    os.mkdir(data_directory)
+                    os.mkdir(data_directory )
                 advanced.pop('name')
                 data_name = self.experiment.pop('name')
                 data_path = lambda i: data_directory + data_name + '#{}'.format(i)
@@ -346,8 +349,12 @@ class ConductorServer(LabradServer):
                 if advanced.pop('append_data'):
                     self.experiment.pop('append_data')
                     iteration -= 1
-                    with open(data_path(iteration), 'r') as infile:
-                        self.data = json.load(infile)
+                    try: 
+                        with open(data_path(iteration), 'r') as infile:
+                            self.data = json.load(infile)
+                    except: 
+                        iteration = 0
+                        self.data = {}
                 else: 
                     self.data = {}
                 self.data_path = data_path(iteration)

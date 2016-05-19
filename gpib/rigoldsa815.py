@@ -44,7 +44,7 @@ class RigolDSA815Wrapper(GPIBDeviceWrapper):
             # alpha
             yield self.write(':SENS:FREQ:SPAN 20e6')
             yield self.write(':SENS:FREQ:CENT 100.96e6')
-        else channel = 2:
+        else:
             # beta
             yield self.write(':SENS:FREQ:SPAN 20e6')
             yield self.write(':SENS:FREQ:CENT 1.36226e9')
@@ -54,11 +54,11 @@ class RigolDSA815Wrapper(GPIBDeviceWrapper):
         data = [float(x) for x in rawdata[12:].split(',')]
         
         # Get frequency points from center and span
-        center = yield float(self.query(':TRACe:CENT?'))
-        span = yield float(self.query(':TRACe:SPAN?'))
+        center = yield self.query(':SENS:FREQ:CENT?')
+        span = yield self.query(':SENS:FREQ:SPAN?')
         
-        f = np.linspace(center - 0.5*span,
-                        center + 0.5*span,
+        f = np.linspace(float(center) - 0.5*float(span),
+                        float(center) + 0.5*float(span),
                         len(data)).tolist()
         
         returnValue ( (f, data) )

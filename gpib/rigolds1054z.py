@@ -39,11 +39,13 @@ class RigolDS1054ZWrapper(GPIBDeviceWrapper):
 
     @inlineCallbacks
     def get_data(self, channel=1):
+        yield self.write(":WAV:POIN:MODE NOR")
+        yield self.write(":WAV:FORM ASC")
         yield self.write(":WAV:SOUR CHAN{}".format(channel))
         rawdata = yield self.query(':WAV:DATA?')
         dt = yield self.query(":WAV:XINC?")
         t0 = yield self.query(":WAV:XOR?")
-        
+
         data = [float(x) for x in rawdata.split(',')[1:]]
         t = [(float(t0) + x * float(dt)) for x in range(len(data))]
 

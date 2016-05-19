@@ -67,34 +67,40 @@ class ClockServoServer(LabradServer):
         }
         """
         for lock_name, parameters in json.loads(config).items():
+            yield eval(parameters['init command'])()
             self.dither[lock_name] = Dither(**parameters['parameters'])
-            self.dither_command[lock_name] = parameters['command']
+            self.dither_command[lock_name] = parameters['update command']
 
     @setting(3, 'update', signal='s')
     def update(self, c, signal):
         for lock, side in json.loads(signal).items():
             if self.pid.has_key(lock):
                 data_dev, data_param = self.pid[lock].data_path
-                data = eval(self.pid_command[lock])()
+                data = yield eval(self.pid_command[lock])()
                 try:
-                    value = data[data_dev][data_param]
+                    value = json.loads(data)[data_dev][data_param][-1]
                     center = self.pid[lock].tick(side, value)
-                    yield self.record({lock: center})
-                except:
+                    print lock, center
+                    data = {lock: {'frequency': center}}
+                    yield self.record(data)
+                except Exception, e:
+                    print e
                     print "waiting for valid data"
 
     @setting(4, 'advance', signal='s')
     def advance(self, c, signal):
-        signal = json.loads(signal)
-        for lock, side in signal.items():
+        for lock, side in json.loads(signal).items():
             if self.dither.has_key(lock):
                 center = self.pid[lock].output
                 next_write = self.dither[lock].tick(side, center)
-#                print eval(self.dither_command[lock])(next_write)
+                x = yield eval(self.dither_command[lock])(next_write)
+                print x
 
+    @inlineCallbacks
     def record(self, data):
-        print 'center', data
-#        yield self.client.conductor.send_data(json.dumps(data))
+#        print 'center', data
+        print 'sending: ', data
+        yield self.client.yesr20_conductor.send_data(json.dumps(data))
 
 if __name__ == "__main__":
     from labrad import util

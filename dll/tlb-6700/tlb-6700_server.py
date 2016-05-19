@@ -53,7 +53,7 @@ class TLB6700Server(LabradServer):
             sampling_interval=self.pid_sampling_interval,
             prop_gain=self.pid_prop_gain,
             int_gain=self.pid_int_gain,
-            min_max=self.pid_min_max,
+            out_range=self.pid_min_max,
             )
 
     def initServer(self):
@@ -148,11 +148,12 @@ class TLB6700Server(LabradServer):
     def set_digital_lock_state(self, c, state=None):
         if state is not None:
             self.pid.offset = yield self.piezo_voltage(None)
+            self.pid.current_offset = yield self.diode_current(None)
             self.digital_lock_state = state
             if state:
                 yield self.tick_digital_lock()
             else:
-                self.pid.rbuffer = deque([0, 0, 0], maxlen=3)
+                self.pid.reset()
                 if hasattr(self.digital_lock_delayed_call, 'cancel'):
                     self.digital_lock_delayed_call.cancel()
         yield self.notify_listeners()
@@ -173,13 +174,26 @@ class TLB6700Server(LabradServer):
     
     @inlineCallbacks
     def tick_digital_lock(self):
+        print self.pid.prop_gain
         try:
             error = yield eval(self.get_dmm_str)
         except labradError:
             yield eval(self.init_dmm_str)
             error = yield eval(self.get_dmm_str)
-        piezo_voltage = self.pid.tick(error)
-        yield self.piezo_voltage(None, piezo_voltage)
+        print error
+        new_piezo_voltage = self.pid.tick(error)
+        piezo_voltage = yield self.piezo_voltage(None)
+        diode_current = yield self.diode_current(None)
+        try:
+            dpv = new_piezo_voltage - piezo_voltage
+            s = dpv - round(dpv, 1)
+            diode_current += s
+        except:
+            s = 0
+        yield self.piezo_voltage(None, new_piezo_voltage)
+        yield self.diode_current(None, diode_current+s)
+        print piezo_voltage
+        print diode_current
         if self.digital_lock_state:
             self.digital_lock_delayed_call = reactor.callLater(self.digital_lock_period, self.tick_digital_lock)
    

@@ -11,7 +11,7 @@ class PID(object):
         self.prop_gain = 1. 
         self.int_gain = 1. 
         self.diff_gain = 0.
-        self.range = [float('-inf'), float('inf')]
+        self.out_range = [float('-inf'), float('inf')]
         self.offset = 0
         self.xbuffer = deque([0., 0., 0.], maxlen=3)
         self.ybuffer = deque([0., 0., 0.], maxlen=3)
@@ -57,7 +57,7 @@ class PID(object):
         y += self.offset
 
         # clamp
-        y = sorted([self.range[0], y, self.range[1]])[1]
+        y = sorted([self.out_range[0], y, self.out_range[1]])[1]
 
         self.output = y
 
