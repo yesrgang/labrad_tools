@@ -211,7 +211,9 @@ class ConductorServer(LabradServer):
             for parameter, d in parameters.items():
                 value = self.parameters[device][parameter]
                 if d['enabled']:
+#                    print device
                     for update_command in d['update commands']:
+                        #print update_command, value
                         yield eval(update_command)(value)
 
     def do_evaluate_sequence_parameters(self, x):
@@ -265,32 +267,54 @@ class ConductorServer(LabradServer):
         for d in data.values():
             d['timestamp'] = time.time()
         self.received_data.update(data)
+        print 'received data from {}'.format(data.keys())
         return json.dumps(data)
 
     @setting(13, 'get data', returns='s')
     def get_data(self, c):
         return json.dumps(self.data)
 
+    @setting(14, 'get received data', returns='s')
+    def get_data(self, c):
+        return json.dumps(self.received_data)
+
     def update_data(self, data_key):
         new_data = copy.deepcopy(getattr(self, data_key))
+        if data_key == 'sequence':
+            print new_data.keys()
         self.data = self.append_data(self.data, new_data)
-        if self.data.has_key('clock_servo'):
-            print self.data['clock_servo']
 
     def write_data(self):
+        print 'writing: ', self.data.keys()
         with open(self.data_path, 'w') as outfile:
             json.dump(self.data, outfile)
  
+#    def append_data(self, x1, x2):
+#        """ recursivly append dict to {..{[]}..} """
+#        if type(x2).__name__ == 'dict':
+#            for k in x2.keys():
+#                if not x1.has_key(k):
+#                    if type(x2[k]).__name__ == 'dict':
+#                        x1[k] = {}
+#                    else:
+#                        x1[k] = x2.pop(k) #!!!
+#            appended = {k: self.append_data(x1[k], x2[k]) for k in x2}
+#            x1.update(appended)
+#            return x1
+#        else:
+#            if not type(x1).__name__ == 'list':
+#                x1 = [x1]
+#            if not type(x2).__name__ == 'list':
+#                x2 = [x2]
+#            return x1 + x2
+    
     def append_data(self, x1, x2):
         """ recursivly append dict to {..{[]}..} """
         if type(x2).__name__ == 'dict':
             for k in x2.keys():
                 if not x1.has_key(k):
-                    if type(x2[k]).__name__ == 'dict':
-                        x1[k] = {}
-                    else:
-                        x1[k] = x2.pop(k) #!!!
-            appended = {k: self.append_data(x1[k], x2[k]) for k in x2}
+                    x1[k] = x2.pop(k) 
+            appended = {k: self.append_data(x1[k], x2[k]) for k in x2.keys()}
             x1.update(appended)
             return x1
         else:
@@ -325,42 +349,45 @@ class ConductorServer(LabradServer):
             if len(self.experiment_queue):
                 # get next experiment from queue
                 self.experiment = self.experiment_queue.popleft()
+                experiment_copy = copy.deepcopy(self.experiment)
                 
-                # need default loop 
+                # set defaults if no value
                 if not self.experiment.has_key('loop'):
                     self.experiment.update({'loop': 0})
+                if not self.experiment.has_key('append_data'):
+                    self.experiment.update({'append_data': 0})
                 
                 # if this experiment should loop, append to begining of queue
                 if self.experiment['loop']:
-                    self.experiment_queue.appendleft(copy.deepcopy(self.experiment))
-                    advanced = self.do_advance(self.experiment)
-                else:
-                    advanced = self.do_advance(self.experiment)
-                    
-                    # determine where to save data
-                    if not advanced.has_key('append_data'):
-                        advanced.update({'append_data': 0})
-                    data_directory = self.data_directory()
-                    if not os.path.exists(data_directory):
-                        os.mkdir(data_directory )
-                    data_name = advanced.pop('name')
-                    self.experiment.pop('name')
-                    data_path = lambda i: data_directory + data_name + '#{}'.format(i)
-                    iteration = 0 
-                    while os.path.isfile(data_path(iteration)):
-                        iteration += 1
-                    if advanced.pop('append_data'):
-                        self.experiment.pop('append_data')
-                        iteration -= 1
-                        iteration = max(iteration, 0)
-                        try: 
+                    if not experiment_copy['append_data']:
+                        self.data = {}
+                    experiment_copy['append_data'] = 1
+                    self.experiment_queue.appendleft(experiment_copy)
+
+                advanced = self.do_advance(self.experiment)
+                
+                # determine where to save data
+                data_directory = self.data_directory()
+                if not os.path.exists(data_directory):
+                    os.mkdir(data_directory )
+                data_name = advanced['name']
+                data_path = lambda i: data_directory + data_name + '#{}'.format(i)
+                iteration = 0 
+                while os.path.isfile(data_path(iteration)):
+                    iteration += 1
+                if advanced['append_data']:
+                    iteration -= 1
+                    iteration = max(iteration, 0)
+                    try: 
+                        if not advanced['loop']:
                             with open(data_path(iteration), 'r') as infile:
                                 self.data = json.load(infile)
-                        except: 
-                            self.data = {}
-                    else: 
+                    except: 
                         self.data = {}
-                    self.data_path = data_path(iteration)
+                else: 
+                    self.data = {}
+                self.data_path = data_path(iteration)
+                if not (advanced['loop'] and advanced['append_data']):
                     print 'saving data to {}'.format(self.data_path)
             else:
                 print 'experiment queue is empty'
@@ -368,12 +395,12 @@ class ConductorServer(LabradServer):
                 do_save = 0
         self.do_save = do_save
         if advanced.has_key('parameters'):
-            parameters = advanced.pop('parameters')
+            parameters = advanced['parameters']
             p = yield self.update_parameters(None, json.dumps(parameters))
         if advanced.has_key('sequence'):
-            self.set_sequence(None, advanced.pop('sequence'))
+            self.set_sequence(None, advanced['sequence'])
         if advanced.has_key('display'):
-            self.display = advanced.pop['display']
+            self.display = advanced['display']
 #        for k, v in advanced.items():
 #            setattr(self, k, v)
 
@@ -381,10 +408,14 @@ class ConductorServer(LabradServer):
     @inlineCallbacks
     def run_sequence(self):
         #reactor.callLater(self.data_delay, self.do_display)
+        sequence = self.evaluate_sequence_parameters(None)
+        duration = sum(sequence['digital@T'])
         if self.do_save:
             self.update_data('parameters')
-            self.update_data_call = reactor.callLater(self.data_delay, self.update_data, 'received_data')
-            self.write_data_call = reactor.callLater(self.data_delay+.5, self.write_data)
+            #self.update_data_call = reactor.callLater(self.data_delay, self.update_data, 'received_data')
+            self.update_data_call = reactor.callLater(duration-2, self.update_data, 'received_data')
+            #self.write_data_call = reactor.callLater(self.data_delay+.5, self.write_data)
+            self.write_data_call = reactor.callLater(duration-1., self.write_data)
         yield self.advance()
         sequence = yield self.program_sequencers()
         yield self.parameters_updated(True)

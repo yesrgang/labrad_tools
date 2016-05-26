@@ -18,7 +18,6 @@ timeout = 5
 
 import numpy as np
 import os
-from pyvisa import visa_exceptions
 from labrad.server import setting, Signal
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 import labrad.types as T

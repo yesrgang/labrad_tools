@@ -6,10 +6,10 @@ class DitherPID(object):
         self.sampling_period = 1. 
         self.overall_gain = 1. 
         self.prop_gain = 1. 
-        self.int_gain = 1. 
+        self.int_gain = 1 
         self.diff_gain = 0.
-        self.input_offset = 0
-        self.output_offset = 0
+        self.input_offset = 0.
+        self.output_offset = 0.
         self.output = None
         self.output_range = [float('-inf'), float('inf')]
 
@@ -24,8 +24,8 @@ class DitherPID(object):
         self.set_parameters(**kwargs)
 
     def set_parameters(self, **kwargs):
-        for kw in kwargs:
-            setattr(self, kw, kwargs[kw])
+        for k, v in kwargs.items():
+            setattr(self, k, v)
         
         G = self.overall_gain
         T = self.sampling_period
@@ -43,7 +43,6 @@ class DitherPID(object):
 
     def tick(self, side, value):
         self.input_buffer[side].append(value)
-
         if np.product([bool(v) for v in self.input_buffer.values()]):
             self.update_output()
         return self.output
@@ -51,6 +50,7 @@ class DitherPID(object):
     def update_output(self):
         in_l = self.input_buffer['left'].pop()
         in_r = self.input_buffer['right'].pop()
+        print 'in: ', in_l, in_r
 
         self.error = in_l - in_r - self.input_offset
         print 'err', self.error
