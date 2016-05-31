@@ -241,6 +241,10 @@ class DigitalSequencerServer(LabradServer):
                     elif c.loc not in locs:
                         sequence.update({c.key: [c.manual_state for dt in sequence['digital@T']]})
         return sequence
+    
+    @setting(10, 'reload configuration')
+    def reload_configuration(self, c):
+        self.load_configuration()
 
 
 if __name__ == "__main__":

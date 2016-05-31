@@ -92,7 +92,7 @@ class DigitalSequencerConfig(object):
                     PulseChannelConfig(loc='C02', name='STIRAP P Switch', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='C03', name='STIRAP P Trigger', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='C04', name='STIRAP S Shutter', mode='auto', manual_state=0, invert=0),
-                    PulseChannelConfig(loc='C05', name='STIRAP S Switch', mode='auto', manual_state=0, invert=0),
+                    PulseChannelConfig(loc='C05', name='STIRAP S Switch', mode='auto', manual_state=0, invert=1),
                     PulseChannelConfig(loc='C06', name='STIRAP S Trigger', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='C07', name='TTLC07', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='C08', name='TTLC08', mode='auto', manual_state=0, invert=0),
