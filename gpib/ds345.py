@@ -32,7 +32,7 @@ class ServerConfig(object):
         self.deviceName = 'StanfordResearchSystems DS345'
     	self.instruments = {
             'Spin Pol. AOM': DeviceConfiguration(
-                gpib_device_id='yesr10 GPIB Bus - GPIB0::21',
+                gpib_device_id='yesr10 GPIB Bus - GPIB0::21::INSTR',
                 def_state=True, 
                 def_frequency=20.06e6,
                 def_amplitude=5,
@@ -41,7 +41,7 @@ class ServerConfig(object):
             ),
                             
             'Clock AOM Kill': DeviceConfiguration(
-                gpib_device_id='yesr20 GPIB Bus - GPIB0::21',
+                gpib_device_id='yesr20 GPIB Bus - GPIB0::21::INSTR',
                 def_state=True, 
                 def_frequency=27.15e6,
                 def_amplitude=-2,

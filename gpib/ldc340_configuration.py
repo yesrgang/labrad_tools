@@ -10,7 +10,7 @@ class LDC340Config(object):
         self.deviceName = 'PROFILE LDC340'
     	self.device_configurations = {
             '707': LDC340DeviceConfiguration(
-                gpib_device_id='yesr10 GPIB Bus - GPIB0::10',
+                gpib_device_id='yesr10 GPIB Bus - GPIB0::10::INSTR',
                 current_range=(0, .1),
                 dial_steps=20,
                 def_current=.095,

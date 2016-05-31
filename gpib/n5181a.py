@@ -32,7 +32,7 @@ class ServerConfig(object):
         self.deviceName = 'Agilent Technologies N5181A'
     	self.instruments = {
         'beta': DeviceConfiguration(
-            gpib_device_id='yesr10 GPIB Bus - GPIB0::19',
+            gpib_device_id='yesr10 GPIB Bus - GPIB0::19::INSTR',
             def_state=True, 
             def_frequency=101.5e6,
             def_amplitude=6.,

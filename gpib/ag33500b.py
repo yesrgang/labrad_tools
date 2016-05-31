@@ -22,8 +22,6 @@ from labrad.server import setting, Signal
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet import reactor
-from influxdb import InfluxDBClient
-
 
 class AG33500BWrapper(GPIBDeviceWrapper):
     def set_configuration(self, configuration):

@@ -32,7 +32,7 @@ class ServerConfig(object):
         self.deviceName = 'Hewlett-Packard ESG-D3000B'
     	self.instruments = {
         'alpha': DeviceConfiguration(
-            gpib_device_id='yesr10 GPIB Bus - GPIB0::20',
+            gpib_device_id='yesr10 GPIB Bus - GPIB0::20::INSTR',
             def_state=True, 
             def_frequency=1.3615e6,
             def_amplitude=6,

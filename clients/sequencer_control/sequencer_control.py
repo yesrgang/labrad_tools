@@ -362,7 +362,11 @@ class Sequencer(QtGui.QWidget):
         self.analogSequencer.nameColumn.scrollArea.horizontalScrollBar().setValue(val)
     
     def browse(self):
-        filepath = QtGui.QFileDialog().getOpenFileName(directory=self.sequence_directory())
+        if os.path.exists(self.sequence_directory()):
+            directory = self.sequence_directory()
+        else:
+            directory = self.base_directory
+        filepath = QtGui.QFileDialog().getOpenFileName(directory=directory)
         if filepath:
             self.loadSaveRun.locationBox.setText(filepath)
             self.loadSequence(filepath)
@@ -490,7 +494,8 @@ class SequencerConfig(object):
         self.digital_servername = 'yesr20_digital_sequencer'
         self.analog_servername = 'yesr20_analog_sequencer'
         self.conductor_servername = 'yesr20_conductor'
-        self.sequence_directory = lambda: 'Z:\\SrQ\\data\\{}\\sequences\\'.format(time.strftime('%Y%m%d'))
+        self.base_directory = 'Z:\\SrQ\\data\\'
+        self.sequence_directory = lambda: self.base_directory + '{}\\sequences\\'.format(time.strftime('%Y%m%d'))
         self.conductor_update_id = 689222
         self.digital_update_id = 689223
         self.spacer_width = 65

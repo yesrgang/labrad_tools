@@ -29,7 +29,7 @@ class ServerConfig(object):
         self.deviceName = 'Agilent Technologies 33522B'
     	self.device_confs = {
             'clock steer': AG33500BConfiguration(
-                gpib_device_id='yesr20 GPIB Bus - GPIB0::25',
+                gpib_device_id='yesr20 GPIB Bus - GPIB0::25::INSTR',
                 source=2,
                 frequency_range=(20e6, 30e6),
                 amplitude_range=(0, .5),

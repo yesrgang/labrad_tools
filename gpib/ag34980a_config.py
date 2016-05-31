@@ -32,7 +32,7 @@ class ServerConfig(object):
        
         self.instruments = {
             'srq monitor': Agilent349880AConfig(
-                gpib_device_id='yesr20 GPIB Bus - GPIB0::7', 
+                gpib_device_id='yesr20 GPIB Bus - GPIB0::7::INSTR', 
                 channels=srq_channels,
                 ),
             }

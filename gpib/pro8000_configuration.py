@@ -7,7 +7,7 @@ class PRO8000Config(object):
     def __init__(self):
         self.name = 'pro8000'
         self.deviceName = 'PROFILE PRO8000'
-        self.gpib_device_id = 'yesr20 GPIB Bus - GPIB0::9'
+        self.gpib_device_id = 'yesr20 GPIB Bus - GPIB0::9::INSTR'
         self.controller_order = ['3D', 'ZS', '2D']
         self.state_id = 698001
         self.current_id = 698002
