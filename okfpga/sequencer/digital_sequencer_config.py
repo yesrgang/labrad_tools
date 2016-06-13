@@ -78,7 +78,7 @@ class DigitalSequencerConfig(object):
                     PulseChannelConfig(loc='B05', name='Spin Pol. Drive', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B06', name='HODT Shutter', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B07', name='VODT Shutter', mode='auto', manual_state=0, invert=0),
-                    PulseChannelConfig(loc='B08', name='Dimple Shutter', mode='auto', manual_state=0, invert=0),
+                    PulseChannelConfig(loc='B08', name='MOT V Shutter', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B09', name='813 H1 AOM', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B10', name='813 H2 AOM', mode='auto', manual_state=0, invert=0),
                     PulseChannelConfig(loc='B11', name='813 V AOM', mode='auto', manual_state=0, invert=0),
