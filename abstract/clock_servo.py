@@ -98,7 +98,6 @@ class ClockServoServer(LabradServer):
             if self.pid.has_key(lock):
                 data_dev, data_param = self.pid[lock].data_path
                 data = yield eval(self.pid_command[lock])()
-                print json.loads(data).keys()
                 try:
                     value = json.loads(data)[data_dev][data_param]
                     if type(value).__name__ == 'list':
@@ -107,20 +106,8 @@ class ClockServoServer(LabradServer):
                 except KeyError, e:
                     print "waiting for valid data on {}".format(e)
                     center = self.pid[lock].output_offset
-                print lock, self.pid[lock].input_buffer
                 data = {lock: {'frequency': center}}
                 yield self.record(data)
-#                try:
-#                    value = json.loads(data)[data_dev][data_param]
-#                    if type(value).__name__ == 'list':
-#                        value = value[-1]
-#                    center = self.pid[lock].tick(side, value)
-#                    print lock, center
-#                    data = {lock: {'frequency': center}}
-#                    yield self.record(data)
-#                except KeyError, e:
-#                    print e
-#                    print "waiting for valid data"
 
     @setting(4, 'advance', signal='s')
     def advance(self, c, signal):
@@ -132,8 +119,6 @@ class ClockServoServer(LabradServer):
 
     @inlineCallbacks
     def record(self, data):
-#        print 'center', data
-        print 'sending: ', data
         yield self.client.yesr20_conductor.send_data(json.dumps(data))
 
 if __name__ == "__main__":
