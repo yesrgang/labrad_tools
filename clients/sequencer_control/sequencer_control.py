@@ -328,7 +328,7 @@ class Sequencer(QtGui.QWidget):
         return odnc
 
     def editAnalogVoltage(self, channel_name):
-    	@inlineCallbacks
+        @inlineCallbacks
         def eav():
             ave_args = (channel_name, self.getSequence(), self.rampMaker, self.config, self.reactor, self.cxn)
             ave = AnalogVoltageEditor(*ave_args)
