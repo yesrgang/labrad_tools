@@ -289,25 +289,6 @@ class ConductorServer(LabradServer):
         with open(self.data_path, 'w') as outfile:
             json.dump(self.data, outfile)
  
-#    def append_data(self, x1, x2):
-#        """ recursivly append dict to {..{[]}..} """
-#        if type(x2).__name__ == 'dict':
-#            for k in x2.keys():
-#                if not x1.has_key(k):
-#                    if type(x2[k]).__name__ == 'dict':
-#                        x1[k] = {}
-#                    else:
-#                        x1[k] = x2.pop(k) #!!!
-#            appended = {k: self.append_data(x1[k], x2[k]) for k in x2}
-#            x1.update(appended)
-#            return x1
-#        else:
-#            if not type(x1).__name__ == 'list':
-#                x1 = [x1]
-#            if not type(x2).__name__ == 'list':
-#                x2 = [x2]
-#            return x1 + x2
-    
     def append_data(self, x1, x2):
         """ recursivly append dict to {..{[]}..} """
         if type(x2).__name__ == 'dict':
@@ -401,9 +382,6 @@ class ConductorServer(LabradServer):
             self.set_sequence(None, advanced['sequence'])
         if advanced.has_key('display'):
             self.display = advanced['display']
-#        for k, v in advanced.items():
-#            setattr(self, k, v)
-
     
     @inlineCallbacks
     def run_sequence(self):

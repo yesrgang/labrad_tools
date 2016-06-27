@@ -100,9 +100,9 @@ class Dither(object):
         }
 
         # non-defaults 
-        self.update_parameters(**kwargs)
+        self.set_parameters(**kwargs)
 
-    def update_parameters(self, **kwargs):
+    def set_parameters(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
 

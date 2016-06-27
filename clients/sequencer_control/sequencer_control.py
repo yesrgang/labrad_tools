@@ -9,10 +9,12 @@ from twisted.internet.defer import inlineCallbacks
 
 import digital_channel_control as dcc
 from connection import connection
-from client_tools2 import SuperSpinBox
+from client_tools import SuperSpinBox
 from digital_widgets import DigitalSequencer
 from analog_widgets import AnalogSequencer
 from analog_editor import AnalogVoltageEditor
+from analog_manual_control import AnalogVoltageManualControl
+from analog_manual_control import ControlConfig as AnalogControlConfig
 from okfpga.sequencer.analog_ramps import RampMaker
 
 def merge_dicts(*dictionaries):
@@ -22,6 +24,7 @@ def merge_dicts(*dictionaries):
     return merged_dictionary
 
 class LoadSaveRun(QtGui.QWidget):
+    """ Tool bar for entering filenames, loading, saving and running """
     def __init__(self):
         super(LoadSaveRun, self).__init__(None)
         self.populate()
@@ -40,6 +43,7 @@ class LoadSaveRun(QtGui.QWidget):
         self.setLayout(self.layout)
 
 class DurationRow(QtGui.QWidget):
+    """ row of boxes for sequence timing """
     def __init__(self, config):
         super(DurationRow, self).__init__(None)
         self.config = config
@@ -82,6 +86,7 @@ class AddDltButton(QtGui.QWidget):
 
 
 class AddDltRow(QtGui.QWidget):
+    """ row of '+'/'-' """
     def __init__(self, config):
         super(AddDltRow, self).__init__(None)
         self.config = config
@@ -290,11 +295,10 @@ class Sequencer(QtGui.QWidget):
             b.dlt.clicked.connect(self.dltColumn(i))
 
         for l in self.digitalSequencer.nameColumn.labels.values():
-            #l.clicked.connect(self.openDigitalManual(l.nameloc))
             l.clicked.connect(self.onDigitalNameClick(l.nameloc))
 
         for l in self.analogSequencer.nameColumn.labels.values():
-            l.clicked.connect(self.editAnalogVoltage(l.nameloc))
+            l.clicked.connect(self.onAnalogNameClick(l.nameloc))
 
     def openDigitalManual(self, channel_name):
         def odm():
@@ -327,17 +331,27 @@ class Sequencer(QtGui.QWidget):
                 yield server.channel_manual_state(channel_name, not state)
         return odnc
 
-    def editAnalogVoltage(self, channel_name):
+    def onAnalogNameClick(self, channel_name):
+        channel_name = str(channel_name)
         @inlineCallbacks
-        def eav():
-            ave_args = (channel_name, self.getSequence(), self.rampMaker, self.config, self.reactor, self.cxn)
-            ave = AnalogVoltageEditor(*ave_args)
-            if ave.exec_():
-                sequence = ave.getEditedSequence().copy()
-                self.setSequence(sequence)
-            conductor = yield self.cxn.get_server(self.conductor_servername)
-            yield conductor.removeListener(listener=ave.receive_parameters, ID=ave.config.conductor_update_id)
-        return eav
+        def oanc():
+            if QtGui.qApp.mouseButtons() & QtCore.Qt.RightButton:
+                conf = AnalogControlConfig()
+                conf.name = channel_name.split('@')[0]
+                widget = AnalogVoltageManualControl(conf, self.reactor)
+                dialog = QtGui.QDialog()
+                dialog.ui = widget
+                dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+                widget.show()
+            elif QtGui.qApp.mouseButtons() & QtCore.Qt.LeftButton:
+                ave_args = (channel_name, self.getSequence(), self.rampMaker, self.config, self.reactor, self.cxn)
+                ave = AnalogVoltageEditor(*ave_args)
+                if ave.exec_():
+                    sequence = ave.getEditedSequence().copy()
+                    self.setSequence(sequence)
+                conductor = yield self.cxn.get_server(self.conductor_servername)
+                yield conductor.removeListener(listener=ave.receive_parameters, ID=ave.config.conductor_update_id)
+        return oanc
 
     def adjustForDVScroll(self):
         val = self.digitalVScroll.verticalScrollBar().value()
@@ -489,26 +503,8 @@ class Sequencer(QtGui.QWidget):
     def closeEvent(self, x):
         self.reactor.stop()
 
-class SequencerConfig(object):
-    def __init__(self):
-        self.digital_servername = 'yesr20_digital_sequencer'
-        self.analog_servername = 'yesr20_analog_sequencer'
-        self.conductor_servername = 'yesr20_conductor'
-        self.base_directory = 'Z:\\SrQ\\data\\'
-        self.sequence_directory = lambda: self.base_directory + '{}\\sequences\\'.format(time.strftime('%Y%m%d'))
-        self.conductor_update_id = 689222
-        self.digital_update_id = 689223
-        self.spacer_width = 65
-        self.spacer_height = 15
-        self.namecolumn_width = 130
-        self.namelabel_width = 200
-        self.durationrow_height = 20
-        self.analog_height = 50
-        self.max_columns = 100
-        self.digital_colors = ['#ff0000', '#ff7700', '#ffff00', '#00ff00', '#0000ff', '#8a2be2']
-        self.rampMaker = RampMaker
-
 if __name__ == '__main__':
+    from sequencer_config import SequencerConfig
     a = QtGui.QApplication([])
     import qt4reactor 
     qt4reactor.install()

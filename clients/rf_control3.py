@@ -4,7 +4,7 @@ from connection import connection
 from twisted.internet.defer import inlineCallbacks
 import numpy as np
 import json
-from client_tools import SuperSpinBox
+from client_tools2 import SuperSpinBox
 
 class CWControl(QtGui.QGroupBox):
     hasNewFrequency = False

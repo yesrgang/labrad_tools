@@ -10,7 +10,7 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 
 from connection import connection
-from client_tools2 import SuperSpinBox
+from client_tools import SuperSpinBox
 from okfpga.sequencer.analog_ramps import RampMaker
 
 sequence = {'a': [{'type': 'sexp', 'dt': 1.0, 'vi': 2.0, 'vf': 5, 'tau': .5, 'pts': 5}, {'type': 'exp', 'dt': 1.0, 'vf': 0, 'tau': -.5, 'pts': 5}]}

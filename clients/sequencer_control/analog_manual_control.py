@@ -4,12 +4,14 @@ from connection import connection
 from twisted.internet.defer import inlineCallbacks
 import numpy as np
 import json
+from client_tools import SuperSpinBox
 
-class DigitalManualControl(QtGui.QGroupBox):
+class AnalogVoltageManualControl(QtGui.QGroupBox):
+    hasNewVoltage = False
     mouseHover = pyqtSignal(bool)
     layout = None
 
-    def __init__(self, configuration, reactor=None, cxn=None):
+    def __init__(self, configuration, reactor, cxn=None):
         QtGui.QDialog.__init__(self)
         self.reactor = reactor
         self.cxn = cxn
@@ -37,6 +39,7 @@ class DigitalManualControl(QtGui.QGroupBox):
 
     @inlineCallbacks
     def get_server_configuration(self):
+        self.voltage_range = (-10., 10.)
         yield None
 
     def populateGUI(self):
@@ -44,9 +47,10 @@ class DigitalManualControl(QtGui.QGroupBox):
         self.mode_button.setCheckable(1)
         self.mode_button.setFixedWidth(self.spinbox_width)
 
-        self.manual_state_button = QtGui.QPushButton()
-        self.manual_state_button.setCheckable(1)
-        self.manual_state_button.setFixedWidth(self.spinbox_width)
+        self.voltage_box = SuperSpinBox(self.voltage_range, self.voltage_units,
+                                        self.voltage_digits)
+        self.voltage_box.setFixedWidth(self.spinbox_width)
+        self.voltage_box.display(0)
 
         if self.layout is None:
             self.layout = QtGui.QGridLayout()
@@ -54,11 +58,11 @@ class DigitalManualControl(QtGui.QGroupBox):
         self.layout.addWidget(QtGui.QLabel('<b>'+self.name+'</b>'), 1, 0, 1, 1,
                               QtCore.Qt.AlignHCenter)
         self.layout.addWidget(self.mode_button, 1, 1)
-        self.layout.addWidget(QtGui.QLabel('Manual State: '), 2, 0, 1, 1,
+        self.layout.addWidget(QtGui.QLabel('Voltage: '), 2, 0, 1, 1,
                               QtCore.Qt.AlignRight)
-        self.layout.addWidget(self.manual_state_button, 2, 1)
+        self.layout.addWidget(self.voltage_box, 2, 1)
         self.setLayout(self.layout)
-        self.setFixedSize(150 + self.spinbox_width, 70)
+        self.setFixedSize(100 + self.spinbox_width, 70)
 
     @inlineCallbacks
     def connectSignals(self):
@@ -66,16 +70,16 @@ class DigitalManualControl(QtGui.QGroupBox):
         yield server.signal__update(self.update_id)
         yield server.addListener(listener=self.receive_update, source=None,
                                  ID=self.update_id)
-        yield self.cxn.add_on_connect(self.servername, self.reinitialize)
-        yield self.cxn.add_on_disconnect(self.servername, self.disable)
+        yield self.cxn.add_on_connect(self.servername_alt, self.reinit)
+        yield self.cxn.add_on_disconnect(self.servername_alt, self.disable)
 
         self.mode_button.released.connect(self.onNewMode)
-        self.manual_state_button.released.connect(self.onNewManualState)
+        self.voltage_box.returnPressed.connect(self.onNewVoltage)
         self.setMouseTracking(True)
-        self.mouseHover.connect(self.requestValues)
-#        self.timer = QtCore.QTimer(self)
-#        self.timer.timeout.connect(self.writeValues)
-#        self.timer.start(self.update_time)
+        #self.mouseHover.connect(self.requestValues)
+        self.timer = QtCore.QTimer(self)
+        self.timer.timeout.connect(self.writeValues)
+        self.timer.start(self.update_time)
 
     @inlineCallbacks
     def requestValues(self, c=None):
@@ -88,18 +92,14 @@ class DigitalManualControl(QtGui.QGroupBox):
         for s in signal:
             if signal[s]['name'] == self.name:
                 update = signal[s]
+        #print update
         if update['mode'] == 'manual':
             self.mode_button.setChecked(1)
             self.mode_button.setText('Manual')
         else:
             self.mode_button.setChecked(0)
             self.mode_button.setText('Auto')
-        if update['manual_state'] == True:
-            self.manual_state_button.setChecked(1)
-            self.manual_state_button.setText('On')
-        else:
-            self.manual_state_button.setChecked(0)
-            self.manual_state_button.setText('Off')
+        self.voltage_box.display(update['manual_voltage'])
         self.free = True
 
     def enterEvent(self, c):
@@ -117,40 +117,52 @@ class DigitalManualControl(QtGui.QGroupBox):
                 yield server.channel_mode(self.name, 'auto')
             else:
                 yield server.channel_mode(self.name, 'manual')
-    
-    @inlineCallbacks
-    def onNewManualState(self):
-        if self.free:
-            server = yield self.cxn.get_server(self.servername)
-            state = yield server.channel_manual_state(self.name)
-            yield server.channel_manual_state(self.name, not state)
 
     @inlineCallbacks
-    def reinitialize(self):
-        pass
+    def writeValues(self):
+        if self.hasNewVoltage:
+            server = yield self.cxn.get_server(self.servername)
+            yield server.channel_manual_voltage(self.name,
+                                                self.voltage_box.value())
+            self.hasNewVoltage = False
+
+    def onNewVoltage(self):
+        if self.free:
+            self.hasNewVoltage = True
+    @inlineCallbacks	
+    def reinit(self): 
+        self.setDisabled(False)
+        server = yield self.cxn.get_server(self.servername)
+        yield server.signal__update(self.update_id, context=self.context)
+        yield server.addListener(listener=self.receive_update, source=None,
+                                 ID=self.update_id, context=self.context)
+	yield server.notify_listeners()
+
 
     def disable(self):
+        print 'oh no!'
         self.setDisabled(True)
 
-#    def closeEvent(self, x):
-#        self.reactor.stop()
-
-class ControlConfig(object):
-    def __init__(self):
-        self.name = '3D MOT AOM'
-        self.servername = 'yesr20_digital_sequencer'
-        self.update_id = 461024
-        self.update_time = 100 # [ms]
-
-        self.spinbox_width = 80
+    def closeEvent(self, x):
+        self.reactor.stop()
 
 class ManyChannels(QtGui.QWidget):
     def __init__(self, reactor, cxn=None):
         QtGui.QDialog.__init__(self)
-        self.channels = ['3D MOT AOM@A00', '3D MOT Shutter', '2D Mot Shutter', 'Zeeman Shutter']
+        self.channels = [
+            'Alpha Intensity', 
+            'Beta Intensity', 
+            'X Comp. Coil', 
+            'Y Comp. Coil', 
+            'Z Comp. Coil', 
+            'HODT Intensity', 
+            'VODT Intensity', 
+            '813 H1 Intensity', 
+            '813 H2 Intensity', 
+            '813 V Intensity',
+        ]
         self.reactor = reactor
         self.cxn = cxn
-#        self.populateGUI()
         self.connect()
 
     @inlineCallbacks
@@ -170,18 +182,42 @@ class ManyChannels(QtGui.QWidget):
         for c in self.channels:
             conf = ControlConfig()
             conf.name = c
-            w = DigitalManualControl(conf, reactor, self.cxn)
+            w = AnalogVoltageManualControl(conf, reactor, self.cxn)
             self.layout.addWidget(w)
+	    h = w.height()
+	    wid = w.width()
+	print h, wid
+	self.setFixedSize(wid*len(self.channels)+5, h+20)
+	#self.layout.setSpacing(0)
         self.setLayout(self.layout)
-        print '!'
+    
+    def closeEvent(self, x):
+        self.reactor.stop()
 
+
+class ControlConfig(object):
+    def __init__(self):
+        self.name = 'Spin Pol. Intensity'
+        self.servername = 'yesr20_analog_sequencer'
+        self.servername_alt = 'yesr20_analog_sequencer'
+        self.update_id = 461023
+        self.update_time = 100 # [ms]
+
+        self.voltage_units = [(0, 'V')]
+        self.voltage_digits = 3
+        self.spinbox_width = 80
 
 if __name__ == '__main__':
+    import sys
     a = QtGui.QApplication([])
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-    widget = DigitalManualControl(ControlConfig(), reactor)
-#    widget = ManyChannels(reactor)
+    if len(sys.argv) > 1:
+        conf = ControlConfig()
+        conf.name = sys.argv[1]
+        widget = AnalogVoltageManualControl(conf, reactor)
+    else:
+        widget = ManyChannels(reactor)
     widget.show()
     reactor.run()
