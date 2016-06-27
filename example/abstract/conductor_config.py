@@ -2,6 +2,7 @@ import os
 import time
 
 node = os.getenv('LABRADNODE')
+sep = os.path.sep
 
 class ConductorConfig(object):
     def __init__(self):
@@ -18,6 +19,5 @@ class ConductorConfig(object):
         ]
         self.default_sequence = {'digital@T': [1, 5, 1]}
         self.default_devices = {}
-        self.data_directory = lambda: '..\\data\\' + time.strftime('%Y%m%d') + '\\'
-        self.data_directory = lambda: '../data/' + time.strftime('%Y%m%d') + '/'
+        self.data_directory = lambda: '..{}data{}'.format(sep, sep) + time.strftime('%Y%m%d')+sep
 
