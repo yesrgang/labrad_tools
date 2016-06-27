@@ -1,0 +1,27 @@
+example for using sequencer interface
+
+start order:
+sequencer/digital_sequencer.py
+sequencer/analog_sequencer.py
+abstract/conductor.py
+clients/sequencer_control/sequencer_control.py
+
+
+What does everything do?
+sequencer_control: 
+gui for generating a sequence dictionary. 
+sequence dictionary is {channel_name: [list of logic or ramps]}.
+open saved sequence in a text editor to get a better picture.
+sequencer_control's "run" button sends dictionary to conductor.
+
+sequence_parameters_control: 
+assigns sequence variables a value.
+in left column enter variable name (prefixed with '*'), e.g. '*T1'.
+in right column enter value in SI units e.g. 1 s -> 1.
+
+conductor:
+substitutes variables into sequence dictionary and then sends to sequencer servers
+does a lot more with data and other devices...
+
+analog/digital_sequencer:
+receives sequence. would write to device instead of passing/

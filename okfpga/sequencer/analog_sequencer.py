@@ -28,7 +28,6 @@ from twisted.internet.threads import deferToThread
 
 from analog_errors import *
 from analog_ramps import *
-from sequence import Sequence
 
 class AnalogSequencerServer(LabradServer):
     """Communicate with DAC board"""
@@ -185,7 +184,7 @@ class AnalogSequencerServer(LabradServer):
     @setting(07, 'run sequence', sequence='s')
     def run_sequence(self, c, sequence):
         """program sequence and then set board mode to run"""
-        sequence = Sequence(sequence)
+        sequence = json.loads(sequence)
         self.program_sequence(sequence)
         for board in self.boards.values():
             self.set_board_mode(board, 'run')

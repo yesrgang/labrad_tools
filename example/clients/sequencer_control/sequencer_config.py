@@ -1,13 +1,18 @@
 import time
+import os
 from analog_ramps import RampMaker
+
+node = os.getenv('LABRADNODE')
 
 class SequencerConfig(object):
     def __init__(self):
-        self.digital_servername = 'yesr20_digital_sequencer'
-        self.analog_servername = 'yesr20_analog_sequencer'
-        self.conductor_servername = 'yesr20_conductor'
-        self.base_directory = 'Z:\\SrQ\\data\\'
+        self.digital_servername = '{}_digital_sequencer'.format(node)
+        self.analog_servername = '{}_analog_sequencer'.format(node)
+        self.conductor_servername = '{}_conductor'.format(node)
+        self.base_directory = '..\\..\\data\\'
+        self.base_directory = '../../data/'
         self.sequence_directory = lambda: self.base_directory + '{}\\sequences\\'.format(time.strftime('%Y%m%d'))
+        self.sequence_directory = lambda: self.base_directory + '{}/sequences/'.format(time.strftime('%Y%m%d'))
         self.conductor_update_id = 689222
         self.digital_update_id = 689223
         self.spacer_width = 65

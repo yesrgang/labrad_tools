@@ -3,3 +3,6 @@
 Errors.Log
 LabRAD.ini
 clients/sequencer_control/sequencer_config.py
+abstract/conductor_config.py
+okfpga/sequencer/analog_config.py
+okfpga/sequencer/digital_config.py
