@@ -15,7 +15,7 @@ from analog_widgets import AnalogSequencer
 from analog_editor import AnalogVoltageEditor
 from analog_manual_control import AnalogVoltageManualControl
 from analog_manual_control import ControlConfig as AnalogControlConfig
-from okfpga.sequencer.analog_ramps import RampMaker
+from analog_ramps import RampMaker
 
 def merge_dicts(*dictionaries):
     merged_dictionary = {}
