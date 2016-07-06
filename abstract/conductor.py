@@ -18,8 +18,11 @@ timeout = 20
 
 import copy
 import json
+import marshal
 import os
+import sys
 import time
+import types
 
 from collections import deque
 
@@ -29,6 +32,10 @@ from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
 from twisted.internet.task import LoopingCall
 from twisted.internet.threads import deferToThread
+
+def eval_marshal(x):
+    code = marshal.loads(x.encode('ISO-8859-1'))
+    return inlineCallbacks(types.FunctionType(code, globals(), "marshal code"))
 
 class ConductorServer(LabradServer):
     parameters_updated = Signal(698124, 'signal: parameters_updated', 'b')
@@ -73,7 +80,7 @@ class ConductorServer(LabradServer):
             }
         }
         """
-        configuration = json.loads(configuration)
+        configuration = json.loads(configuration, encoding='ISO-8859-1')
         self.devices.update(configuration)
         for device, parameters in configuration.items():
             self.parameters[device] = {}
@@ -83,10 +90,14 @@ class ConductorServer(LabradServer):
                 else:
                     self.devices[device][parameter]['enabled'] = True
                 value = d['default value']
-                for init_command in d['init commands']:
-                    yield eval(init_command)
-                for update_command in d['update commands']:
-                    yield eval(update_command)(value)
+                try:
+                    yield eval(d['init command'])
+                except:
+                    yield eval_marshal(d['init command'])(self)
+                try:
+                    yield eval(d['update command'])(value)
+                except:
+                    yield eval_marshal(d['update command'])(self, value)
                 self.parameters[device][parameter] = value
         returnValue('') #json.dumps(self.devices))
 
@@ -152,7 +163,7 @@ class ConductorServer(LabradServer):
     def read_sequence_file(self, sequence_filename):
         try:
             if not os.path.exists(sequence_filename):
-                sequence_filename = self.data_directory() + 'sequences\\' + sequence_filename
+                sequence_filename = self.data_directory() + 'sequences' + os.path.sep + sequence_filename
             with open(sequence_filename, 'r') as infile:
                 sequence = json.load(infile)
             return sequence
@@ -163,16 +174,17 @@ class ConductorServer(LabradServer):
     def set_sequence(self, c, sequence):
         try:
             sequence = json.loads(sequence)
-        except: 
-            print 'no load'
-        if type(sequence).__name__ == 'list':
-            sequence = self.combine_sequences([self.read_sequence_file(s) for s in sequence])
-        else:
-            sequence = self.read_sequence_file(sequence)
+            print sequence
 
-        fixed_sequence = yield self.fix_sequence_keys(c, json.dumps(sequence))
-        self.sequence = json.loads(fixed_sequence)
-        returnValue(fixed_sequence)
+            if type(sequence).__name__ == 'list':
+                sequence = self.combine_sequences([self.read_sequence_file(s) for s in sequence])
+            else:
+                sequence = self.read_sequence_file(sequence)
+            fixed_sequence = yield self.fix_sequence_keys(c, json.dumps(sequence))
+            self.sequence = json.loads(fixed_sequence)
+        except Exception, e: 
+            print 'unable to load sequence'
+            print e
 
     @setting(8, 'queue experiment', experiment='s', returns='i')
     def queue_experiment(self, c, experiment):
@@ -211,10 +223,10 @@ class ConductorServer(LabradServer):
             for parameter, d in parameters.items():
                 value = self.parameters[device][parameter]
                 if d['enabled']:
-#                    print device
-                    for update_command in d['update commands']:
-                        #print update_command, value
-                        yield eval(update_command)(value)
+                    try:
+                        yield eval(d['update command'])(value)
+                    except:
+                        yield eval_marshal(d['update command'])(self, value)
 
     def do_evaluate_sequence_parameters(self, x):
         if type(x).__name__ in ['str', 'unicode']:
@@ -231,6 +243,8 @@ class ConductorServer(LabradServer):
                         self.parameters['sequence'][x] = value
                     except:
                         raise Exception('could not sub var {}'.format(x))
+                        #print 'could not sub var {}. setting to zero'.format(x)
+                        #self.parameters['sequence'][x] = 0
                 return value
             else:
                 return x
@@ -379,27 +393,29 @@ class ConductorServer(LabradServer):
             parameters = advanced['parameters']
             p = yield self.update_parameters(None, json.dumps(parameters))
         if advanced.has_key('sequence'):
-            self.set_sequence(None, advanced['sequence'])
+            self.set_sequence(None, json.dumps(advanced['sequence']))
         if advanced.has_key('display'):
             self.display = advanced['display']
     
     @inlineCallbacks
     def run_sequence(self):
-        #reactor.callLater(self.data_delay, self.do_display)
-        sequence = self.evaluate_sequence_parameters(None)
-        duration = sum(sequence['digital@T'])
-        if self.do_save:
-            self.update_data('parameters')
-            #self.update_data_call = reactor.callLater(self.data_delay, self.update_data, 'received_data')
-            self.update_data_call = reactor.callLater(duration-2, self.update_data, 'received_data')
-            #self.write_data_call = reactor.callLater(self.data_delay+.5, self.write_data)
-            self.write_data_call = reactor.callLater(duration-1., self.write_data)
-        yield self.advance()
-        sequence = yield self.program_sequencers()
-        yield self.parameters_updated(True)
-        duration = sum(sequence['digital@T'])
-        self.run_sequence_call = reactor.callLater(duration, self.run_sequence)
-        yield self.evaluate_device_parameters()
+        try:
+            sequence = self.evaluate_sequence_parameters(None)
+            duration = sum(sequence['digital@T'])
+            if self.do_save:
+                self.update_data('parameters')
+                self.update_data_call = reactor.callLater(duration-2, self.update_data, 'received_data')
+                self.write_data_call = reactor.callLater(duration-1., self.write_data)
+            yield self.advance()
+            sequence = yield self.program_sequencers()
+            yield self.parameters_updated(True)
+            duration = sum(sequence['digital@T'])
+            self.run_sequence_call = reactor.callLater(duration, self.run_sequence)
+            yield self.evaluate_device_parameters()
+        except Exception, e:
+            print e
+            print "error running sequence. will try again in 10 seconds"
+            self.run_sequence_call = reactor.callLater(10, self.run_sequence)
 
     def write_to_db(self):
         self.write_to_db_call = reactor.callLater(self.db_write_period, self.write_to_db)

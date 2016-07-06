@@ -1,3 +1,3 @@
 class ClockServoConfig(object):
     def __init__(self):
-        self.name = 'clock_servo'
+        self.name = '%LABRADNODE%_clock_servo'

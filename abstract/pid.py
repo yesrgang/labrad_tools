@@ -107,6 +107,7 @@ class Dither(object):
             setattr(self, k, v)
 
     def tick(self, side, center):
-        offset = self.modulation_depth * self.modulation_sign[side]
-        self.output = center + offset
-        return center + offset
+        if center is not None:
+            offset = self.modulation_depth * self.modulation_sign[side]
+            self.output = center + offset
+            return center + offset

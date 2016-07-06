@@ -152,7 +152,7 @@ class ConductorServer(LabradServer):
     def read_sequence_file(self, sequence_filename):
         try:
             if not os.path.exists(sequence_filename):
-                sequence_filename = self.data_directory() + 'sequences\\' + sequence_filename
+                sequence_filename = self.data_directory() + 'sequences'+ os.path.sep + sequence_filename
             with open(sequence_filename, 'r') as infile:
                 sequence = json.load(infile)
             return sequence
@@ -163,16 +163,20 @@ class ConductorServer(LabradServer):
     def set_sequence(self, c, sequence):
         try:
             sequence = json.loads(sequence)
-        except: 
-            print 'no load'
-        if type(sequence).__name__ == 'list':
-            sequence = self.combine_sequences([self.read_sequence_file(s) for s in sequence])
-        else:
-            sequence = self.read_sequence_file(sequence)
+            print sequence
 
-        fixed_sequence = yield self.fix_sequence_keys(c, json.dumps(sequence))
-        self.sequence = json.loads(fixed_sequence)
-        returnValue(fixed_sequence)
+            if type(sequence).__name__ == 'list':
+                sequence = self.combine_sequences([self.read_sequence_file(s) for s in sequence])
+            else:
+                sequence = self.read_sequence_file(sequence)
+            print sequence
+            fixed_sequence = yield self.fix_sequence_keys(c, json.dumps(sequence))
+            self.sequence = json.loads(fixed_sequence)
+#            returnValue(fixed_sequence)
+        except Exception, e: 
+            print 'unable to load sequence'
+            print e
+#            returnValue(sequence)
 
     @setting(8, 'queue experiment', experiment='s', returns='i')
     def queue_experiment(self, c, experiment):

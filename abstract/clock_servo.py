@@ -60,8 +60,8 @@ class ClockServoServer(LabradServer):
         config = json.loads(config)
         if config:
             for lock_name, lock_config in config.items():
-                self.pid[lock_name].set_parameters(lock_config)
-        return json.dumps({k: v.__dict__ for k, v in self.pid.items()})
+                self.pid[lock_name].set_parameters(**lock_config)
+#        return json.dumps({k: v.__dict__ for k, v in self.pid.items()})
 
 
     @setting(2, 'init dither', config='s')
@@ -85,8 +85,8 @@ class ClockServoServer(LabradServer):
         config = json.loads(config)
         if config:
             for lock_name, lock_config in config.items():
-                self.dither[lock_name].set_parameters(lock_config)
-        return json.dumps({k: v.__dict__ for k, v in self.dither.items()})
+                self.dither[lock_name].set_parameters(**lock_config)
+#        return json.dumps({k: v.__dict__ for k, v in self.dither.items()})
 
     @setting(3, 'update', signal='s')
     def update(self, c, signal):
@@ -95,6 +95,7 @@ class ClockServoServer(LabradServer):
     @inlineCallbacks
     def do_update(self, signal):
         for lock, side in json.loads(signal).items():
+            print 'PID: ', lock, side
             if self.pid.has_key(lock):
                 data_dev, data_param = self.pid[lock].data_path
                 data = yield eval(self.pid_command[lock])()
@@ -109,9 +110,14 @@ class ClockServoServer(LabradServer):
                 data = {lock: {'frequency': center}}
                 yield self.record(data)
 
+    @setting(7, lock='s')
+    def get_center(self, c, lock):
+        return self.pid[lock].output
+
     @setting(4, 'advance', signal='s')
     def advance(self, c, signal):
         for lock, side in json.loads(signal).items():
+            print 'dither: ', lock, side
             if self.dither.has_key(lock):
                 center = self.pid[lock].output
                 next_write = self.dither[lock].tick(side, center)

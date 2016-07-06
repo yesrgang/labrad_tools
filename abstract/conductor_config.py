@@ -1,4 +1,7 @@
+import os
 import time
+
+SEP = os.path.sep
 
 class ConductorConfig(object):
     def __init__(self):
