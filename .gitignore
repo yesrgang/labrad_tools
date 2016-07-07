@@ -1,7 +1,12 @@
 *.pyc
 *~
-Errors.Log
-LabRAD.ini
+*.log
+*.aux
+*.dvi
+*.fls
+*.fdb_latexmk
+*.out
+
 clients/sequencer_control/sequencer_config.py
 abstract/conductor_config.py
 okfpga/sequencer/analog_config.py

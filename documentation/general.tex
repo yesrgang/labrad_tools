@@ -1,31 +1,40 @@
 \input{header.tex}
 \usepackage{listings}
-\title{yesr labrad}
-\author{Ross Hutson}
+\title{YeSr LabRAD}
 \begin{document}
 \maketitle
 
-
 \section{Installation}
-Installation instructions are given in the \href{https://github.com/AMOLabRAD/AMOLabRAD/wiki/Installation-instructions}{AMO LabRAD Wiki}. 
-Here, we just give a list of dependencies. 
-\begin{itemize}
-    \item python 2.7.x
-    \item zope.interface
-    \item twisted
-    \item pylabrad
-    \item numpy 
-    \item scipy
-    \item matplotlib
-    \item numpy 
-    \item scipy
-    \item pyserial
-    \item pyvisa
-    \item Opal Kelly Front Panel
-\end{itemize}
-These can be installed however you like. Anaconda seems to work nice for Windows. There is also a list of windows executables on the yesr datashare.
+\subsection{LabRAD Manager}
+The labrad \href{https://github.com/labrad/scalabrad}{manager} and \href{https://github.com/labrad/scalabrad-web}{web interface} can be found on github. 
 
-\section{Introduction}
+\subsection{pylabrad}
+Here is a list of python dependencies. 
+\begin{itemize}
+    \item required
+    \begin{itemize}
+        \item python 2.7.11
+        \item twisted
+        \item pylabrad
+    \end{itemize}
+    \item generally useful
+    \begin{itemize}
+        \item numpy 
+        \item scipy
+        \item matplotlib
+        \item pyserial 2.7
+        \item pyvisa 1.8
+    \end{itemize}
+    \item optional
+    \begin{itemize}
+        \item Opal Kelly Front Panel
+        \item python-vxi11
+    \end{itemize}
+\end{itemize}
+These can be installed however you like (pip, virtualenv).
+
+\section{Usage}
+\subsection{Simple Connection}
 If the labrad manager is running and environment variables are set correctly
 \begin{lstlisting}[language=bash]
     >> import labrad

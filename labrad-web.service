@@ -1,0 +1,16 @@
+[Unit]
+Description=labrad manager
+After=syslog.target
+
+[Service]
+Type=simple
+User=srgang
+Group=srgang
+WorkingDirectory=/home/srgang/labrad
+ExecStart=/home/srgang/labrad/bin/labrad-web --host 0.0.0.0
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target
+
