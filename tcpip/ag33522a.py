@@ -16,7 +16,8 @@ class AG33522AServer(LabradServer):
             setattr(self, key, value)
     
     def initServer(self):
-        self.write_defaults()
+        pass
+#        self.write_defaults()
     
     def write_defaults(self):
         for name, channel in self.channels.items():
