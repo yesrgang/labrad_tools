@@ -18,12 +18,12 @@ timeout = 20
 
 import json
 import sys
-sys.path.append('../')
 
 from labrad.server import Signal, setting
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 
+sys.path.append('../')
 from serial_device_server import SerialDeviceServer
 
 UPDATE_ID = 698021
@@ -44,5 +44,4 @@ class StepperMotorServer(SerialDeviceServer):
 
 if __name__ == "__main__":
     from labrad import util
-    config_name = 'config'
-    util.runServer(StepperMotorServer(config_name))
+    util.runServer(StepperMotorServer())
