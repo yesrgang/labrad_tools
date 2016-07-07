@@ -4,7 +4,7 @@ from twisted.internet.defer import returnValue, inlineCallbacks
 from labrad.server import LabradServer, setting
 
 class SerialConnection():
-    def __init__( self, serial_server, port, **kwargs ):
+    def __init__(self, serial_server, port, **kwargs):
         timeout = kwargs.get('timeout')
         baudrate = kwargs.get('baudrate')
         stopbits = kwargs.get('stopbits')
@@ -46,14 +46,19 @@ class SerialDeviceServer(LabradServer):
         config = __import__(self.config_path).ServerConfig()
         for key, value in config.__dict__.items():
             setattr(self, key, value)
+
+    @setting(0, returns='s')
+    def get_device_list(self, c):
+        return json.dumps(self.devices.keys())
     
-    @setting(1, 'select device by name', name='s', returns='s')
+    @setting(1, name='s', returns='b')
     def select_device_by_name(self, c, name):
         if name not in self.devices.keys():
-            returnValue(json.dumps(self.devices.keys()))
+            message = '{} is not the name of a configured device'.format(name)
+            raise Exception(message)
         
         c['name'] = name
-        device = self.devices[name]
+        device = self.get_device(c)
         connection_name = device.serial_server_name + ' - ' + device.port
         if connection_name not in self.open_connections:
             params = dict(device.__dict__)
@@ -69,21 +74,17 @@ class SerialDeviceServer(LabradServer):
             yield device.serial_connection.write(command)
             ans = yield device.serial_connection.read_line()
 
-        returnValue(name)
+        returnValue(True)
 
     def init_serial(self, serial_server_name, port, **kwargs):
-        try:
-            serial_server = self.client.servers[serial_server_name]
-            serial_server_connection = SerialConnection(
-                    serial_server=serial_server, port=port, **kwargs)
+        serial_server = self.client.servers[serial_server_name]
+        serial_server_connection = SerialConnection(
+                serial_server=serial_server, port=port, **kwargs)
 
-            print 'serial connection opened: {} - {}'.format(serial_server_name, 
-                                                             port)
+        print 'serial connection opened: {} - {}'.format(serial_server_name, 
+                                                         port)
 
-            return serial_server_connection
-        except Exception:
-            serial_server_connection = None
-            print "unable to open serial connection"
+        return serial_server_connection
 
     def get_device(self, c):
         name = c.get('name')
