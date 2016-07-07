@@ -1,0 +1,36 @@
+\input{header.tex}
+\usepackage{listings}
+\title{yesr labrad}
+\author{Ross Hutson}
+\begin{document}
+\maketitle
+
+
+\section{Installation}
+Installation instructions are given in the \href{https://github.com/AMOLabRAD/AMOLabRAD/wiki/Installation-instructions}{AMO LabRAD Wiki}. 
+Here, we just give a list of dependencies. 
+\begin{itemize}
+    \item python 2.7.x
+    \item zope.interface
+    \item twisted
+    \item pylabrad
+    \item numpy 
+    \item scipy
+    \item matplotlib
+    \item numpy 
+    \item scipy
+    \item pyserial
+    \item pyvisa
+    \item Opal Kelly Front Panel
+\end{itemize}
+These can be installed however you like. Anaconda seems to work nice for Windows. There is also a list of windows executables on the yesr datashare.
+
+\section{Introduction}
+If the labrad manager is running and environment variables are set correctly
+\begin{lstlisting}[language=bash]
+    >> import labrad
+    >> cxn = labrad.connect()
+\end{lstlisting}
+
+
+\end{document}
