@@ -18,7 +18,7 @@ timeout = 20
 
 import json
 import sys
-from datatime import datetime
+from datetime import datetime
 sys.path.append('../')
 
 from labrad.server import Signal, setting
