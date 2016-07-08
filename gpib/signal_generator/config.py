@@ -1,4 +1,6 @@
-from device_configs import DS345, HPSignalGenerator, AG335XXX
+from devices.ds345 import DS345
+from devices.hp_signal_generator import HPSignalGenerator
+from devices.ag335xxx import AG335XXX
 
 class ServerConfig(object):
     def __init__(self):
