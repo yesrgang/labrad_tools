@@ -1,25 +1,4 @@
-import labrad.types as T
-
-class SilverPack17(object):
-    def __init__(self, **kwargs):
-        self.timeout = T.Value(1, 's')
-        self.baudrate = 9600
-        self.stopbits=1
-        self.bytesize=8
-        self.serial_connection = None
-        
-        self.init_commands = [
-            '/1m30h10R\r' # current
-            '/1V1000L500R\r' # velocity and acceleration
-            '/1j256o1500R\r' # step resolution
-        ]
-        
-        for kw in kwargs:
-            setattr(self, kw, kwargs[kw])
-
-    def move_absolute_str(self, position):
-        return '/1A{}R\r'.format(position)
-
+from devices.silver_pack_17 import SilverPack17
 
 class ServerConfig(object):
     def __init__(self):

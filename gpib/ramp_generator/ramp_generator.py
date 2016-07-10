@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = gpib_signal_generator
+name = gpib_ramp_generator
 version = 1.0
 description = 
-instancename = gpib_signal_generator
+instancename = gpib_ramp_generator
 
 [startup]
 cmdline = %PYTHON% %FILE%

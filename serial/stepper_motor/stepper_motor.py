@@ -34,13 +34,9 @@ class StepperMotorServer(SerialDeviceServer):
     @setting(2, 'move absolute', position='i', returns='b')
     def move_absolute(self, c, position=None):
         device = self.get_device(c)
-        write_str = device.move_absolute_str(position)
-        yield device.serial_connection.write(write_str)
-        ans = yield device.serial_connection.read_line()
-        if ans:
-            returnValue(True)
-        else:
-            returnValue(False)
+        if position is not None:
+            yield device.move_absolute(position)
+        returnValue(device.position)
 
 if __name__ == "__main__":
     from labrad import util
