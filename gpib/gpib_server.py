@@ -1,56 +1,10 @@
-# Copyright (C) 2008  Matthew Neeley
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-# CHANGELOG
-#
-# 2011 December 10 - Peter O'Malley & Jim Wenner
-#
-# Fixed bug where doesn't add devices if no SOCKETS connected.
-#
-# 2011 December 5 - Jim Wenner
-#
-# Added ability to read TCPIP (Ethernet) devices if configured to use
-# sockets (i.e., fixed port address). To do this, added getSocketsList
-# function and changed refresh_devices.
-#
-# 2011 December 3 - Jim Wenner
-#
-# Added ability to read TCPIP (Ethernet) devices. Must be configured
-# using VXI-11 or LXI so that address ends in INSTR. Does not accept if
-# configured to use sockets. To do this, changed refresh_devices.
-#
-# To be clear, the gpib system already supported ethernet devices just fine
-# as long as they weren't using raw socket protocol. The changes that
-# were made here and in the next few revisions are hacks to make socket
-# connections work, and should be improved.
-
-from labrad.server import LabradServer, setting
-from twisted.internet.defer import inlineCallbacks
-from twisted.internet.reactor import callLater
-from labrad.errors import DeviceNotSelectedError
-import labrad.units as units
-import visa
-
-
 """
 ### BEGIN NODE INFO
 [info]
-name = GPIB Bus
+name = gpib
 version = 1.3.2-no-refresh
 description = Gives access to GPIB devices via pyvisa.
-instancename = %LABRADNODE% GPIB Bus
+instancename = gpib
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -62,10 +16,17 @@ timeout = 20
 ### END NODE INFO
 """
 
+from labrad.server import LabradServer, setting
+from twisted.internet.defer import inlineCallbacks
+from twisted.internet.reactor import callLater
+from labrad.errors import DeviceNotSelectedError
+import labrad.units as units
+import visa
+
 
 class GPIBBusServer(LabradServer):
     """Provides direct access to GPIB-enabled devices."""
-    name = '%LABRADNODE% GPIB Bus'
+    name = '%LABRADNODE%_gpib'
 
     refreshInterval = 10
     defaultTimeout = 1.0 * units.s

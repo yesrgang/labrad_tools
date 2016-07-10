@@ -23,11 +23,11 @@ class SilverPack17(object):
 
 class ServerConfig(object):
     def __init__(self):
-        self.name = '%LABRADNODE%_stepper_motor'
+        self.name = 'stepper_motor'
 
         self.devices = {
             'nd filter': SilverPack17(
-                serial_server_name='yesr5_serial_server',
+                serial_server_name='yesr5_serial',
                 port='COM6',
             ),
         }

@@ -63,7 +63,7 @@ SerialDevice = collections.namedtuple('SerialDevice', ['name', 'devicepath'])
 
 class SerialServer(LabradServer):
     """Provides access to a computer's serial (COM) ports."""
-    name = '%LABRADNODE% Serial Server'
+    name = '%LABRADNODE%_serial'
 
     def initServer(self):
         if sys.platform.startswith('win32'):

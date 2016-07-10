@@ -101,13 +101,12 @@ class ConductorServer(LabradServer):
         for device, parameters in configuration.items():
             self.parameters[device] = {}
             for parameter, d in parameters.items():
-                if d.get('value'):
-                    value = d['value']
-                    d['init_command'] = process_command(d['init_command'])
-                    d['update_command'] = process_command(d['update_command'])
-                    yield d['init_command'](device)
-                    yield d['update_command'](device, value)
-                    self.parameters[device][parameter] = value
+                value = d['value']
+                d['init_command'] = process_command(d['init_command'])
+                d['update_command'] = process_command(d['update_command'])
+                yield d['init_command'](device)
+                yield d['update_command'](device, value)
+                self.parameters[device][parameter] = value
         returnValue(True)
 
     @setting(2, 'remove device', device_name='s', returns='s')
@@ -231,9 +230,8 @@ class ConductorServer(LabradServer):
     def evaluate_device_parameters(self):
         for device, parameters in self.devices.items():
             for parameter, d in parameters.items():
-                if d.get('value'):
-                    value = self.parameters[device][parameter]
-                    yield d['update command'](idevice, value)
+                value = self.parameters[device][parameter]
+                yield d['update command'](idevice, value)
 
     def do_evaluate_sequence_parameters(self, x):
         if type(x).__name__ in ['str', 'unicode']:
