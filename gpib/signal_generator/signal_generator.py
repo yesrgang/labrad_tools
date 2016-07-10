@@ -19,13 +19,11 @@ timeout = 5
 
 import json
 import sys
-from datetime import datetime
-sys.path.append('../')
 
 from labrad.server import Signal, setting
-from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 
+sys.path.append('../')
 from gpib_device_server import GPIBDeviceServer
 
 UPDATE_ID = 698034
@@ -64,9 +62,10 @@ class SignalGeneratorServer(GPIBDeviceServer):
 
     @setting(5)
     def send_update(self, c):
-        d = self.get_device(c)
-        parameters = dict([(p, getattr(d, p)) for p in d.update_parameters])
-        yield self.update(json.dumps(parameters))
+        device = self.get_device(c)
+        update = {c['name']: {p: getattr(device, p) 
+                  for p in device.update_parameters}}
+        yield self.update(json.dumps(update))
 
 if __name__ == "__main__":
     from labrad import util

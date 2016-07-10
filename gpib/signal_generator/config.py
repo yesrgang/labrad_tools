@@ -5,7 +5,7 @@ from devices.ag335xxx import AG335XXX
 class ServerConfig(object):
     def __init__(self):
     	self.devices = {
-            'Spin Pol. AOM': DS345(
+            'spin_pol_aom': DS345(
                 gpib_server_name='yesr10_gpib_bus',
                 address='GPIB0::21::INSTR',
                 state=True, 
@@ -35,7 +35,7 @@ class ServerConfig(object):
                 frequency_range=(250e3, 3e9),
                 amplitude_range=(-20, 20),
             ),
-            'clock steer': AG335XXX(
+            'clock_steer': AG335XXX(
                 gpib_server_name='yesr20_gpib_bus',
                 address='GPIB0::25::INSTR',
                 source=2,

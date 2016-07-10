@@ -11,7 +11,7 @@ from matplotlib.figure import Figure
 
 from connection import connection
 from client_tools import SuperSpinBox
-from okfpga.sequencer.analog_ramps import RampMaker
+from analog_ramps import RampMaker
 
 sequence = {'a': [{'type': 'sexp', 'dt': 1.0, 'vi': 2.0, 'vf': 5, 'tau': .5, 'pts': 5}, {'type': 'exp', 'dt': 1.0, 'vf': 0, 'tau': -.5, 'pts': 5}]}
 

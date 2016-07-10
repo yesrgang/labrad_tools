@@ -39,6 +39,26 @@ class GPIBDeviceServer(LabradServer):
         for key, value in config.__dict__.items():
             setattr(self, key, value)
 
+    @inlineCallbacks
+    def initServer(self):
+        for device in self.devices.values():
+            connection_name = device.gpib_server_name + ' - ' + device.address
+            if connection_name not in self.open_connections:
+                connection = yield self.init_gpib_connection(
+                    device.gpib_server_name,
+                    device.address,
+                    device.timeout)
+                self.open_connections[connection_name] = connection
+            device.gpib_connection = self.open_connections[connection_name]
+            yield device.initialize()
+
+
+    def init_gpib_connection(self, gpib_server_name, address, timeout):
+        gpib_server = self.client.servers[gpib_server_name]
+        gpib_server_connection = GPIBConnection(gpib_server, address, timeout)
+        print 'connection opened: {} - {}'.format(gpib_server_name, address)
+        return gpib_server_connection
+
     @setting(0, returns='s')
     def get_device_list(self, c):
         return json.dumps(self.devices.keys())
@@ -51,25 +71,7 @@ class GPIBDeviceServer(LabradServer):
         
         c['name'] = name
         device = self.get_device(c)
-        connection_name = device.gpib_server_name + ' - ' + device.address
-        if connection_name not in self.open_connections:
-            connection = yield self.init_gpib_connection(
-                device.gpib_server_name,
-                device.address,
-                device.timeout)
-            self.open_connections[connection_name] = connection
-            device.gpib_connection = connection
-            yield device.initialize()
-        else:
-            device.gpib_connection = self.open_connections[connection_name]
-        
-        returnValue(json.dumps(device.__dict__, default=lambda x: None))
-
-    def init_gpib_connection(self, gpib_server_name, address, timeout):
-        gpib_server = self.client.servers[gpib_server_name]
-        gpib_server_connection = GPIBConnection(gpib_server, address, timeout)
-        print 'connection opened: {} - {}'.format(gpib_server_name, address)
-        return gpib_server_connection
+        return json.dumps(device.__dict__, default=lambda x: None)
 
     def get_device(self, c):
         name = c.get('name')

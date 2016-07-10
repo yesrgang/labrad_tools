@@ -50,9 +50,9 @@ class AnalogSequencerServer(LabradServer):
 
     def initialize_board(self, board):
         fp = ok.FrontPanel()
-        module_count = fp.GetDeviceCount()
-        print "Found {} unused modules".format(module_count)
-        for i in range(module_count):
+        device_count = fp.GetDeviceCount()
+        print "Found {} unused devices".format(device_count)
+        for i in range(device_count):
             serial = fp.GetDeviceListSerial(i)
             tmp = ok.FrontPanel()
             tmp.OpenBySerial(serial)

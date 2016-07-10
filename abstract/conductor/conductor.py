@@ -33,14 +33,22 @@ from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
 from twisted.internet.task import LoopingCall
 from twisted.internet.threads import deferToThread
 
-def eval_marshal(x):
-    code = marshal.loads(x.encode('ISO-8859-1'))
-    return inlineCallbacks(types.FunctionType(code, globals(), "marshal code"))
+def process_command(command):
+    if type(command).__name__ != function:
+        try:
+            # if command is simple string like "lambda x: print(x)"
+            command = eval(command)
+        except:
+            # if command is marshal dumps
+            code = marshal.loads(x.encode('ISO-8859-1'))
+            command = types.FunctionType(code, globals(), "marshal code")
+    return inlineCallbacks(command)
 
 class ConductorServer(LabradServer):
     parameters_updated = Signal(698124, 'signal: parameters_updated', 'b')
     def __init__(self, config_name):
         self.data = {}
+        self.sequence = {'digital@T': [1, 5, 1]}
         self.devices = {}
         self.do_save = 0
         self.experiment_queue = deque([])
@@ -56,8 +64,8 @@ class ConductorServer(LabradServer):
     @inlineCallbacks
     def initServer(self):
         yield LabradServer.initServer(self)
-        yield self.set_sequence(None, json.dumps(self.default_sequence))
-        yield self.register_device(None, json.dumps(self.default_devices) )
+        yield self.set_sequence(None, json.dumps(self.sequence))
+        yield self.register_device(None, self.default_devices)
         yield self.run_sequence()
         if self.db_write_period:
             self.dbclient = InfluxDBClient.from_DSN(os.getenv('INFLUXDBDSN'))
@@ -68,38 +76,39 @@ class ConductorServer(LabradServer):
         for key, value in config.__dict__.items():
             setattr(self, key, value)
 
-    @setting(1, 'register device', configuration='s', returns='s')
+    @setting(1, 'register device', configuration='s', returns='b')
     def register_device(self, c, configuration):
         """ register device
 
-        configuration = {*device_name: {
-            *parameter: {
-                'init commands': [*init_command],
-                'update commands': [lambda v: *update_command(v)],
-                'default value': *default_value,
+        configuration = {device_name: {
+            parameter: {
+                'init_command': init_command(device),
+                'update_command': update_command(device, value),
+                'value': *value,
             }
         }
         """
-        configuration = json.loads(configuration, encoding='ISO-8859-1')
+        if type(configuration).__name__ == 'str':
+            configuration = json.loads(configuration, encoding='ISO-8859-1')
+        elif type(configuration).__name__ == 'list':
+            def get_device_config(device_name):
+                path = 'devices.{}'.format(device_name)
+                module = __import__(path, fromlist=['config'])
+                return module.config
+            configuration = {dn: get_device_config(dn) for dn in configuration}
+
         self.devices.update(configuration)
         for device, parameters in configuration.items():
             self.parameters[device] = {}
             for parameter, d in parameters.items():
-                if d.has_key('enabled'):
-                    self.devices[device][parameter]['enabled'] = d['enabled']
-                else:
-                    self.devices[device][parameter]['enabled'] = True
-                value = d['default value']
-                try:
-                    yield eval(d['init command'])
-                except:
-                    yield eval_marshal(d['init command'])(self)
-                try:
-                    yield eval(d['update command'])(value)
-                except:
-                    yield eval_marshal(d['update command'])(self, value)
-                self.parameters[device][parameter] = value
-        returnValue('') #json.dumps(self.devices))
+                if d.get('value'):
+                    value = d['value']
+                    d['init_command'] = process_command(d['init_command'])
+                    d['update_command'] = process_command(d['update_command'])
+                    yield d['init_command'](device)
+                    yield d['update_command'](device, value)
+                    self.parameters[device][parameter] = value
+        returnValue(True)
 
     @setting(2, 'remove device', device_name='s', returns='s')
     def remove_device(self, c, device_name=None):
@@ -163,7 +172,8 @@ class ConductorServer(LabradServer):
     def read_sequence_file(self, sequence_filename):
         try:
             if not os.path.exists(sequence_filename):
-                sequence_filename = self.data_directory() + 'sequences' + os.path.sep + sequence_filename
+                sequence_filename = self.data_directory() + 'sequences' + \
+                                    os.path.sep + sequence_filename
             with open(sequence_filename, 'r') as infile:
                 sequence = json.load(infile)
             return sequence
@@ -174,14 +184,14 @@ class ConductorServer(LabradServer):
     def set_sequence(self, c, sequence):
         try:
             sequence = json.loads(sequence)
-            print sequence
-
             if type(sequence).__name__ == 'list':
-                sequence = self.combine_sequences([self.read_sequence_file(s) for s in sequence])
+                sequence = self.combine_sequences([self.read_sequence_file(s) 
+                                                   for s in sequence])
             else:
                 sequence = self.read_sequence_file(sequence)
             fixed_sequence = yield self.fix_sequence_keys(c, json.dumps(sequence))
             self.sequence = json.loads(fixed_sequence)
+            returnValue(fixed_sequence)
         except Exception, e: 
             print 'unable to load sequence'
             print e
@@ -221,12 +231,9 @@ class ConductorServer(LabradServer):
     def evaluate_device_parameters(self):
         for device, parameters in self.devices.items():
             for parameter, d in parameters.items():
-                value = self.parameters[device][parameter]
-                if d['enabled']:
-                    try:
-                        yield eval(d['update command'])(value)
-                    except:
-                        yield eval_marshal(d['update command'])(self, value)
+                if d.get('value'):
+                    value = self.parameters[device][parameter]
+                    yield d['update command'](idevice, value)
 
     def do_evaluate_sequence_parameters(self, x):
         if type(x).__name__ in ['str', 'unicode']:
@@ -413,8 +420,8 @@ class ConductorServer(LabradServer):
             self.run_sequence_call = reactor.callLater(duration, self.run_sequence)
             yield self.evaluate_device_parameters()
         except Exception, e:
-            print e
             print "error running sequence. will try again in 10 seconds"
+            print e
             self.run_sequence_call = reactor.callLater(10, self.run_sequence)
 
     def write_to_db(self):

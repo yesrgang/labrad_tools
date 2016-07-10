@@ -143,8 +143,8 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
         print 'oh no!'
         self.setDisabled(True)
 
-    def closeEvent(self, x):
-        self.reactor.stop()
+#    def closeEvent(self, x):
+#        self.reactor.stop()
 
 class ManyChannels(QtGui.QWidget):
     def __init__(self, reactor, cxn=None):

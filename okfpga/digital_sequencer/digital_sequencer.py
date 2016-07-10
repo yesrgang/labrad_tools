@@ -23,8 +23,6 @@ from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 
-from sequence import Sequence
-
 class DigitalSequencerServer(LabradServer):
     def __init__(self, config_name):
         LabradServer.__init__(self)
@@ -149,7 +147,7 @@ class DigitalSequencerServer(LabradServer):
 
     @setting(2, 'run sequence', sequence='s')
     def run_sequence(self, c, sequence):
-        sequence = Sequence(sequence)
+        sequence = json.loads(sequence)
         self.program_sequence(sequence)
         for board in self.boards.values():
             self.set_board_mode(board, 'run')

@@ -46,12 +46,35 @@ class SerialDeviceServer(LabradServer):
         config = __import__(self.config_path).ServerConfig()
         for key, value in config.__dict__.items():
             setattr(self, key, value)
+    
+    @inlineCallbacks
+    def initServer(self):
+        for device in self.devices.values():
+            connection_name = device.serial_server_name + ' - ' + device.port
+            if connection_name not in self.open_connections:
+                params = dict(device.__dict__)
+                params.pop('serial_server_name')
+                params.pop('port')
+                connection = yield self.init_serial(
+                    device.serial_server_name,
+                    device.port,
+                    **params)
+                self.open_connections[connection_name] = connection
+            device.serial_connection = self.open_connections[connection_name]
+            yield device.initialize()
+
+    def init_serial(self, serial_server_name, port, **kwargs):
+        serial_server = self.client.servers[serial_server_name]
+        serial_server_connection = SerialConnection(
+                serial_server=serial_server, port=port, **kwargs)
+        print 'connection opened: {} - {}'.format(serial_server_name, port)
+        return serial_server_connection
 
     @setting(0, returns='s')
     def get_device_list(self, c):
         return json.dumps(self.devices.keys())
     
-    @setting(1, name='s', returns='b')
+    @setting(1, name='s', returns='s')
     def select_device_by_name(self, c, name):
         if name not in self.devices.keys():
             message = '{} is not the name of a configured device'.format(name)
@@ -59,32 +82,7 @@ class SerialDeviceServer(LabradServer):
         
         c['name'] = name
         device = self.get_device(c)
-        connection_name = device.serial_server_name + ' - ' + device.port
-        if connection_name not in self.open_connections:
-            params = dict(device.__dict__)
-            params.pop('serial_server_name')
-            params.pop('port')
-            connection = yield self.init_serial(
-                device.serial_server_name,
-                device.port,
-                **params)
-            self.open_connections[connection_name] = connection
-        device.serial_connection = self.open_connections[connection_name]
-        for command in device.init_commands:
-            yield device.serial_connection.write(command)
-            ans = yield device.serial_connection.read_line()
-
-        returnValue(True)
-
-    def init_serial(self, serial_server_name, port, **kwargs):
-        serial_server = self.client.servers[serial_server_name]
-        serial_server_connection = SerialConnection(
-                serial_server=serial_server, port=port, **kwargs)
-
-        print 'serial connection opened: {} - {}'.format(serial_server_name, 
-                                                         port)
-
-        return serial_server_connection
+        return json.dumps(device.__dict__, default=lambda x: None)
 
     def get_device(self, c):
         name = c.get('name')

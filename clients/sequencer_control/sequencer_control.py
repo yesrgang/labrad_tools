@@ -2,12 +2,14 @@ import json
 import time
 import numpy as np
 import os
+import sys
 
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
 from twisted.internet.defer import inlineCallbacks
 
-import digital_channel_control as dcc
+sys.path.append('../')
+sys.path.append('../../okfpga/analog_sequencer')
 from connection import connection
 from client_tools import SuperSpinBox
 from digital_widgets import DigitalSequencer
@@ -15,7 +17,7 @@ from analog_widgets import AnalogSequencer
 from analog_editor import AnalogVoltageEditor
 from analog_manual_control import AnalogVoltageManualControl
 from analog_manual_control import ControlConfig as AnalogControlConfig
-from analog_ramps import RampMaker
+#from analog_ramps import RampMaker
 
 def merge_dicts(*dictionaries):
     merged_dictionary = {}
@@ -299,20 +301,6 @@ class Sequencer(QtGui.QWidget):
 
         for l in self.analogSequencer.nameColumn.labels.values():
             l.clicked.connect(self.onAnalogNameClick(l.nameloc))
-
-    def openDigitalManual(self, channel_name):
-        def odm():
-            config = dcc.ControlConfig()
-            config.name = str(channel_name.split('@')[0])
-            widget = dcc.DigitalManualControl(config)
-            dialog = QtGui.QDialog()
-            dialog.ui = widget
-            dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-            widget.show()
-            pos = QtGui.QCursor().pos()
-            pos = pos - QtCore.QPoint(100, 50)
-            widget.move(pos)
-        return odm
 
     def onDigitalNameClick(self, channel_name):
         channel_name = str(channel_name)

@@ -25,7 +25,7 @@ class HPSignalGenerator(SignalGenerator):
 
     @inlineCallbacks
     def set_amplitude(self, amplitude):
-        command = 'POW:AMPL {} {}'.format(amplitude, amplitude_units)
+        command = 'POW:AMPL {} {}'.format(amplitude, self.amplitude_units)
         yield self.gpib_connection.write(command)
 
     @inlineCallbacks
