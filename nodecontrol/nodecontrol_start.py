@@ -8,7 +8,7 @@ for node in node_dict.keys():
     if node in cxn.servers: 
         print '{}:'.format(node)
         cxn.servers[node].refresh_servers()
-        running_servers = cxn.servers[node].running_servers()
+        running_servers = np.array(cxn.servers[node].running_servers())
         for server in node_dict[node]:
             if server in running_servers: 
                 print '{} is running'.format(server)

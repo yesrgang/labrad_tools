@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = current_control
+name = gpib_current_control
 version = 1.0
 description = 
-instancename = current_control
+instancename = gpib_current_control
 
 [startup]
 cmdline = %PYTHON% %FILE%
