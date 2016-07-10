@@ -1,21 +1,3 @@
-"""
-### BEGIN NODE INFO
-[info]
-name = conductor
-version = 1.0
-description = 
-instancename = %LABRADNODE%_conductor
-
-[startup]
-cmdline = %PYTHON% %FILE%
-timeout = 20
-
-[shutdown]
-message = 987654321
-timeout = 20
-### END NODE INFO
-"""
-
 import copy
 import json
 import os
