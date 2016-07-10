@@ -4,7 +4,7 @@
 name = gpib
 version = 1.3.2-no-refresh
 description = Gives access to GPIB devices via pyvisa.
-instancename = gpib
+instancename = %LABRADNODE_gpib
 
 [startup]
 cmdline = %PYTHON% %FILE%

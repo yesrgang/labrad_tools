@@ -26,6 +26,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
 from lib.pid import Dither, DitherPID
 
 class ClockServoServer(LabradServer):
+    name = 'clock_servo'
     def __init__(self, config_name):
         self.pid = {}
         self.pid_command = {}
