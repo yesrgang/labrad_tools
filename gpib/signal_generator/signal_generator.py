@@ -43,16 +43,13 @@ class SignalGeneratorServer(GPIBDeviceServer):
     def frequency(self, c, frequency=None):
         """ get or change output frequency """
 
-
     @quickSetting(12, 'v')
     def amplitude(self, c, amplitude=None):
         """ get or change output amplitude """
-
     
     @quickSetting(13, 'v')
     def ramprate(self, c, ramprate=None):
         """ get or change ramprate """
-
 
 if __name__ == "__main__":
     from labrad import util
