@@ -41,16 +41,21 @@ class GPIBDeviceServer(LabradServer):
 
     @inlineCallbacks
     def initServer(self):
-        for device in self.devices.values():
-            connection_name = device.gpib_server_name + ' - ' + device.address
-            if connection_name not in self.open_connections:
-                connection = yield self.init_gpib_connection(
-                    device.gpib_server_name,
-                    device.address,
-                    device.timeout)
-                self.open_connections[connection_name] = connection
-            device.gpib_connection = self.open_connections[connection_name]
-            yield device.initialize()
+        for name, device in self.devices.items():
+            try: 
+                connection_name = device.gpib_server_name + ' - ' + device.address
+                if connection_name not in self.open_connections:
+                    connection = yield self.init_gpib_connection(
+                        device.gpib_server_name,
+                        device.address,
+                        device.timeout)
+                    self.open_connections[connection_name] = connection
+                device.gpib_connection = self.open_connections[connection_name]
+                yield device.initialize()
+            except:
+                print 'could not initialize device {}'.format(name)
+                print 'removing {} from available devices'.format(name)
+                self.devices.pop(name)
 
 
     def init_gpib_connection(self, gpib_server_name, address, timeout):
@@ -64,7 +69,7 @@ class GPIBDeviceServer(LabradServer):
         return json.dumps(self.devices.keys())
     
     @setting(1, name='s', returns='s')
-    def select_device_by_name(self, c, name):
+    def select_device(self, c, name):
         if name not in self.devices.keys():
             message = '{} is not the name of a configured device'.format(name)
             raise Exception(message)
@@ -78,3 +83,13 @@ class GPIBDeviceServer(LabradServer):
         if name is None:
             raise Exception('select a device first')
         return self.devices[name]
+
+    def update(self, x):
+        print x
+
+    @setting(2)
+    def send_update(self, c):
+        device = self.get_device(c)
+        update = {c['name']: {p: getattr(device, p) 
+                  for p in device.update_parameters}}
+        yield self.update(json.dumps(update))

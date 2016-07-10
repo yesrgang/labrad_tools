@@ -25,6 +25,8 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 
 sys.path.append('../')
 from gpib_device_server import GPIBDeviceServer
+sys.path.append('../../')
+from extras.decorators import quickSetting
 
 UPDATE_ID = 698034
 
@@ -33,39 +35,24 @@ class SignalGeneratorServer(GPIBDeviceServer):
     update = Signal(UPDATE_ID, 'signal: update', 's')
     name = 'gpib_signal_generator'
 
-    @setting(2, state='b', returns='b')
+    @quickSetting(10, 'b')
     def state(self, c, state=None):
-        device = self.get_device(c)
-        if state is not None:
-            yield device.set_state(state)
-        device.state = yield device.get_state()
-        yield self.send_update(c)
-        returnValue(device.state)
+        """ get or change output state """
 
-    @setting(3, frequency='v', returns='v')
+    @quickSetting(11, 'v')
     def frequency(self, c, frequency=None):
-        device = self.get_device(c)
-        if frequency is not None:
-            yield device.set_frequency(frequency)
-        device.frequency = yield device.get_frequency()
-        yield self.send_update(c)
-        returnValue(device.frequency)
+        """ get or change output frequency """
 
-    @setting(4, amplitude='v', returns='v')
+
+    @quickSetting(12, 'v')
     def amplitude(self, c, amplitude=None):
-        device = self.get_device(c)
-        if amplitude is not None:
-            yield device.set_amplitude(amplitude)
-        device.amplitude = yield device.get_amplitude()
-        yield self.send_update(c)
-        returnValue(device.amplitude)
+        """ get or change output amplitude """
 
-    @setting(5)
-    def send_update(self, c):
-        device = self.get_device(c)
-        update = {c['name']: {p: getattr(device, p) 
-                  for p in device.update_parameters}}
-        yield self.update(json.dumps(update))
+    
+    @quickSetting(13, 'v')
+    def ramprate(self, c, ramprate=None):
+        """ get or change ramprate """
+
 
 if __name__ == "__main__":
     from labrad import util
