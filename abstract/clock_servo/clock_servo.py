@@ -2,9 +2,9 @@
 ### BEGIN NODE INFO
 [info]
 name = clock_servo
-version = 1.0
+version = 1.1
 description = 
-instancename = %LABRADNODE%_clock_servo
+instancename = clock_servo
 
 [startup]
 cmdline = %PYTHON% %FILE%

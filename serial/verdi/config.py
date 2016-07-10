@@ -1,19 +1,8 @@
-import labrad.types as T
+from devices.v18 import V18
 
-class V18(object):
-    def __init__(self, **kwargs):
-        self.timeout = T.Value(1, 's')
-        self.baudrate = 19200
-        self.stopbits=1
-        self.bytesize=8
-        self.delayed_calls = []
-        for kw in kwargs:
-            setattr(self, kw, kwargs[kw])
-
-
-class VerdiConfig(object):
+class ServerConfig(object):
     def __init__(self):
-        self.verdi = {
+        self.devices = {
             'm2 pump': V18(
                 serial_server_name='yesr20_serial',
                 port='COM8',
