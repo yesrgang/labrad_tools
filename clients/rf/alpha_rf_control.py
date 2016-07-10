@@ -14,6 +14,8 @@ class ControlConfig(object):
         self.spinbox_width = 100
 
 if __name__ == '__main__':
+    import sys
+    sys.path.append('../')
     from PyQt4 import QtGui
     from rf_control import RFControl
     a = QtGui.QApplication([])

@@ -15,12 +15,14 @@ class ControlConfig(object):
 
 
 if __name__ == '__main__':
+    import sys
+    sys.path.append('../')
     from PyQt4 import QtGui
-    from signal_generator_control import SignalGeneratorControl
+    from rf_control import RFControl
     a = QtGui.QApplication([])
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-    widget = SignalGeneratorControl('spin_aom_control', reactor)
+    widget = RFControl('spin_aom_control', reactor)
     widget.show()
     reactor.run()
