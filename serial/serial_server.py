@@ -4,7 +4,7 @@
 name = serial
 version = 1.1
 description = 
-instancename = serial
+instancename = %LABRADNODE%_serial
 
 [startup]
 cmdline = %PYTHON% %FILE%

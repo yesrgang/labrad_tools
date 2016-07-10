@@ -46,6 +46,7 @@ def process_command(command):
 
 class ConductorServer(LabradServer):
     parameters_updated = Signal(698124, 'signal: parameters_updated', 'b')
+    name = '%LABRADNODE%_conductor'
     def __init__(self, config_name):
         self.data = {}
         self.sequence = {'digital@T': [1, 5, 1]}
