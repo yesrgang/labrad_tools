@@ -44,7 +44,23 @@ class VerdiServer(DeviceServer):
     update = Signal(UPDATE_ID, 'signal: update', 's')
     name='verdi'
 
-    @setting(10, warmup='b', returns='b')
+    @quickSetting(10, 'b')
+    def state(self, c, state=None):
+        """ get or change state """
+
+    @quickSetting(11, 'v')
+    def shutter_state(self, c, shutter_state=None):
+        """ get or change shutter_state """
+
+    @quickSetting(12, 'v')
+    def power(self, c, power=None):
+        """ get or change power """
+
+    @quickSetting(13, 'v')
+    def current(self, c, current=None):
+        """ get or change current """
+
+    @setting(14, warmup='b', returns='b')
     def warmup(self, c, warmup=True):
         device = self.get_device(c)
         if warmup:
@@ -59,7 +75,7 @@ class VerdiServer(DeviceServer):
             device.delayed_calls.append(full_power_call)
         returnValue(warmup)
 
-    @setting(11, delta_day='i', hour='i', returns='i')
+    @setting(15, delta_day='i', hour='i', returns='i')
     def queue_warmup(self, c, delta_day=0, hour=10):
         device = self.get_device(c)
         delay = seconds_til_start(delta_day, hour)
@@ -67,7 +83,7 @@ class VerdiServer(DeviceServer):
         device.delayed_calls.append(warmup_call)
         return delay
 
-    @setting(12, shutdown='b', returns='b')
+    @setting(16, shutdown='b', returns='b')
     def shutdown(self, c, shutdown=True):
         device = self.get_device(c)
         if shutdown:

@@ -1,10 +1,4 @@
 {   
-    "quick_settings": [
-        ["state", "b"], 
-        ["frequency", "v"], 
-        ["amplitude", "v"],
-        ["ramprate", "v"]
-    ],
     "devices": {
         "spin_pol_aom": {
             "device_type": "DS345",

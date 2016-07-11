@@ -1,9 +1,4 @@
 {
-    "quick_settings": [
-        ["state", "b"],
-        ["current", "v"],
-        ["power", "v"]
-    ],
     "devices": {
         "3d": {
             "device_type": "LDC80xx",

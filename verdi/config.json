@@ -1,10 +1,4 @@
 {
-    "quick_settings": [
-        ["state", "b"],
-        ["shutter_state", "b"],
-        ["power", "v"],
-        ["current", "v"]
-    ],
     "devices": {
         "m2_pump": {
             "device_type": "V18",

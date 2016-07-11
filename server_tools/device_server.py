@@ -36,8 +36,8 @@ class DeviceServer(LabradServer):
         self.quick_settings = []
 
         self.load_config(config_path)
-        for i, (setting, arg_type) in enumerate(self.quick_settings):
-            add_quick_setting(self, 10 + i, setting, arg_type)
+#        for i, (setting, arg_type) in enumerate(self.quick_settings):
+#            add_quick_setting(self, 10 + i, setting, arg_type)
 
     def load_config(self, path=None):
         if path is not None:
