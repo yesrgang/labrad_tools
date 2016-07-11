@@ -36,7 +36,8 @@ def seconds_til_start(delta_day, hour):
 
 def cancel_delayed_calls(device):
     for call in device.delayed_calls:
-        call.cancel()
+        if call.active():
+            call.cancel()
     device.delayed_calls = []
 
 class VerdiServer(DeviceServer):
