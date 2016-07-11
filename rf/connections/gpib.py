@@ -1,15 +1,23 @@
+import os
+
+from twisted.internet.defer import inlineCallbacks
 import labrad.units as U
+from labrad.wrappers import connectAsync
 
-class GPIBConnection():
-    def __init__(self, server, device):
-        self.context = server.context()
-        self.server = server
+LABRADHOST = os.getenv('LABRADHOST')
 
-        server.address(device.address, context=self.context)
+class GPIBConnection(object):
+    @inlineCallbacks
+    def initialize(self, device):
+        self.connection = yield connectAsync(LABRADHOST)
+        self.server = self.connection[device.servername]
+        self.context = self.server.context()
+
+        self.server.address(device.address, context=self.context)
         if hasattr(device, 'timeout'):
-            server.timeout(device.timeout, context=self.context)
+            self.server.timeout(device.timeout, context=self.context)
         else:
-            server.timeout(1 * U.s, context=self.context)
+            self.server.timeout(1 * U.s, context=self.context)
 
     def write(self, data):
         return self.server.write(data, context=self.context)

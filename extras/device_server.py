@@ -69,13 +69,13 @@ class DeviceServer(LabradServer):
                 print 'could not initialize device {}'.format(name)
                 print 'removing {} from available devices'.format(name)
                 self.devices.pop(name)
-
+    
+    @inlineCallbacks
     def init_connection(self, device):
-        server = self.client.servers[device.servername]
-        Connection = get_connection_wrapper(device)
-        connection = Connection(server, device)
+        connection = get_connection_wrapper(device)()
+        yield connection.initialize(device)
         print 'connection opened: {} - {}'.format(device.servername, device.address)
-        return connection
+        returnValue(connection)
 
     @setting(0, returns='s')
     def get_device_list(self, c):
