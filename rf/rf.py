@@ -16,14 +16,9 @@ timeout = 5
 ### END NODE INFO
 """
 
-
-import sys
-
 from labrad.server import Signal, setting
 
-sys.path.append('../../')
-from extras.device_server import DeviceServer
-
+from server_tools.device_server import DeviceServer
 
 UPDATE_ID = 698034
 

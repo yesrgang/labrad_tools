@@ -3,12 +3,11 @@ import labrad.types as T
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 class SilverPack17(object):
-    def __init__(self, **kwargs):
+    def __init__(self, config):
         self.timeout = T.Value(1, 's')
         self.baudrate = 9600
         self.stopbits=1
         self.bytesize=8
-        self.serial_connection = None
         
         self.init_commands = [
             '/1m30h10R\r' # current
@@ -16,20 +15,8 @@ class SilverPack17(object):
             '/1j256o1500R\r' # step resolution
         ]
         
-        for kw in kwargs:
-            setattr(self, kw, kwargs[kw])
+        for key, value in config.items():
+            setattr(self, key, value)
 
     def move_absolute_str(self, position):
         return '/1A{}R\r'.format(position)
-
-
-class ServerConfig(object):
-    def __init__(self):
-        self.name = 'stepper_motor'
-
-        self.devices = {
-            'nd filter': SilverPack17(
-                serial_server_name='yesr5_serial',
-                port='COM6',
-            ),
-        }

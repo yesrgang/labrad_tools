@@ -16,17 +16,13 @@ timeout = 20
 ### END NODE INFO
 """
 
-import json
-import sys
 from datetime import datetime
-sys.path.append('../')
 
 from labrad.server import Signal, setting
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 
-from serial_device_server import SerialDeviceServer
-
+from server_tools.device_server import DeviceServer
 
 UPDATE_ID = 698044
 
@@ -43,43 +39,11 @@ def cancel_delayed_calls(device):
         call.cancel()
     device.delayed_calls = []
 
-class VerdiServer(SerialDeviceServer):
+class VerdiServer(DeviceServer):
     update = Signal(UPDATE_ID, 'signal: update', 's')
     name='verdi'
 
-    @setting(2, state='b', returns='b')
-    def state(self, c, state=None):
-        device = self.get_device(c)
-        if state is not None:
-            yield device.set_state(state)
-        device.state = yield device.get_state()
-        returnValue(device.state)
-
-    @setting(3, shutter_state='b', returns='b')
-    def shutter_state(self, c, shutter_state=None):
-        device = self.get_device(c)
-        if shutter_state is not None:
-            yield device.set_shutter_state(shutter_state)
-        device.shutter_state = yield device.get_shutter_state()
-        returnValue(device_shutter_state)
-
-    @setting(4, power='v', returns='v')
-    def power(self, c, power=None):
-        device = self.get_device(c)
-        if power is not None:
-            yield device.set_power(power)
-        device.power = yield device.get_power()
-        returnValue(device.power)
-
-    @setting(5, current='v', returns='v')
-    def current(self, c, current=None):
-        device = self.get_device(c)
-        if current is not None:
-            yield device.set_current(current)
-        device.current = yield device.get_current()
-        returnValue(device.current)
-
-    @setting(6, warmup='b', returns='b')
+    @setting(10, warmup='b', returns='b')
     def warmup(self, c, warmup=True):
         device = self.get_device(c)
         if warmup:
@@ -94,7 +58,7 @@ class VerdiServer(SerialDeviceServer):
             device.delayed_calls.append(full_power_call)
         returnValue(warmup)
 
-    @setting(7, delta_day='i', hour='i', returns='i')
+    @setting(11, delta_day='i', hour='i', returns='i')
     def queue_warmup(self, c, delta_day=0, hour=10):
         device = self.get_device(c)
         delay = seconds_til_start(delta_day, hour)
@@ -102,7 +66,7 @@ class VerdiServer(SerialDeviceServer):
         device.delayed_calls.append(warmup_call)
         return delay
 
-    @setting(8, shutdown='b', returns='b')
+    @setting(12, shutdown='b', returns='b')
     def shutdown(self, c, shutdown=True):
         device = self.get_device(c)
         if shutdown:

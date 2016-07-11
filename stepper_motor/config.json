@@ -1,0 +1,10 @@
+{
+    "devices": {
+        "nd_filter": {
+            "device_type": "SilverPack17",
+            "connection_type": "Serial",
+            "servername": "yesr5_serial",
+            "address": "COM6"
+        }
+    }
+}

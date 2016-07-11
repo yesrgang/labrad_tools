@@ -16,36 +16,18 @@ timeout = 5
 ### END NODE INFO
 """
 
-import json
-import sys
-
 from labrad.server import Signal, setting
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.reactor import callLater
 
-sys.path.append('../')
-from gpib_device_server import GPIBDeviceServer
-sys.path.append('../../')
-from extras.decorators import quickSetting
+from server_tools.device_server import DeviceServer
 
 UPDATE_ID = 698027
 
-class CurrentControllerServer(GPIBDeviceServer):
+class CurrentControllerServer(DeviceServer):
     """ Provides basic control for current controllers """
     update = Signal(UPDATE_ID, 'signal: update', 's')
     name = 'gpib_current_controller'
-
-    @quickSetting(10, 'b')
-    def state(self, c, state=None):
-        """ get or change output state """
-
-    @quickSetting(11, 'v')
-    def current(self, c, current=None):
-        """ get or change output current """
-
-    @quickSetting(12, 'v')
-    def power(self, c, power=None):
-        """ get or change output power """
 
     @setting(13, warmup='b', returns='b')
     def warmup(self, c, warmup=True):

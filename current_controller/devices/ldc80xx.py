@@ -8,6 +8,14 @@ from generic_current_controller import CurrentController
 
 class LDC80xx(CurrentController):
     @inlineCallbacks
+    def initialize(self):
+        for command in self.init_commands:
+            yield self.gpib_connection.write(command)
+        self.state = yield self.get_state()
+        self.current = yield self.get_current()
+        self.power = yield self.get_power()
+
+    @inlineCallbacks
     def set_slot(self):
         yield self.gpib_connection.write(':SLOT {}'.format(self.slot))
 

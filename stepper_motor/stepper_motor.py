@@ -16,22 +16,17 @@ timeout = 20
 ### END NODE INFO
 """
 
-import json
-import sys
-
 from labrad.server import Signal, setting
-from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 
-sys.path.append('../')
-from serial_device_server import SerialDeviceServer
+from server_toosl.device_server import DeviceServer
 
 UPDATE_ID = 698021
 
-class StepperMotorServer(SerialDeviceServer):
+class StepperMotorServer(DeviceServer):
     update = Signal(UPDATE_ID, 'signal: update', 's')
 
-    @setting(2, 'move absolute', position='i', returns='b')
+    @setting(10, 'move absolute', position='i', returns='b')
     def move_absolute(self, c, position=None):
         device = self.get_device(c)
         if position is not None:
