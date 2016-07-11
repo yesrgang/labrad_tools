@@ -49,19 +49,24 @@ class SerialDeviceServer(LabradServer):
     
     @inlineCallbacks
     def initServer(self):
-        for device in self.devices.values():
-            connection_name = device.serial_server_name + ' - ' + device.port
-            if connection_name not in self.open_connections:
-                params = dict(device.__dict__)
-                params.pop('serial_server_name')
-                params.pop('port')
-                connection = yield self.init_serial(
-                    device.serial_server_name,
-                    device.port,
-                    **params)
-                self.open_connections[connection_name] = connection
-            device.serial_connection = self.open_connections[connection_name]
-            yield device.initialize()
+        for name, device in self.devices.items():
+            try:
+                connection_name = device.serial_server_name + ' - ' + device.port
+                if connection_name not in self.open_connections:
+                    params = dict(device.__dict__)
+                    params.pop('serial_server_name')
+                    params.pop('port')
+                    connection = yield self.init_serial(
+                        device.serial_server_name,
+                        device.port,
+                        **params)
+                    self.open_connections[connection_name] = connection
+                device.serial_connection = self.open_connections[connection_name]
+                yield device.initialize()
+            except:
+                print 'could not initialize device {}'.format(name)
+                print 'removing {} from available devices'.format(name)
+                self.devices.pop(name)
 
     def init_serial(self, serial_server_name, port, **kwargs):
         serial_server = self.client.servers[serial_server_name]
@@ -75,7 +80,7 @@ class SerialDeviceServer(LabradServer):
         return json.dumps(self.devices.keys())
     
     @setting(1, name='s', returns='s')
-    def select_device_by_name(self, c, name):
+    def select_device(self, c, name):
         if name not in self.devices.keys():
             message = '{} is not the name of a configured device'.format(name)
             raise Exception(message)
@@ -93,3 +98,13 @@ class SerialDeviceServer(LabradServer):
     def stopServer( self ):
         for connection in self.open_connections.values():
             connection.close()
+
+    def update(self, x):
+        print x
+
+    @setting(2)
+    def send_update(self, c):
+        device = self.get_device(c)
+        update = {c['name']: {p: getattr(device, p) 
+                  for p in device.update_parameters}}
+        yield self.update(json.dumps(update))

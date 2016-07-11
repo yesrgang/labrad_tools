@@ -1,11 +1,7 @@
-import labrad.types as T
-
 from devices.ad9854 import AD9854
 
 class ServerConfig(object):
     def __init__(self):
-        self.name = 'dds'
-
         self.devices = {
             '813_x_aom': AD9854(
                 serial_server_name = 'yesr20_serial',
