@@ -10,19 +10,19 @@ class LDC80xx(CurrentController):
     @inlineCallbacks
     def initialize(self):
         for command in self.init_commands:
-            yield self.gpib_connection.write(command)
+            yield self.connection.write(command)
         self.state = yield self.get_state()
         self.current = yield self.get_current()
         self.power = yield self.get_power()
 
     @inlineCallbacks
     def set_slot(self):
-        yield self.gpib_connection.write(':SLOT {}'.format(self.slot))
+        yield self.connection.write(':SLOT {}'.format(self.slot))
 
     @inlineCallbacks
     def get_current(self):
         yield self.set_slot()
-        ans = yield self.gpib_connection.query(':ILD:SET?')
+        ans = yield self.connection.query(':ILD:SET?')
         returnValue(float(ans[9:]))
 
     @inlineCallbacks
@@ -33,13 +33,13 @@ class LDC80xx(CurrentController):
         command = ':ILD:SET {}'.format(current)
         
         yield self.set_slot()
-        yield self.gpib_connection.write(command)
+        yield self.connection.write(command)
         self.power = yield self.get_power()
 
     @inlineCallbacks
     def get_power(self):
         yield self.set_slot()
-        ans = yield self.gpib_connection.query(':POPT:ACT?')
+        ans = yield self.connection.query(':POPT:ACT?')
         returnValue(float(ans[10:]))
     
     @inlineCallbacks
@@ -49,7 +49,7 @@ class LDC80xx(CurrentController):
     @inlineCallbacks
     def get_state(self):
         yield self.set_slot()
-        ans = yield self.gpib_connection.query(':LASER?')
+        ans = yield self.connection.query(':LASER?')
         if ans == ':LASER ON':
             returnValue(True)
         elif ans == ':LASER OFF':
@@ -63,7 +63,7 @@ class LDC80xx(CurrentController):
             command = ':LASER OFF'
         
         yield self.set_slot()
-        yield self.gpib_connection.write(command)
+        yield self.connection.write(command)
 
     @inlineCallbacks
     def dial_current(self, stop):

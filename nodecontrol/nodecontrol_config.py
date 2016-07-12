@@ -4,10 +4,9 @@ node_dict = {
     ],
     'node yesr20': [
         'gpib',
-        'gpib_current_control',
-        'gpib_signal_generator',
         'serial',
-        'dds',
+        'gpib_current_controller',
+        'rf',
         'TLB-6700',
         'digital_sequencer',
         'analog_sequencer',

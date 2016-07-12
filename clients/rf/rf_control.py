@@ -18,10 +18,12 @@ class RFControl(QtGui.QGroupBox):
         self.load_config(config)
         self.connect()
 
-    def load_config(self, config):
+    def load_config(self, config=None):
         if type(config).__name__ == 'str':
             config = __import__(config).ControlConfig()
-        for key, value in config.__dict__.items():
+        if config is not None:
+            self.config = config
+        for key, value in self.config.__dict__.items():
             setattr(self, key, value)
 
     @inlineCallbacks
@@ -38,9 +40,10 @@ class RFControl(QtGui.QGroupBox):
     @inlineCallbacks
     def select_device(self):
         server = yield self.cxn.get_server(self.servername)
-        config = yield server.select_device_by_name(self.name)
+        config = yield server.select_device(self.name)
         for key, value in json.loads(config).items():
             setattr(self, key, value)
+        self.load_config()
     
     def populateGUI(self):
         self.state_button = QtGui.QPushButton()

@@ -17,6 +17,16 @@ class SilverPack17(object):
         
         for key, value in config.items():
             setattr(self, key, value)
-
-    def move_absolute_str(self, position):
-        return '/1A{}R\r'.format(position)
+   
+    @inlineCallbacks
+    def initialize(self):
+        for command in self.init_commands:
+            yield self.connection.write(command)
+            ans = yield self.connection.read_line()
+    
+    @inlineCallbacks
+    def move_absolute(self, position):
+        command = '/1A{}R\r'.format(position)
+        yield self.connection.write(command)
+        ans = yield self.connection.read_line()
+        self.position = position

@@ -97,9 +97,6 @@ class DeviceServer(LabradServer):
             raise Exception('select a device first')
         return self.devices[name]
 
-    def update(self, x):
-        print x
-
     @setting(2)
     def send_update(self, c):
         device = self.get_device(c)

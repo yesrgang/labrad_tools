@@ -1,7 +1,7 @@
 class ControlConfig(object):
     def __init__(self, name):
         self.name = name
-        self.servername = 'dds'
+        self.servername = 'rf'
         self.update_id = 461100
         
         self.frequency_display_units = [(6, 'MHz')]

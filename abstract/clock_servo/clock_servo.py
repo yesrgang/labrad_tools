@@ -42,8 +42,8 @@ class ClockServoServer(LabradServer):
         for key, value in config.__dict__.items():
             setattr(self, key, value)
     
-    @setting(1, 'init pid', config='s')
-    def init_pid(self, c, config=None):
+    @setting(1, config='s')
+    def initialize_pid(self, c, config=None):
         """ define pid
 
         config = {
@@ -54,9 +54,9 @@ class ClockServoServer(LabradServer):
         """
         for lock_name, parameters in json.loads(config).items():
             self.pid[lock_name] = DitherPID(**parameters['parameters'])
-            self.pid_command[lock_name] = parameters['command']
+            self.pid_command[lock_name] = parameters['update']
 
-    @setting(5, 'update pid', config='s')
+    @setting(5, config='s')
     def update_pid(self, c, config='{}'):
         config = json.loads(config)
         if config:
@@ -64,9 +64,8 @@ class ClockServoServer(LabradServer):
                 self.pid[lock_name].set_parameters(**lock_config)
 #        return json.dumps({k: v.__dict__ for k, v in self.pid.items()})
 
-
-    @setting(2, 'init dither', config='s')
-    def init_dither(self, c, config=None):
+    @setting(2, config='s')
+    def initialize_dither(self, c, config=None):
         """ define dither
 
         config = {
@@ -77,11 +76,11 @@ class ClockServoServer(LabradServer):
         }
         """
         for lock_name, parameters in json.loads(config).items():
-            yield eval(parameters['init command'])()
+            yield eval(parameters['initialize'])()
             self.dither[lock_name] = Dither(**parameters['parameters'])
-            self.dither_command[lock_name] = parameters['update command']
+            self.dither_command[lock_name] = parameters['update']
 
-    @setting(6, 'update dither', config='s')
+    @setting(6, config='s')
     def update_dither(self, c, config='{}'):
         config = json.loads(config)
         if config:
@@ -89,14 +88,13 @@ class ClockServoServer(LabradServer):
                 self.dither[lock_name].set_parameters(**lock_config)
 #        return json.dumps({k: v.__dict__ for k, v in self.dither.items()})
 
-    @setting(3, 'update', signal='s')
+    @setting(3, signal='s')
     def update(self, c, signal):
         reactor.callLater(5, self.do_update, signal)
     
     @inlineCallbacks
     def do_update(self, signal):
         for lock, side in json.loads(signal).items():
-            print 'PID: ', lock, side
             if self.pid.has_key(lock):
                 data_dev, data_param = self.pid[lock].data_path
                 data = yield eval(self.pid_command[lock])()
@@ -115,14 +113,14 @@ class ClockServoServer(LabradServer):
     def get_center(self, c, lock):
         return self.pid[lock].output
 
-    @setting(4, 'advance', signal='s')
+    @setting(4, signal='s')
     def advance(self, c, signal):
         for lock, side in json.loads(signal).items():
-            print 'dither: ', lock, side
             if self.dither.has_key(lock):
                 center = self.pid[lock].output
                 next_write = self.dither[lock].tick(side, center)
                 x = yield eval(self.dither_command[lock])(next_write)
+                print next_write
 
     @inlineCallbacks
     def record(self, data):

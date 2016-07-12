@@ -1,24 +1,18 @@
-import os
-import time
 from twisted.internet.defer import inlineCallbacks
 
 @inlineCallbacks
-def init_command(device):
-    device['frequency']['context'] = yield self.client.signal_generator.context()
-    context = device['frequency']['context']
-    yield self.client.signal_generator.select_device_by_name('clock_steer', context=context)
+def initialize(self):
+    yield self.cxn.rf.select_device('clock_steer')
 
 @inlineCallbacks
-def update_command(device, value):
-    context = device['frequency']['context']
-    yield self.client.signal_generator.frequency(value, context=context)
+def update(self, value):
+    yield self.cxn.rf.frequency(value)
 
 config = {
     'clock_aom': {
         'frequency': {
-            'init_command': init_command, 
-            'update_command': update_command,
-            'context': None,
+            'initialize': initialize, 
+            'update': update,
             'value': None,
         },
     },

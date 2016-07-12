@@ -28,21 +28,17 @@ from collections import deque
 
 from influxdb import InfluxDBClient
 from labrad.server import LabradServer, setting, Signal
-from twisted.internet import reactor
+from twisted.internet.reactor import callLater
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
 from twisted.internet.task import LoopingCall
 from twisted.internet.threads import deferToThread
 
-def process_command(command):
-    if type(command).__name__ != function:
-        try:
-            # if command is simple string like "lambda x: print(x)"
-            command = eval(command)
-        except:
-            # if command is marshal dumps
-            code = marshal.loads(x.encode('ISO-8859-1'))
-            command = types.FunctionType(code, globals(), "marshal code")
-    return inlineCallbacks(command)
+from devices.parameter_wrapper import ParameterWrapper
+
+def get_device_config(device_name):
+    path = 'devices.{}'.format(device_name)
+    module = __import__(path, fromlist=['config'])
+    return module.config
 
 class ConductorServer(LabradServer):
     parameters_updated = Signal(698124, 'signal: parameters_updated', 'b')
@@ -58,7 +54,7 @@ class ConductorServer(LabradServer):
         self.received_data = {}
 
         self.config_name = config_name
-        self.load_configuration()
+        self.load_config()
         self.in_communication = DeferredLock()
         LabradServer.__init__(self)
 
@@ -72,42 +68,39 @@ class ConductorServer(LabradServer):
             self.dbclient = InfluxDBClient.from_DSN(os.getenv('INFLUXDBDSN'))
             self.write_to_db()
 
-    def load_configuration(self):
+    def load_config(self):
         config = __import__(self.config_name).ConductorConfig()
         for key, value in config.__dict__.items():
             setattr(self, key, value)
 
-    @setting(1, 'register device', configuration='s', returns='b')
-    def register_device(self, c, configuration):
+    @setting(1, 'register device', config='s', returns='b')
+    def register_device(self, c, config):
         """ register device
 
-        configuration = {device_name: {
+        config = {device_name: {
             parameter: {
-                'init_command': init_command(device),
-                'update_command': update_command(device, value),
+                'initialize': initialize(device),
+                'update': update(device, value),
                 'value': *value,
             }
         }
         """
-        if type(configuration).__name__ == 'str':
-            configuration = json.loads(configuration, encoding='ISO-8859-1')
-        elif type(configuration).__name__ == 'list':
-            def get_device_config(device_name):
-                path = 'devices.{}'.format(device_name)
-                module = __import__(path, fromlist=['config'])
-                return module.config
-            configuration = {dn: get_device_config(dn) for dn in configuration}
-
-        self.devices.update(configuration)
-        for device, parameters in configuration.items():
-            self.parameters[device] = {}
-            for parameter, d in parameters.items():
-                value = d['value']
-                d['init_command'] = process_command(d['init_command'])
-                d['update_command'] = process_command(d['update_command'])
-                yield d['init_command'](device)
-                yield d['update_command'](device, value)
-                self.parameters[device][parameter] = value
+        if type(config).__name__ == 'str':
+            config = json.loads(config, encoding='ISO-8859-1')
+        if type(config).__name__ == 'list':
+            config = {dn: get_device_config(dn)[dn] for dn in config}
+        
+        for device_name, device in config.items():
+            self.devices[device_name] = {}
+            self.parameters[device_name] = {}
+            for parameter_name, parameter in device.items():
+                parameter = ParameterWrapper(parameter)
+                value = parameter.value
+                yield parameter.connect()
+                yield parameter.initialize()
+                yield parameter.update(value)
+                self.devices[device_name][parameter_name] = parameter
+                self.parameters[device_name][parameter_name] = value
         returnValue(True)
 
     @setting(2, 'remove device', device_name='s', returns='s')
@@ -115,7 +108,7 @@ class ConductorServer(LabradServer):
         if device_name is not None:
             device = self.devices.pop(device_name)
             value = self.parameters.pop(device_name)
-        return json.dumps(self.devices)
+        return json.dumps(self.devices.keys())
 
     @setting(3, 'set parameters', parameters='s', returns='s')
     def set_parameters(self, c, parameters=None):
@@ -140,18 +133,18 @@ class ConductorServer(LabradServer):
                     self.parameters[device_name][parameter_name] = value
         return json.dumps(self.parameters)
 
-    @setting(5, 'enable parameters', parameters='s', returns='s')
-    def enable_parameters(self, c, parameters=None):
-        if parameters is not None:
-            for device_name, device in json.loads(parameters).items():
-                for parameter_name, parameter in device.items():
-                    self.devices[device_name][parameter_name]['enabled'] = parameter
-        returns = {}
-        for device_name, device in self.devices.items():
-            returns[device_name] = {}
-            for parameter_name, parameter in device.items():
-                returns[device_name][parameter_name] = parameter['enabled']
-        return json.dumps(returns)
+#    @setting(5, 'enable parameters', parameters='s', returns='s')
+#    def enable_parameters(self, c, parameters=None):
+#        if parameters is not None:
+#            for device_name, device in json.loads(parameters).items():
+#                for parameter_name, parameter in device.items():
+#                    self.devices[device_name][parameter_name]['enabled'] = parameter
+#        returns = {}
+#        for device_name, device in self.devices.items():
+#            returns[device_name] = {}
+#            for parameter_name, parameter in device.items():
+#                returns[device_name][parameter_name] = parameter['enabled']
+#        return json.dumps(returns)
 
     @setting(6, 'fix sequence keys', sequence='s', returns='s')
     def fix_sequence_keys(self, c, sequence):
@@ -229,10 +222,10 @@ class ConductorServer(LabradServer):
 
     @inlineCallbacks
     def evaluate_device_parameters(self):
-        for device, parameters in self.devices.items():
-            for parameter, d in parameters.items():
-                value = self.parameters[device][parameter]
-                yield d['update command'](idevice, value)
+        for device_name, parameters in self.devices.items():
+            for parameter_name, parameter in parameters.items():
+                value = self.parameters[device_name][parameter_name]
+                yield parameter.update(value)
 
     def do_evaluate_sequence_parameters(self, x):
         if type(x).__name__ in ['str', 'unicode']:
@@ -410,21 +403,21 @@ class ConductorServer(LabradServer):
             duration = sum(sequence['digital@T'])
             if self.do_save:
                 self.update_data('parameters')
-                self.update_data_call = reactor.callLater(duration-2, self.update_data, 'received_data')
-                self.write_data_call = reactor.callLater(duration-1., self.write_data)
+                self.update_data_call = callLater(duration-2, self.update_data, 'received_data')
+                self.write_data_call = callLater(duration-1., self.write_data)
             yield self.advance()
             sequence = yield self.program_sequencers()
             yield self.parameters_updated(True)
             duration = sum(sequence['digital@T'])
-            self.run_sequence_call = reactor.callLater(duration, self.run_sequence)
+            self.run_sequence_call = callLater(duration, self.run_sequence)
             yield self.evaluate_device_parameters()
         except Exception, e:
             print "error running sequence. will try again in 10 seconds"
             print e
-            self.run_sequence_call = reactor.callLater(10, self.run_sequence)
+            self.run_sequence_call = callLater(10, self.run_sequence)
 
     def write_to_db(self):
-        self.write_to_db_call = reactor.callLater(self.db_write_period, self.write_to_db)
+        self.write_to_db_call = callLater(self.db_write_period, self.write_to_db)
         parameters = self.parameters
 
         def to_float(x):

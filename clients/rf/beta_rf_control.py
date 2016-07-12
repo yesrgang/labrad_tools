@@ -1,6 +1,6 @@
 class ControlConfig(object):
     def __init__(self):
-        self.servername = 'gpib_signal_generator'
+        self.servername = 'rf'
         self.name = 'beta'
         self.update_id = 461014
 
