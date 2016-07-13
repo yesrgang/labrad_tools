@@ -1,6 +1,8 @@
 from collections import deque
 import numpy as np
 
+import pickle
+
 class DitherPID(object):
     def __init__(self, **kwargs):
         self.sampling_period = 1. 
@@ -53,6 +55,10 @@ class DitherPID(object):
         print 'in: ', in_l, in_r
 
         self.error = in_l - in_r - self.input_offset
+        if hasattr(self, 'error_function')
+            print 'using error function'
+            ef = pickle.loads(self.error_function)
+            self.error = ef(self.error)
         print 'err', self.error
 
         b_0 = self.filter_coefficients['b_0']
