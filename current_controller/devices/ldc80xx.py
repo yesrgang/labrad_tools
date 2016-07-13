@@ -1,7 +1,7 @@
 import numpy as np
 import time
 
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
 from twisted.internet.reactor import callLater
 
 from generic_current_controller import CurrentController
@@ -9,6 +9,7 @@ from generic_current_controller import CurrentController
 class LDC80xx(CurrentController):
     @inlineCallbacks
     def initialize(self):
+        self._lock = DeferredLock()
         for command in self.init_commands:
             yield self.connection.write(command)
         self.state = yield self.get_state()
@@ -21,9 +22,11 @@ class LDC80xx(CurrentController):
 
     @inlineCallbacks
     def get_current(self):
+        self._lock.acquire()
         yield self.set_slot()
         ans = yield self.connection.query(':ILD:SET?')
         returnValue(float(ans[9:]))
+        self._lock.release()
 
     @inlineCallbacks
     def set_current(self, current):
@@ -32,14 +35,18 @@ class LDC80xx(CurrentController):
         current = sorted([min_current, current, max_current])[1]
         command = ':ILD:SET {}'.format(current)
         
+        self._lock.acquire()
         yield self.set_slot()
         yield self.connection.write(command)
         self.power = yield self.get_power()
+        self._lock.release()
 
     @inlineCallbacks
     def get_power(self):
+        self._lock.acquire()
         yield self.set_slot()
         ans = yield self.connection.query(':POPT:ACT?')
+        self._lock.release()
         returnValue(float(ans[10:]))
     
     @inlineCallbacks
@@ -48,8 +55,10 @@ class LDC80xx(CurrentController):
 
     @inlineCallbacks
     def get_state(self):
+        self._lock.acquire()
         yield self.set_slot()
         ans = yield self.connection.query(':LASER?')
+        self._lock.release()
         if ans == ':LASER ON':
             returnValue(True)
         elif ans == ':LASER OFF':
@@ -62,8 +71,10 @@ class LDC80xx(CurrentController):
         else:
             command = ':LASER OFF'
         
+        self._lock.acquire()
         yield self.set_slot()
         yield self.connection.write(command)
+        self._lock.release()
 
     @inlineCallbacks
     def dial_current(self, stop):

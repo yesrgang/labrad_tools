@@ -20,7 +20,7 @@ import json
 import numpy as np
 
 from labrad.server import LabradServer, setting, Signal
-from twisted.internet import reactor
+from twisted.internet.reactor import callLater
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
 
 from lib.pid import Dither, DitherPID
@@ -37,6 +37,8 @@ class ClockServoServer(LabradServer):
         self.load_configuration()
         LabradServer.__init__(self)
 
+        self.update_call = callLater(.1, lambda: None)
+
     def load_configuration(self):
         config = __import__(self.config_name).ClockServoConfig()
         for key, value in config.__dict__.items():
@@ -52,6 +54,10 @@ class ClockServoServer(LabradServer):
             }
         }
         """
+        if self.update_call.active():
+            self.update_call.cancel()
+        print 'init pid'
+        self.pid = {}
         for lock_name, parameters in json.loads(config).items():
             self.pid[lock_name] = DitherPID(**parameters['parameters'])
             self.pid_command[lock_name] = parameters['update']
@@ -75,6 +81,7 @@ class ClockServoServer(LabradServer):
             }
         }
         """
+        self.dither = {}
         for lock_name, parameters in json.loads(config).items():
             yield eval(parameters['initialize'])()
             self.dither[lock_name] = Dither(**parameters['parameters'])
@@ -90,7 +97,7 @@ class ClockServoServer(LabradServer):
 
     @setting(3, signal='s')
     def update(self, c, signal):
-        reactor.callLater(5, self.do_update, signal)
+        self.update_call = callLater(5, self.do_update, signal)
     
     @inlineCallbacks
     def do_update(self, signal):
@@ -103,6 +110,7 @@ class ClockServoServer(LabradServer):
                     if type(value).__name__ == 'list':
                         value = value[-1]
                     center = self.pid[lock].tick(side, value)
+                    print 'read frac data'
                 except KeyError, e:
                     print "waiting for valid data on {}".format(e)
                     center = self.pid[lock].output_offset
@@ -120,7 +128,7 @@ class ClockServoServer(LabradServer):
                 center = self.pid[lock].output
                 next_write = self.dither[lock].tick(side, center)
                 x = yield eval(self.dither_command[lock])(next_write)
-                print next_write
+                print 'setting dither {}: '.format(side), next_write
 
     @inlineCallbacks
     def record(self, data):

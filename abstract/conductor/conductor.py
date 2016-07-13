@@ -178,6 +178,7 @@ class ConductorServer(LabradServer):
         try:
             sequence = json.loads(sequence)
             if type(sequence).__name__ == 'list':
+                print sequence
                 sequence = self.combine_sequences([self.read_sequence_file(s) 
                                                    for s in sequence])
             else:

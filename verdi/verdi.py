@@ -23,6 +23,7 @@ from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 from server_tools.device_server import DeviceServer
+from server_tools.decorators import quickSetting
 
 UPDATE_ID = 698044
 

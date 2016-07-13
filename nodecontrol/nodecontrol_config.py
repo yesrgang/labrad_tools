@@ -11,4 +11,7 @@ node_dict = {
         'digital_sequencer',
         'analog_sequencer',
     ],
+    'node yesr5': [
+        'serial',
+    ],
 }

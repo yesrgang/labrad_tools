@@ -1,5 +1,5 @@
 import labrad.types as T
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import inlineCallbacks, returnValue
 
 class V18(object):
     def __init__(self, config):
