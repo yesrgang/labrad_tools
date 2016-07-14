@@ -19,6 +19,9 @@ class SerialConnection(object):
             if hasattr(device, attr): 
                 value = getattr(device, attr)
                 getattr(self.server, attr)(value)
+
+    def baudrate(self, x):
+        self.server.baudrate(x)
         
     def write(self, x):
         return self.server.write(x)

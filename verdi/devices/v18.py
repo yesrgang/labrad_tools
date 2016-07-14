@@ -1,12 +1,14 @@
 import labrad.types as T
 from twisted.internet.defer import inlineCallbacks, returnValue
 
+from time import sleep
+
 class V18(object):
     def __init__(self, config):
         self.timeout = T.Value(1, 's')
         self.baudrate = 19200
-        self.stopbits=1
-        self.bytesize=8
+        self.stopbits = 1
+        self.bytesize = 8
         self.delayed_calls = []
         for key, value in config.items():
             setattr(self, key, value)
@@ -24,9 +26,9 @@ class V18(object):
     @inlineCallbacks
     def set_state(self, state):
         if state:
-            yield self.connection.write('Laser: 1')
+            yield self.connection.write_line('Laser: 1')
         else:
-            yield self.connection.write('Laser: 0')
+            yield self.connection.write_line('Laser: 0')
         ans = yield self.connection.read_line()
 
 
@@ -34,30 +36,30 @@ class V18(object):
     def get_shutter_state(self):
         yield self.connection.write_line('Print Shutter')
         ans = yield self.connection.read_line()
-        returnValue(bool(ans))
+        returnValue(bool(int(ans)))
 
     @inlineCallbacks
     def set_shutter_state(self, shutter_state):
         if shutter_state:
-            yield self.connection.write('Shutter: 1')
+            yield self.connection.write_line('Shutter: 1')
         else:
-            yield self.connection.write('Shutter: 0')
+            yield self.connection.write_line('Shutter: 0')
         ans = yield self.connection.read_line()
 
     @inlineCallbacks
     def get_power(self):
-        yield self.connection.write('Print Light')
+        yield self.connection.write_line('Print Light')
         ans = yield self.connection.read_line()
-
-    @inlineCallbacks
-    def set_power(self, power):
-        yield self.connection.write('Light: {}'.cormat(power))
-        ans = self.connection.read_line()
         returnValue(float(ans))
 
     @inlineCallbacks
+    def set_power(self, power):
+        yield self.connection.write_line('Light: {}'.format(power))
+        ans = self.connection.read_line()
+
+    @inlineCallbacks
     def get_current(self):
-        yield self.connection.write('Print Current')
+        yield self.connection.write_line('Print Current')
         ans = yield self.connection.read_line()
         returnValue(float(ans))
 

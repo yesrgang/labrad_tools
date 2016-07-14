@@ -9,7 +9,7 @@
             "power_range": [0, 18], 
             "init_power": 16,
             "full_power": 18,
-            "shutter_delay": 300,
+            "shutter_delay": 600,
             "full_power_delay": 1800
         }
     }
