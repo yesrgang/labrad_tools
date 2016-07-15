@@ -49,7 +49,7 @@ class VerdiServer(DeviceServer):
     def state(self, c, state=None):
         """ get or change state """
 
-    @quickSetting(11, 'v')
+    @quickSetting(11, 'b')
     def shutter_state(self, c, shutter_state=None):
         """ get or change shutter_state """
 

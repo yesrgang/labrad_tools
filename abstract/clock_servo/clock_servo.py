@@ -58,13 +58,13 @@ class ClockServoServer(LabradServer):
             self.update_call.cancel()
         print 'init pid'
         self.pid = {}
-        for lock_name, parameters in json.loads(config).items():
+        for lock_name, parameters in json.loads(config, encoding='ISO-8859-1').items():
             self.pid[lock_name] = DitherPID(**parameters['parameters'])
             self.pid_command[lock_name] = parameters['update']
 
     @setting(5, config='s')
     def update_pid(self, c, config='{}'):
-        config = json.loads(config)
+        config = json.loads(config, encoding='ISO-8859-1')
         if config:
             for lock_name, lock_config in config.items():
                 self.pid[lock_name].set_parameters(**lock_config)

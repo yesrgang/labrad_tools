@@ -55,9 +55,9 @@ class DitherPID(object):
         print 'in: ', in_l, in_r
 
         self.error = in_l - in_r - self.input_offset
-        if hasattr(self, 'error_function')
+        if hasattr(self, 'error_function'):
             print 'using error function'
-            ef = pickle.loads(self.error_function)
+            ef = pickle.loads(self.error_function.encode('ISO-8859-1'))
             self.error = ef(self.error)
         print 'err', self.error
 
@@ -78,6 +78,7 @@ class DitherPID(object):
 
         # offset
         y += self.output_offset
+        # y += self.output
 
         # clamp
         y = sorted([self.output_range[0], y, self.output_range[1]])[1]
