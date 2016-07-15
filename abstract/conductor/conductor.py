@@ -178,7 +178,6 @@ class ConductorServer(LabradServer):
         try:
             sequence = json.loads(sequence)
             if type(sequence).__name__ == 'list':
-                print sequence
                 sequence = self.combine_sequences([self.read_sequence_file(s) 
                                                    for s in sequence])
             else:
@@ -281,7 +280,6 @@ class ConductorServer(LabradServer):
         for d in data.values():
             d['timestamp'] = time.time()
         self.received_data.update(data)
-        print 'received data from {}'.format(data.keys())
         return json.dumps(data)
 
     @setting(13, 'get data', returns='s')
@@ -299,7 +297,6 @@ class ConductorServer(LabradServer):
         self.data = self.append_data(self.data, new_data)
 
     def write_data(self):
-        print 'writing: ', self.data.keys()
         with open(self.data_path, 'w') as outfile:
             json.dump(self.data, outfile)
  

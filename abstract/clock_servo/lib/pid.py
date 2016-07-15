@@ -103,7 +103,8 @@ class DitherPIID(object):
         self.sampling_period = 1. 
         self.overall_gain = 1. 
         self.prop_gain = 1. 
-        self.int_gain = 1 
+        self.int_gain = 1.
+        self.intint_gain = 1.
         self.diff_gain = 0.
         self.input_offset = 0.
         self.output_offset = 0.
