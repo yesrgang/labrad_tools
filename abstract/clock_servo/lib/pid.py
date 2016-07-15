@@ -153,7 +153,7 @@ class DitherPIID(object):
         print 'in: ', in_l, in_r
 
         self.error = in_l - in_r - self.input_offset
-        if hasattr(self, 'error_function')
+        if hasattr(self, 'error_function'):
             print 'using error function'
             ef = pickle.loads(self.error_function)
             self.error = ef(self.error)
