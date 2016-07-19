@@ -16,4 +16,5 @@ class ConductorConfig(object):
 
         self.default_devices = [
                 'clock_aom',
+                'stepper_motor',
         ]

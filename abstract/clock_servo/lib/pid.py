@@ -132,6 +132,8 @@ class DitherPIID(object):
         ii = G*self.intint_gain
         d = G*self.diff_gain
 
+        print 'Gains: ', [G, T, p, i, ii, d]
+
         self.filter_coefficients = {
             'a_0': 0. + p + T/2.*i + 1.*T**2/4.*ii + 2./T*d,
             'a_1': 0. - p + T/2.*i + 3.*T**2/4.*ii - 6./T*d,
@@ -156,7 +158,7 @@ class DitherPIID(object):
         self.error = in_l - in_r - self.input_offset
         if hasattr(self, 'error_function'):
             print 'using error function'
-            ef = pickle.loads(self.error_function)
+            ef = pickle.loads(self.error_function.encode('ISO-8859-1'))
             self.error = ef(self.error)
         print 'err', self.error
 
@@ -171,10 +173,12 @@ class DitherPIID(object):
         x = self.error
         x_ = self.xbuffer
         y_ = self.ybuffer
-        y  = a_0*x + a_1*x_[-1] + a_2*x_[-2] + a_3*x[-3] + b_1*y[-1] + b_2*y[-2] + b_3*y[-3]
+        y  = a_0*x + a_1*x_[-1] + a_2*x_[-2] + a_3*x_[-3] + b_1*y_[-1] + b_2*y_[-2] + b_3*y_[-3]
 
         x_.append(x)
         y_.append(y)
+
+        print 'y: {}'.format(y)
 
         # offset
         y += self.output_offset

@@ -37,7 +37,8 @@ class AG335xxxRamp(AG335xxx):
         ]
         for command in commands:
             self.connection.write(command)
-        callLater(self.t_ramp/2., self.set_ramprate, ramprate)
+        call = callLater(self.t_ramp/2., self.set_ramprate, ramprate)
+        self.delayed_calls.append(call)
 
     @inlineCallbacks
     def get_ramprate(self):

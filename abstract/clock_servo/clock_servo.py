@@ -23,7 +23,7 @@ from labrad.server import LabradServer, setting, Signal
 from twisted.internet.reactor import callLater
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
 
-from lib.pid import Dither, DitherPID
+from lib.pid import Dither, DitherPID, DitherPIID
 
 class ClockServoServer(LabradServer):
     name = 'clock_servo'
