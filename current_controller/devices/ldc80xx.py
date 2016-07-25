@@ -12,6 +12,10 @@ class LDC80xx(CurrentController):
         self._lock = DeferredLock()
         for command in self.init_commands:
             yield self.connection.write(command)
+        yield self.get_parameters()
+    
+    @inlineCallbacks
+    def get_parameters(self):
         self.state = yield self.get_state()
         self.current = yield self.get_current()
         self.power = yield self.get_power()
@@ -88,8 +92,13 @@ class LDC80xx(CurrentController):
     def warmup(self):
         yield self.set_state(True)
         yield self.dial_current(self.default_current)
+        callLater(6, self.get_parameters)
+        #self.state = yield self.get_state()
+        #self.current = yield self.get_current()
+        #self.power = yield self.get_power()
 
     @inlineCallbacks
     def shutdown(self):
         yield self.dial_current(0)
         callLater(6, self.set_state, False)
+        callLater(7, self.get_parameters)
