@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = current_controller
+name = rf
 version = 1.0
 description = 
-instancename = current_controller
+instancename = rf
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -17,31 +17,29 @@ timeout = 5
 """
 
 from labrad.server import Signal, setting
-from twisted.internet.defer import inlineCallbacks, returnValue
-from twisted.internet.reactor import callLater
 
 from server_tools.device_server import DeviceServer
 from server_tools.decorators import quickSetting
 
-UPDATE_ID = 698027
+UPDATE_ID = 698034
 
-class CurrentControllerServer(DeviceServer):
-    """ Provides basic control for current controllers """
+class RFServer(DeviceServer):
+    """ Provides basic control for RF sources """
     update = Signal(UPDATE_ID, 'signal: update', 's')
-    name = 'current_controller'
+    name = 'rf'
 
     @quickSetting(10, 'b')
     def state(self, c, state=None):
-        """ get or update state """
+        """ get or change state """
 
     @quickSetting(11, 'v')
-    def current(self, c, current=None):
-        """ get or update current """
+    def diode_current(self, c, frequency=None):
+        """ get or change frequency """
 
     @quickSetting(12, 'v')
-    def power(self, c, power=None):
-        """ get or update power """
-
+    def piezo_voltage(self, c, amplitude=None):
+        """ get or change amplitude """
+    
     @setting(13, warmup='b', returns='b')
     def warmup(self, c, warmup=True):
         device = self.get_device(c)
@@ -58,6 +56,6 @@ class CurrentControllerServer(DeviceServer):
         callLater(10, self.send_update, c)
         returnValue(shutdown)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from labrad import util
-    util.runServer(CurrentControllerServer())
+    util.runServer(RFServer())

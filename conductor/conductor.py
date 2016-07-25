@@ -133,19 +133,6 @@ class ConductorServer(LabradServer):
                     self.parameters[device_name][parameter_name] = value
         return json.dumps(self.parameters)
 
-#    @setting(5, 'enable parameters', parameters='s', returns='s')
-#    def enable_parameters(self, c, parameters=None):
-#        if parameters is not None:
-#            for device_name, device in json.loads(parameters).items():
-#                for parameter_name, parameter in device.items():
-#                    self.devices[device_name][parameter_name]['enabled'] = parameter
-#        returns = {}
-#        for device_name, device in self.devices.items():
-#            returns[device_name] = {}
-#            for parameter_name, parameter in device.items():
-#                returns[device_name][parameter_name] = parameter['enabled']
-#        return json.dumps(returns)
-
     @setting(6, 'fix sequence keys', sequence='s', returns='s')
     def fix_sequence_keys(self, c, sequence):
         sequence = json.loads(sequence)
@@ -337,6 +324,8 @@ class ConductorServer(LabradServer):
             if not self.experiment:
                 raise IndexError
             advanced = self.do_advance(self.experiment)
+
+        # IndexError means experiment is over/need to get next experiment in queue
         except IndexError:
             if len(self.experiment_queue):
                 # get next experiment from queue
@@ -385,6 +374,7 @@ class ConductorServer(LabradServer):
                 print 'experiment queue is empty'
                 advanced = {}
                 do_save = 0
+
         self.do_save = do_save
         if advanced.has_key('parameters'):
             parameters = advanced['parameters']
