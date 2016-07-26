@@ -1,4 +1,21 @@
-# LabRAD server for Rigol's DSA815 spectrum analyzer using the LXI protocol
+"""
+### BEGIN NODE INFO
+[info]
+name = dsa815
+version = 1.0
+description = 
+instancename = dsa815
+
+[startup]
+cmdline = %PYTHON% %FILE%
+timeout = 20
+
+[shutdown]
+message = 987654321
+timeout = 5
+### END NODE INFO
+"""
+
 
 from labrad.server import LabradServer, setting
 from vxi11 import Instrument

@@ -1,5 +1,20 @@
-# -*- coding: utf-8 -*-
-# LabRAD server for locking the M-squared laser to the comb
+"""
+### BEGIN NODE INFO
+[info]
+name = msquared_comb_lock
+version = 1.0
+description = 
+instancename = msquared_comb_lock
+
+[startup]
+cmdline = %PYTHON% %FILE%
+timeout = 20
+
+[shutdown]
+message = 987654321
+timeout = 5
+### END NODE INFO
+"""
 
 from labrad.server import LabradServer, setting
 from twisted.internet import task, defer, reactor

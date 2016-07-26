@@ -1,4 +1,20 @@
-# LabRAD server for the M-squared ICE module
+"""
+### BEGIN NODE INFO
+[info]
+name = msquared
+version = 1.0
+description = 
+instancename = msquared
+
+[startup]
+cmdline = %PYTHON% %FILE%
+timeout = 20
+
+[shutdown]
+message = 987654321
+timeout = 5
+### END NODE INFO
+"""
 
 from labrad.server import LabradServer, setting
 from lib.msquared_connection import MSquaredConnection
@@ -9,7 +25,7 @@ class MSquaredServer(LabradServer):
     """
     M-squared LabRAD server
     """
-    name = 'MSquared'
+    name = 'msquared'
 
     def __init__(self, config_path='./config.json'):
         self.config = self.load_config(config_path)

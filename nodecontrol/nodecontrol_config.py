@@ -8,6 +8,7 @@ node_dict = {
         'gpib_current_controller',
         'rf',
         'TLB-6700',
+        'verdi',
         'digital_sequencer',
         'analog_sequencer',
     ],
