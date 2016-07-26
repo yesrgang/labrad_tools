@@ -26,7 +26,7 @@ class DS345(RFWrapper):
 
     @inlineCallbacks
     def set_amplitude(self, amplitude):
-        command = 'AMPL {}{}'.fomat(amplitude, self.amplitude_units)
+        command = 'AMPL {}{}'.format(amplitude, self.amplitude_units)
         yield self.connection.write(command)
 
     @inlineCallbacks
