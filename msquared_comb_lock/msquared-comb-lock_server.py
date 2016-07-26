@@ -16,7 +16,7 @@ class MSquaredCombLockServer(LabradServer):
     """
     Comb lock LabRAD server for the M-squared laser
     """
-    name = 'MSquaredCombLock'
+    name = 'msquared_comb_lock'
 
     def __init__(self, config_path='./config.json'):
         self.config = self.load_config(config_path)
@@ -58,7 +58,8 @@ class MSquaredCombLockServer(LabradServer):
         setpoint = self.pid.setpoint*1e6
         frequency = setpoint + (  float(position-len(trace)/2) * ( self.lock_span / len(trace) )  )
 
-        has_good_snr = (np.max(trace) - np.min(trace)) > self.peak_threshold
+#        has_good_snr = (np.max(trace) - np.min(trace)) > self.peak_threshold
+        has_good_snr = (np.max(trace) - np.mean(trace)) > self.peak_threshold
         if not has_good_snr:
             self.lock_status = False
             print 'Feedback disabled due to bad signal'
@@ -83,7 +84,7 @@ class MSquaredCombLockServer(LabradServer):
 
     @property
     def spectrum_analyzer(self):
-        return self.client.ds815
+        return self.client.dsa815
 
     @property
     def msquared(self):
@@ -415,9 +416,14 @@ class MSquaredCombLockServer(LabradServer):
         """
 
         self.log_path = None
-
+    
+    @setting(30)
     def enable_lock(self):
         self.is_locked = True
+
+    @setting(31)
+    def disable_lock(self):
+        self.is_locked = False
 
     @property
     def current_settings(self):
