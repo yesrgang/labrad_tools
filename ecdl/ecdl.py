@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = rf
+name = ecdl
 version = 1.0
 description = 
-instancename = rf
+instancename = ecdl
 
 [startup]
 cmdline = %PYTHON% %FILE%

@@ -1,21 +1,4 @@
-"""
-### BEGIN NODE INFO
-[info]
-name = dsa815
-version = 1.0
-description = 
-instancename = dsa815
-
-[startup]
-cmdline = %PYTHON% %FILE%
-timeout = 20
-
-[shutdown]
-message = 987654321
-timeout = 5
-### END NODE INFO
-"""
-# import time
+import time
 import json
 import numpy as np
 
