@@ -25,7 +25,7 @@ class DSA815Server(LabradServer):
     """
     DSA815 (Rigol 1.5 GHz spectrum analyzer) LabRAD server
     """
-    name = 'DSA815'
+    name = 'dsa815'
 
     def __init__(self, config_path='./config.json'):
         self.config = self.load_config(config_path)
