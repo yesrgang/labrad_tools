@@ -5,14 +5,17 @@ node_dict = {
     'node yesr20': [
         'gpib',
         'serial',
-        'gpib_current_controller',
+        'current_controller',
         'rf',
         'TLB-6700',
         'verdi',
+        'dsa815',
+        'msquared_comb_lock',
         'digital_sequencer',
         'analog_sequencer',
+        'clock_servo',
     ],
     'node yesr5': [
-        'serial',
+        'msquared',
     ],
 }

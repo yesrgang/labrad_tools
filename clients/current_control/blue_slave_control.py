@@ -1,7 +1,7 @@
 class ControlConfig(object):
     def __init__(self, name):
         self.name = name
-        self.servername = 'gpib_current_controller'
+        self.servername = 'current_controller'
         self.update_id = 461109
         self.update_time = 100
 
