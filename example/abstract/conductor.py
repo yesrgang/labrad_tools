@@ -367,7 +367,7 @@ class ConductorServer(LabradServer):
             parameters = advanced['parameters']
             p = yield self.update_parameters(None, json.dumps(parameters))
         if advanced.has_key('sequence'):
-            self.set_sequence(None, advanced['sequence'])
+            self.set_sequence(None, json.dumps(advanced['sequence']))
         if advanced.has_key('display'):
             self.display = advanced['display']
     
