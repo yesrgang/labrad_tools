@@ -2,10 +2,13 @@
     "devices": {
         "blue_master": {
             "device_type": "AOSenseECDL",
-            "connection_type": "serial",
-            "servername": "yesr20_serial",
-            "address": "COMx",
-            "diode_current_range": [0.0, 170e-3],
+            "connection_type": "Serial",
+            "servername": "yesr5_serial",
+            "address": "COM7",
+	    "baudrate": 115200,
+	    "stopbits": 1,
+	    "bytesize": 8,
+            "diode_current_range": [0.0, 165],
             "piezo_voltage_range": [0.0, 125.0],
             "default_current": 130e-3
         }

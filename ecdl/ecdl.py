@@ -21,12 +21,11 @@ from labrad.server import Signal, setting
 from server_tools.device_server import DeviceServer
 from server_tools.decorators import quickSetting
 
-UPDATE_ID = 698034
+UPDATE_ID = 698039
 
-class RFServer(DeviceServer):
-    """ Provides basic control for RF sources """
+class ECDLServer(DeviceServer):
     update = Signal(UPDATE_ID, 'signal: update', 's')
-    name = 'rf'
+    name = 'ecdl'
 
     @quickSetting(10, 'b')
     def state(self, c, state=None):
@@ -58,4 +57,4 @@ class RFServer(DeviceServer):
 
 if __name__ == "__main__":
     from labrad import util
-    util.runServer(RFServer())
+    util.runServer(ECDLServer())

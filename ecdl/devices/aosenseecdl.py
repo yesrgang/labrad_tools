@@ -12,9 +12,9 @@ class AOSenseECDL(GenericECDL):
     @inlineCallbacks
     def initialize(self):
         self._lock = DeferredLock()
-        for command in self.init_commands:
-            yield self.connection.write_line(command)
-            ans = yield self.connection.read_line()
+        #for command in self.init_commands:
+        #    yield self.connection.write(command)
+        #    ans = yield self.connection.read_line()
         yield self.get_parameters()
 
     @inlineCallbacks 
@@ -24,54 +24,71 @@ class AOSenseECDL(GenericECDL):
         self.piezo_voltage = yield self.get_piezo_voltage()
 
     @inlineCallbacks
-    def get_current(self):
-        yield self.connection.write_line('ILA')
+    def get_diode_current(self):
+        yield self.connection.write('ILA\r\n')
         ans = yield self.connection.read_line()
-        returnValue(float(ans))
+	s = ans.split('\r\n')[0].split('=')[-1] 
+	current = float(s)
+        ans = yield self.connection.read_line()
+        ans = yield self.connection.read_line()
+        returnValue(current)
 
     @inlineCallbacks
     def set_diode_current(self, current):
         min_current = self.diode_current_range[0]
         max_current = self.diode_current_range[1]
         current = sorted([min_current, current, max_current])[1]
-        command = 'ILA {}'.format(current)
+        command = 'ILA {}\r\n'.format(current)
         
-        yield self.connection.write_line(command)
+        yield self.connection.write(command)
+        ans = yield self.connection.read_line()
+        ans = yield self.connection.read_line()
         ans = yield self.connection.read_line()
 
     @inlineCallbacks
     def get_piezo_voltage(self):
-        yield self.connection.write_line('UPZ')
+        yield self.connection.write('UPZ\r\n')
         ans = yield self.connection.read_line()
-        returnValue(float(ans))
+	s = ans.split('\r\n')[0].split('=')[-1]
+	voltage = float(s)
+        ans = yield self.connection.read_line()
+        ans = yield self.connection.read_line()
+        returnValue(voltage)
     
     @inlineCallbacks
-    def set_piezo_voltage(self, piezo_voltage):
+    def set_piezo_voltage(self, voltage):
         min_voltage = self.piezo_voltage_range[0]
         max_voltage = self.piezo_voltage_range[1]
         voltage = sorted([min_voltage, voltage, max_voltage])[1]
-        command = 'UPZ {}'.format(voltage)
-        
-        yield self.connection.write_line(command)
+        command = 'UPZ {}\r\n'.format(voltage)
+        yield self.connection.write(command)
+        ans = yield self.connection.read_line()
+        ans = yield self.connection.read_line()
         ans = yield self.connection.read_line()
     
     @inlineCallbacks
     def get_state(self):
-        yield self.connection.write_line('LASER')
+        yield self.connection.write('LASER\r\n')
         ans = yield self.connection.read_line()
-        if ans == 'ON':
+        if 'ON' in ans:
+            ans = yield self.connection.read_line()
+            ans = yield self.connection.read_line()
             returnValue(True)
         else:
+            ans = yield self.connection.read_line()
+            ans = yield self.connection.read_line()
             returnValue(False)
 
     @inlineCallbacks
     def set_state(self, state):
         if state:
-            command = 'LASER ON'
+            command = 'LASER ON\r\n'
         else:
-            command = 'LASER OFF'
+            command = 'LASER OFF\r\n'
         
-        yield self.connection.write_line(command)
+        yield self.connection.write(command)
+        ans = yield self.connection.read_line()
+        ans = yield self.connection.read_line()
         ans = yield self.connection.read_line()
 
     @inlineCallbacks

@@ -17,5 +17,6 @@ node_dict = {
     ],
     'node yesr5': [
         'msquared',
+        'serial',
     ],
 }
