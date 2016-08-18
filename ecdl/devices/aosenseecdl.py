@@ -9,6 +9,9 @@ from generic_ecdl import GenericECDL
 
 class AOSenseECDL(GenericECDL):
     timeout = 1 * U.s
+    baudrate = 115200
+    stopbits = 1
+    bytesize = 8
     @inlineCallbacks
     def initialize(self):
         self._lock = DeferredLock()

@@ -4,7 +4,7 @@ class ControlConfig(object):
         self.name = 'blue_master'
         self.update_id = 461014
 
-        self.piezo_voltage_display_units = [(0, '%')]
+        self.piezo_voltage_display_units = [(0, 'V')]
         self.piezo_voltage_digits = 2
         self.diode_current_display_units = [(0, 'mA')]
         self.diode_current_digits = 1
