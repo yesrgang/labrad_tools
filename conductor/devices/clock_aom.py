@@ -9,12 +9,10 @@ def update(self, value):
     yield self.cxn.rf.frequency(value)
 
 config = {
-    'clock_aom': {
-        'frequency': {
-            'initialize': initialize, 
-            'update': update,
-            'value': None,
-        },
+    'frequency': {
+        'initialize': initialize, 
+        'update': update,
+        'value': None,
     },
 }
 

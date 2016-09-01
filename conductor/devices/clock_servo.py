@@ -75,17 +75,15 @@ def update_dither(self, value):
 
 
 config = {
-    'clock_servo': {
-        'pid': {
-            'initialize': initialize_pid,
-            'update': update_pid,
-            'value': "(None, None)"
-        },
-        'dither': {
-            'initialize': initialize_dither,
-            'update': update_dither,
-            'value': "(None, None)"
-        },
+    'pid': {
+        'initialize': initialize_pid,
+        'update': update_pid,
+        'value': "(None, None)"
+    },
+    'dither': {
+        'initialize': initialize_dither,
+        'update': update_dither,
+        'value': "(None, None)"
     },
 }
 

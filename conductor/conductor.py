@@ -26,12 +26,10 @@ import types
 
 from collections import deque
 
-from influxdb import InfluxDBClient
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet.reactor import callLater
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
 from twisted.internet.task import LoopingCall
-from twisted.internet.threads import deferToThread
 
 from devices.parameter_wrapper import ParameterWrapper
 
@@ -45,13 +43,14 @@ class ConductorServer(LabradServer):
     name = '%LABRADNODE%_conductor'
     def __init__(self, config_name):
         self.data = {}
-        self.sequence = {'digital@T': [1, 5, 1]}
+        self.default_sequence = {'digital@T': [1, 5, 1]}
         self.devices = {}
         self.do_save = 0
         self.experiment_queue = deque([])
         self.experiment = {}
         self.parameters = {'sequence': {}}
         self.received_data = {}
+        self.default_devices = {}
 
         self.config_name = config_name
         self.load_config()
@@ -61,79 +60,96 @@ class ConductorServer(LabradServer):
     @inlineCallbacks
     def initServer(self):
         yield LabradServer.initServer(self)
-        yield self.set_sequence(None, json.dumps(self.sequence))
+        yield self.set_sequence(None, json.dumps(self.default_sequence))
         yield self.register_device(None, self.default_devices)
         yield self.run_sequence()
-        if self.db_write_period:
-            self.dbclient = InfluxDBClient.from_DSN(os.getenv('INFLUXDBDSN'))
-            self.write_to_db()
 
     def load_config(self):
         config = __import__(self.config_name).ConductorConfig()
         for key, value in config.__dict__.items():
             setattr(self, key, value)
 
-    @setting(1, 'register device', config='s', returns='b')
-    def register_device(self, c, config):
-        """ register device
-
-        config = {device_name: {
-            parameter: {
-                'initialize': initialize(device),
-                'update': update(device, value),
-                'value': *value,
-            }
+    @setting(2, config='s'):
+    def register_device_parameters(self, c, config):
+        """
+        config = {
+            device_name: {
+                parameter_name: {
+                    'initialize': initialize(),
+                    'update': update(value),
+                    'stop': stop(),
+                    'value': value,
+                }
         }
         """
         if type(config).__name__ == 'str':
-            config = json.loads(config, encoding='ISO-8859-1')
-        if type(config).__name__ == 'list':
-            config = {dn: get_device_config(dn)[dn] for dn in config}
-        
-        for device_name, device in config.items():
-            self.devices[device_name] = {}
-            self.parameters[device_name] = {}
-            for parameter_name, parameter in device.items():
-                parameter = ParameterWrapper(parameter)
+            config = json.loads(config)
+
+        for device_name, device_config in config.items():
+            if not device_config:
+                device_config = get_device_config(device_name)
+            else:
+                device_config = json.loads(device_config, encoding='ISO-8859-1')
+            if not self.devices.has_key(device_name):
+                self.devices[device_name] = {}
+            if not self.parameters.has_key(device_name):
+                self.parameters[device_name] = {}
+
+            for parameter_name, parameter_config in device_config.items():
+                parameter = ParameterWrapper(parameter_config)
                 value = parameter.value
                 yield parameter.connect()
                 yield parameter.initialize()
                 yield parameter.update(value)
                 self.devices[device_name][parameter_name] = parameter
                 self.parameters[device_name][parameter_name] = value
+            returnValue(True)
+
+    @setting(2, device_name='s', returns='b')
+    def remove_devices(self, c, device_name):
+        """ remove entire device """
+        config = {device_name: parameter_name 
+                for parameter_name in self.devices[device_name].keys()}
+        yield self.remove_device_parameters(json.dumps(config))
+        returnValue(True)
+    
+    @setting(2, config='s', returns='b')
+    def remove_device_parameters(self, c, config):
+        """ remove specified device_parameter
+
+        config = {
+            device_name: parameter_name,
+        }
+        """
+        for device_name, parameter_name in json.loads(config).items():
+            parameter = self.devices[device_name].pop(parameter_name)
+            value = self.parameters[device_name].pop(parameter_name)
+            yield parameter.stop()
+            if not self.devices[device_name]:
+                self.devices.pop(device_name)
+            if not self.parameters[device_name]:
+                self.parameters.pop(device_name)
         returnValue(True)
 
-    @setting(2, 'remove device', device_name='s', returns='s')
-    def remove_device(self, c, device_name=None):
-        if device_name is not None:
-            device = self.devices.pop(device_name)
-            value = self.parameters.pop(device_name)
+    @setting(3, returns='s')
+    def get_device_list(self, c):
         return json.dumps(self.devices.keys())
 
-    @setting(3, 'set parameters', parameters='s', returns='s')
-    def set_parameters(self, c, parameters=None):
-        """ set parameters
-
-        parameters = {*device_name: {*parameter: *value}}
-        e.g. {'Clock AOM': {'frequency': {'value': x}}}
-             {'sequence': {'T_evap': {'value': x}}}
-        """
-        if parameters is not None:
-            self.parameters = json.loads(parameters)
+    @setting(3, returns='s')
+    def get_parameters(self, c):
         return json.dumps(self.parameters)
     
-    @setting(4, 'update parameters', parameters='s', returns='s')
-    def update_parameters(self, c, parameters=None):
-        if parameters is not None:
-            parameters = json.loads(parameters)
-            for device_name, device in parameters.items():
-                if not self.parameters.has_key(device_name):
-                    self.parameters[device_name] = {}
-                for parameter_name, value in device.items():
-                    self.parameters[device_name][parameter_name] = value
-        return json.dumps(self.parameters)
+    @setting(4, config='s', returns='s')
+    def set_parameter_values(self, c, config):
+        config = json.loads(config)
+        for device_name, device_config in config.items():
+            if not self.parameters.has_key(device_name):
+                self.parameters[device_name] = {}
+            for parameter_name, parameter_value in device_config.items():
+                self.parameters[device_name][parameter_name] = parameter_value
+        return True
 
-    @setting(6, 'fix sequence keys', sequence='s', returns='s')
+    @setting(6, sequence='s', returns='s')
     def fix_sequence_keys(self, c, sequence):
         sequence = json.loads(sequence)
         for sequencer in self.sequencers:
@@ -160,7 +176,7 @@ class ConductorServer(LabradServer):
         except Exception, e:
             return sequence_filename
 
-    @setting(7, 'set sequence', sequence='s', returns='s')
+    @setting(7, sequence='s', returns='s')
     def set_sequence(self, c, sequence):
         try:
             sequence = json.loads(sequence)
@@ -176,7 +192,7 @@ class ConductorServer(LabradServer):
             print 'unable to load sequence'
             print e
 
-    @setting(8, 'queue experiment', experiment='s', returns='i')
+    @setting(8, experiment='s', returns='i')
     def queue_experiment(self, c, experiment):
         """ load experiment into queue
 
@@ -192,7 +208,7 @@ class ConductorServer(LabradServer):
         self.experiment_queue.append(json.loads(experiment))
         return len(self.experiment_queue)
 
-    @setting(9, 'set experiment queue', experiment_queue='s', returns='i')
+    @setting(9, experiment_queue='s', returns='i')
     def set_experiment_queue(self, c, experiment_queue=None):
         if experiment_queue:
             experiment_queue = json.loads(experiment_queue)
@@ -202,10 +218,11 @@ class ConductorServer(LabradServer):
             self.experiment_queue = deque([])
         return len(self.experiment_queue)
 
-    @setting(10, 'stop experiment')
+    @setting(10, returns='b')
     def stop_experiment(self, c):
         self.do_save = 0
         self.experiment = {}
+        return True
 
     @inlineCallbacks
     def evaluate_device_parameters(self):
@@ -241,7 +258,7 @@ class ConductorServer(LabradServer):
         else:
             return x
     
-    @setting(11, 'evaluate sequence parameters', sequence='s', returns='s')
+    @setting(11, sequence='s', returns='s')
     def evaluate_sequence_parameters(self, c, sequence=None):
         if sequence is None:
             evaluated_sequence = self.do_evaluate_sequence_parameters(self.sequence)
@@ -261,7 +278,7 @@ class ConductorServer(LabradServer):
             self.in_communication.release()
         returnValue(sequence)
 
-    @setting(12, 'send data', data='s', returns='s')
+    @setting(12, data='s', returns='s')
     def send_data(self, c, data):
         data = json.loads(data)
         for d in data.values():
@@ -269,12 +286,12 @@ class ConductorServer(LabradServer):
         self.received_data.update(data)
         return json.dumps(data)
 
-    @setting(13, 'get data', returns='s')
+    @setting(13, returns='s')
     def get_data(self, c):
         return json.dumps(self.data)
 
-    @setting(14, 'get received data', returns='s')
-    def get_data(self, c):
+    @setting(14, returns='s')
+    def get_received_data(self, c):
         return json.dumps(self.received_data)
 
     def update_data(self, data_key):
@@ -302,11 +319,6 @@ class ConductorServer(LabradServer):
             if not type(x2).__name__ == 'list':
                 x2 = [x2]
             return x1 + x2
-
-    def do_display(self):
-        if self.experiment.has_key('display'):
-            exec(str(self.experiment['display']))
-            display(self.data)
 
     def do_advance(self, x):
         """ get next values from current experiment """
@@ -381,8 +393,6 @@ class ConductorServer(LabradServer):
             p = yield self.update_parameters(None, json.dumps(parameters))
         if advanced.has_key('sequence'):
             self.set_sequence(None, json.dumps(advanced['sequence']))
-        if advanced.has_key('display'):
-            self.display = advanced['display']
     
     @inlineCallbacks
     def run_sequence(self):
@@ -404,26 +414,6 @@ class ConductorServer(LabradServer):
             print e
             self.run_sequence_call = callLater(10, self.run_sequence)
 
-    def write_to_db(self):
-        self.write_to_db_call = callLater(self.db_write_period, self.write_to_db)
-        parameters = self.parameters
-
-        def to_float(x):
-            try:
-                return float(x)
-            except:
-                return 0.
-
-        to_db = [{
-            "measurement": "experiment parameters",
-            "tags": {"device": device_name, "parameter": p},
-            "fields": {"value": to_float(v)},
-        } for device_name, device in self.parameters.items() for p, v in device.items()]
-
-        try:
-            self.dbclient.write_points(to_db)
-        except:
-            print "failed to save parameters to database"
 
 if __name__ == "__main__":
     from labrad import util

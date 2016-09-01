@@ -14,7 +14,6 @@ class ConductorConfig(object):
                 'yesr20_digital_sequencer'
         ]
 
-        self.default_devices = [
-                'clock_aom',
-                #'stepper_motor',
-        ]
+        self.default_devices = {
+                'clock_aom': None,
+        }

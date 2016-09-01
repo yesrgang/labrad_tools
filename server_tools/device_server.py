@@ -56,6 +56,7 @@ class DeviceServer(LabradServer):
         for name, device in self.devices.items():
             device_wrapper = get_device_wrapper(device)
             device = device_wrapper(device)
+            device.name = name
             try: 
                 connection_name = device.servername + ' - ' + device.address
                 if connection_name not in self.open_connections:

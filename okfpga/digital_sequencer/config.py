@@ -41,8 +41,6 @@ class TimingChannelConfig(object):
         for kw in kwargs:
             setattr(self, kw, kwargs[kw])
 
-
-
 class DigitalSequencerConfig(object):
     def __init__(self):
         self.name = '%LABRADNODE%_digital_sequencer'
