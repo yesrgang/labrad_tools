@@ -17,10 +17,13 @@ timeout = 20
 """
 import json
 import numpy as np
+import os
 
 import ok
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet.defer import inlineCallbacks, returnValue
+
+SEP = os.path.sep
 
 class OKFPGAServer(LabradServer):
     name = '%LABRADNODE%_okfpga'
@@ -50,7 +53,7 @@ class OKFPGAServer(LabradServer):
     
     @setting(3, filename='s')
     def program_bitfile(self, c, filename):
-        error = c['xem'].ConfigureFPGA(filename)
+        error = c['xem'].ConfigureFPGA('bit_files'+SEP+filename)
         if error:
             print "unable to program sequencer"
             return False
@@ -63,10 +66,13 @@ class OKFPGAServer(LabradServer):
     @setting(12, wire='i', value='i')
     def set_wire_in(self, c, wire, value):
         c['xem'].SetWireInValue(wire, value)
+        print value
     
     @setting(13)
     def update_wire_ins(self, c):
         c['xem'].UpdateWireIns()
+        print 'ok'
 
 if __name__ == "__main__":
-    __server__ = OKFPGAServer()
+    from labrad import util
+    util.runServer(OKFPGAServer())

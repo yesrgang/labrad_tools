@@ -1,7 +1,7 @@
 from twisted.internet.defer import inlineCallbacks
 from labrad.wrappers import connectAsync
 
-class Frequency(object):
+class GenericParameter(object):
     def __init__(self):
         self.priority = 1
         self.value_type = 'single'
@@ -9,8 +9,7 @@ class Frequency(object):
 
     @inlineCallbacks
     def initialize(self):
-        self.cxn = yield connectAsync()
-        yield self.cxn.rf.select_device('clock_steer')
+        yield None
     
     @inlineCallbacks
     def stop(self):
@@ -18,4 +17,4 @@ class Frequency(object):
 
     @inlineCallbacks
     def update(self, value):
-        ans = yield self.cxn.rf.frequency(value)
+        yield None

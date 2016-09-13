@@ -5,13 +5,22 @@ def time_to_ticks(clk, time):
 
 class DigitalChannel(object):
     channel_type = 'digital'
-    def __init__(self, **kwargs):
+    def __init__(self, config):
         """ defaults """
+        self.mode = 'auto'
+        self.manual_output = 0
+        self.invert = 0
 
-        for kw in kwargs:
-            setattr(self, kw, kwargs[kw])
+        row, col = config['loc']
+        self.rowcol = [row, col]
+        self.name = 'TTL'+row+str(col).zfill(2)
         
-	self.key = self.name+'@'+self.loc
+        """ non-defaults """
+        for key, value in config.items():
+            setattr(self, key, value)
+         
+        self.loc = row+str(col).zfill(2)
+        self.key = self.name+'@'+self.loc
    
     @inlineCallbacks
     def set_mode(self, mode):
@@ -19,18 +28,18 @@ class DigitalChannel(object):
         yield self.board.write_channel_modes()
 
     @inlineCallbacks
-    def set_manual_state(self, state):
+    def set_manual_output(self, state):
         self.state = state
-        yield self.board.write_manual_states()
+        yield self.board.write_channel_manual_outputs()
 
-class AnalogBoard(object):
-    sequencer_type = 'analog'
+class DigitalBoard(object):
+    sequencer_type = 'digital'
     def __init__(self, config):
         """ defaults """
         self.update_parameters = []
         self.init_commands = []
 
-        self.bit_file = 'digital_sequencer.bit'
+        self.bitfile = 'digital_sequencer.bit'
         self.mode_ints = {'idle': 0, 'load': 1, 'run': 2}
         self.mode_wire = 0x00
         self.sequence_pipe = 0x80
@@ -39,24 +48,29 @@ class AnalogBoard(object):
         self.clk = 50e6
         self.mode = 'idle'
        
+        channel_wrappers = [
+                DigitalChannel({'loc': [x, i], 'board_name': self.name})
+                for x in self.name for i in range(16)]
+
         """ non-defaults"""
         for key, value in config.items():
             setattr(self, key, value)
         
-        channel_wrappers = {}
         for c in self.channels:
             c['board_name'] = self.name
             wrapper = DigitalChannel(c)
-            channel_wrappers[wrapper.loc] = wrapper
-
+            row, column = wrapper.rowcol
+            channel_wrappers[(ord(row)%32-1)*16 + column] = wrapper
         self.channels = channel_wrappers
+
+        for c in self.channels:
+            c.board = self
 
     @inlineCallbacks
     def initialize(self):
-        yield self.connection.open(self.board_id)
         yield self.connection.program_bitfile(self.bitfile)
         yield self.write_channel_modes()
-        yield self.write_channel_states()
+        yield self.write_channel_manual_outputs()
 
     @inlineCallbacks
     def set_mode(self, mode):
@@ -79,17 +93,18 @@ class AnalogBoard(object):
 
     def make_sequence(self, sequence):
         # make sure trigger happens on first run
-        for c in self.channels.values():
+        for c in self.channels:
             sequence[c.key].insert(0, sequence[c.key][0])
         sequence['Trigger@D15'][0] = 1
 
-	# allow for sequencer's ramp to zero
-        for c in self.channels.values()
+        # allow for sequencer's ramp to zero
+        for c in self.channels:
             sequence[c.key].append(sequence[c.key][-1])
         sequence['Trigger@D15'][-1] = 1
 
         # for now, assume each channel_sequence has same timings
-        programmable_sequence = [(dt, [sequence[c.key][i] for c in board.channels]) 
+        programmable_sequence = [(dt, [sequence[c.key][i] 
+                for c in board.channels]) 
                 for i, dt in enumerate(sequence[self.timing_channel])]
         
         ba = []
@@ -103,7 +118,7 @@ class AnalogBoard(object):
     
     @inlineCallbacks
     def write_channel_modes(self):
-        cm_list = [c.mode for n, c in sorted(self.channels.items())]
+        cm_list = [c.mode for c in self.channels]
         values = [sum([2**j for j, m in enumerate(cm_list[i:i+16]) 
                 if m == 'manual']) for i in range(0, 64, 16)]
         for value, wire in zip(values, self.channel_mode_wires):
@@ -111,12 +126,12 @@ class AnalogBoard(object):
         yield self.connection.update_wire_ins()
    
     @inlineCallbacks
-    def write_manual_states(self): 
+    def write_channel_manual_outputs(self): 
         cm_list = [c.mode for c in self.channels]
-        cs_list = [c.manual_state for c in self.channels]
+        cs_list = [c.manual_output for c in self.channels]
         ci_list = [c.invert for c in self.channels]
-        msi = zip(cm_list[i:i+16], cs_list[i:i+16], ci_list[i:i+16])
-        values = [sum([2**j for j, (m, s, i) in enumerate(msi) 
+        values = [sum([2**j for j, (m, s, i) in enumerate(zip(
+                cm_list[i:i+16], cs_list[i:i+16], ci_list[i:i+16]))
                 if (m=='manual' and s!=i) or (m=='auto' and i==True)]) 
                 for i in range(0, 64, 16)]
         for value, wire in zip(values, self.state_invert_wires):

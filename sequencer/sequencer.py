@@ -59,14 +59,14 @@ class SequencerServer(DeviceServer):
             raise Exception(message)
         return channel
 
-    @setting(1)
+    @setting(10)
     def get_channels(self, c):
         channels = {c.key: c 
                 for d in self.devices.values() 
                 for c in d.channels}
         return json.dumps(channels)
     
-    @setting(2, sequence='s')
+    @setting(11, sequence='s')
     def run_sequence(self, c, sequence):
         sequence = self._fix_sequence_keys(json.loads(sequence))
         for device in self.devices.values():
@@ -74,26 +74,27 @@ class SequencerServer(DeviceServer):
         for device in self.devices.values():
             yield device.start_sequence()
     
-    @setting(3, channel_id='s', mode='s')
+    @setting(12, channel_id='s', mode='s')
     def channel_mode(self, c, channel_id, mode=None):
         channel = self.id2channel(channel_id)
         if mode is not None:
             yield channel.set_mode(mode)
         yield self.send_update(c)
-        return channel.mode
+        returnValue(channel.mode)
     
-    @setting(4, channel_id='s', state='?')
-    def channel_manual_state(self, c, channel_id, state=None):
+    @setting(13, channel_id='s', output='?')
+    def channel_manual_output(self, c, channel_id, output=None):
         channel = self.id2channel(channel_id)
-        if state is not None:
-            yield channel.set_manual_state(state)
+        if output is not None:
+            yield channel.set_manual_output(output)
+            print channel.name, channel.manual_output
         yield self.send_update(c)
-        return channel.manual_state
+        returnValue(channel.manual_output)
 
-    @setting(5, sequence='s', returns='s')
+    @setting(14, sequence='s', returns='s')
     def fix_sequence_keys(self, c, sequence):
         sequence = json.loads(sequence)
-        sequence_keyfix =  self._fix_sequence_keys(sequence)
+        sequence_keyfix = self._fix_sequence_keys(sequence)
         return json.dumps(sequence)
     
     def _fix_sequence_keys(self, sequence):
@@ -108,7 +109,7 @@ class SequencerServer(DeviceServer):
                         s = sequence.pop(key)
                         sequence.update({c.key: s})
                     elif c.loc not in locs:
-                        sequence.update({c.key: [c.manual_state 
+                        sequence.update({c.key: [c.manual_output 
                                 for dt in sequence[self.timing_channel]]})
         return sequence
     

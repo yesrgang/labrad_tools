@@ -1,4 +1,5 @@
 from twisted.internet.defer import inlineCallbacks, returnValue
+from lib.analog_ramps import RampMaker
 
 VOLTAGE_RANGE = (-10., 10.)
 DAC_BITS = 16
@@ -15,7 +16,7 @@ def voltage_to_unsigned(voltage):
     min_voltage = min(VOLTAGE_RANGE)
     max_voltage = max(VOLTAGE_RANGE)
     voltage_span = float(max(VOLTAGE_RANGE) - min(VOLTAGE_RANGE))
-    voltage = sorted([min_voltage, voltage, max_voltage])[1] + min_voltage
+    voltage = sorted([min_voltage, voltage, max_voltage])[1] - min_voltage
     return int(voltage/voltage_span*(2**DAC_BITS-1))
 
 def ramp_rate(voltage_diff, clk, time):
@@ -34,23 +35,24 @@ class AnalogChannel(object):
         'loc': 0, # in range(8)
         'name': 'DACA0', # unique string 
         'mode': 'auto', # 'auto' or 'manual'
-        'manual_state': 0, # default manual voltage. between -10, 10.
+        'manual_output': 0, # default manual voltage. between -10, 10.
     }
     """
     channel_type = 'analog'
-    def __init__(self, **kwargs):
+    def __init__(self, config):
         """ defaults """
-        self.mode_wire = 0x09
-        board_name = kwargs['board_name']
-        loc = kwargs['loc']
+        self.mode = 'auto'
+        self.manual_output = 'manual'
+        board_name = config['board_name']
+        loc = config['loc']
         self.name = 'DAC'+board_name+str(loc).zfill(2)
         
         """ non-defaults """
-        for kw in kwargs:
-            setattr(self, kw, kwargs[kw])
+        for key, value in config.items():
+            setattr(self, key, value)
         
         self.loc = self.board_name + str(self.loc).zfill(2)
-	self.key = self.name+'@'+self.loc
+        self.key = self.name+'@'+self.loc
    
     @inlineCallbacks
     def set_mode(self, mode):
@@ -58,9 +60,9 @@ class AnalogChannel(object):
         yield self.board.write_channel_modes()
 
     @inlineCallbacks
-    def set_manual_state(self, manual_voltage):
-        self.manual_voltage = manual_voltage
-        yield self.board.write_manual_states()
+    def set_manual_output(self, manual_output):
+        self.manual_output = manual_output
+        yield self.board.write_channel_manual_outputs()
 
 
 class AnalogBoard(object):
@@ -70,9 +72,11 @@ class AnalogBoard(object):
         self.update_parameters = []
         self.init_commands = []
 
-        self.bit_file = 'analog_sequencer.bit'
+        self.bitfile = 'analog_sequencer.bit'
         self.mode_ints = {'idle': 0, 'load': 1, 'run': 2}
         self.mode_wire = 0x00
+        self.sequence_pipe = 0x80
+        self.channel_mode_wire = 0x09
         self.manual_voltage_wires = [0x01, 0x02, 0x03, 0x04, 
                                      0x05, 0x06, 0x07, 0x08]
         self.clk = 48e6 / (8.*2. + 2.)
@@ -92,12 +96,14 @@ class AnalogBoard(object):
 
         self.channels = channel_wrappers
 
+        for c in self.channels:
+            c.board = self
+
     @inlineCallbacks
     def initialize(self):
-        yield self.connection.open(self.board_id)
         yield self.connection.program_bitfile(self.bitfile)
         yield self.write_channel_modes()
-        yield self.write_channel_states()
+        yield self.write_channel_manual_outputs()
 
     @inlineCallbacks
     def set_mode(self, mode):
@@ -155,16 +161,14 @@ class AnalogBoard(object):
     @inlineCallbacks
     def write_channel_modes(self):
         cm_list = [c.mode for c in self.channels]
-        values = [sum([2**j for j, m in enumerate(cm_list[i:i+16]) 
-                if m == 'manual']) 
-                for i in range(0, 64, 16)]
-        for value, wire in zip(values, self.channel_mode_wires):
-            yield self.connection.set_wire_in(wire, value)
+        value = sum([2**j for j, m in enumerate(cm_list) if m == 'manual'])
+        yield self.connection.set_wire_in(self.channel_mode_wire, value)
         yield self.connection.update_wire_ins()
     
     @inlineCallbacks
-    def write_channel_states(self): 
+    def write_channel_manual_outputs(self): 
         for c, w in zip(self.channels, self.manual_voltage_wires):
-            yield self.connection.set_wire_in(w, c.manual_voltage)
+            v = voltage_to_unsigned(c.manual_output)
+            yield self.connection.set_wire_in(w, v)
         yield self.connection.update_wire_ins()
 

@@ -15,8 +15,8 @@ class OKFPGAConnection(object):
 
         self.server.open(device.address)
 
-    def load_bit(self, bit_file):
-        return self.server.load_bit(bit_file)
+    def program_bitfile(self, bit_file):
+        return self.server.program_bitfile(bit_file)
         
     def write_to_pipe_in(self, wire, byte_array):
         return self.server.write_to_pipe_in(wire, byte_array)

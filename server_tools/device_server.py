@@ -1,11 +1,17 @@
+import re
 import json
 import types
-import inspect
+import inflection
 
 from twisted.internet.defer import returnValue, inlineCallbacks
 from labrad.server import LabradServer, setting
 
 from decorators import quickSetting
+
+
+def underscore(name):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z])([A-Z])', r'\1_\2', s1).lower()
 
 def add_quick_setting(srv, ID, setting_name, arg_type):
     def setting(self, c, arg=None):
@@ -19,7 +25,7 @@ def add_quick_setting(srv, ID, setting_name, arg_type):
 
 def get_device_wrapper(device_config):
     device_type = device_config['device_type']
-    module_path = 'devices.{}'.format(device_type.lower())
+    module_path = 'devices.{}'.format(underscore(device_type))
     module = __import__(module_path, fromlist=[device_type])
     return getattr(module, device_type)
 
@@ -55,8 +61,8 @@ class DeviceServer(LabradServer):
     def initialize_devices(self):
         for name, device in self.devices.items():
             device_wrapper = get_device_wrapper(device)
+            device_wrapper.name = name
             device = device_wrapper(device)
-            device.name = name
             try: 
                 connection_name = device.servername + ' - ' + device.address
                 if connection_name not in self.open_connections:
