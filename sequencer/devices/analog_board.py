@@ -131,7 +131,18 @@ class AnalogBoard(object):
         
         # ramp to zero at end
         for c in self.channels:
-            sequence[c.key].append({'dt': 10e-3, 'type': 'lin', 'vf': 0})
+            sequence[c.key].append({'dt': 10e-3, 'type': 'lin', 'vf': 0})def get_sequence_parameters(x):
+    if type(x).__name__ in ['str', 'unicode']:
+        if x[0] == '*':
+            return [x]
+        else:
+            return []
+    elif type(x).__name__ == 'list':
+        return list(chain.from_iterable([get_sequence_parameters(xx) for xx in x]))
+    elif type(x).__name__ == 'dict':
+        return list(chain.from_iterable([get_sequence_parameters(v) for v in x.values()]))
+
+
             sequence[c.key].append({'dt': 10, 'type': 'lin', 'vf': 0})
 
         # break into smaller pieces [(T, loc, {dt, dv})]

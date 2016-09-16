@@ -1,5 +1,11 @@
 {
     "devices": {
+        "Timing": {
+            "channels": [
+            {
+                "name": "timing"
+            }
+        ],
         "ABCD": {
             "device_type": "DigitalBoard",
             "connection_type": "OKFPGA",

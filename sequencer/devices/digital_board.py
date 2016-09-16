@@ -3,6 +3,11 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 def time_to_ticks(clk, time):
     return int(clk*time)
 
+def get_out(channel_sequence, t):
+    for s in channel_sequence[::-1]:
+        if s['t'] <= t:
+            return s['out']
+
 class DigitalChannel(object):
     channel_type = 'digital'
     def __init__(self, config):
@@ -95,12 +100,23 @@ class DigitalBoard(object):
         # make sure trigger happens on first run
         for c in self.channels:
             sequence[c.key].insert(0, sequence[c.key][0])
-        sequence['Trigger@D15'][0] = 1
+        sequence['Trigger@D15'][0]['out'] = 1
 
-        # allow for sequencer's ramp to zero
+        # allow for analog's ramp to zero
         for c in self.channels:
             sequence[c.key].append(sequence[c.key][-1])
-        sequence['Trigger@D15'][-1] = 1
+        sequence['Trigger@D15'][-1]['out'] = 1
+
+        for c in self.channels:
+            total_ticks = 0
+            for s in sequence[c.key]:
+                dt = time_to_ticks(self.clk, s['dt'])
+                s.update({'dt': dt, 't': total_ticks})
+                total_ticks += dt
+
+        t_ = sorted(list(set([s['t'] for c in self.channels 
+                                     for s in sequence[c.key]])))
+        
 
         # for now, assume each channel_sequence has same timings
         programmable_sequence = [(dt, [sequence[c.key][i] 

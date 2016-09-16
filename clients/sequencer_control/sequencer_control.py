@@ -119,14 +119,15 @@ class Sequencer(QtGui.QWidget):
     def __init__(self, config, reactor=None, cxn=None):
         super(Sequencer, self).__init__(None)
         self.sequence_parameters = {}
-        self.config = config
+#        self.config = config
+        
         for key, value in config.__dict__.items():
             setattr(self, key, value)
-        self.digital_servername = config.digital_servername
-        self.analog_servername = config.analog_servername
-        self.config = config
-        self.cxn = cxn
+        
+        self.sequencer_servername = config.sequencer_servername
+#        self.config = config
         self.reactor = reactor
+        self.cxn = cxn
         self.connect()
 
     @inlineCallbacks
@@ -135,31 +136,31 @@ class Sequencer(QtGui.QWidget):
             self.cxn = connection()  
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
-        dserver = yield self.cxn.get_server(self.digital_servername)
-        dc = yield dserver.get_channels()
-        self.digital_channels = json.loads(dc)
-        yield dserver.signal__update(self.config.digital_update_id)
-        yield dserver.addListener(listener=self.update_digital,
-            source=None, ID=self.digital_update_id)
-        tc = yield dserver.get_timing_channel()
-        self.timing_channel = json.loads(tc)
-        self.config.timing_channel = json.loads(tc)
-        aserver = yield self.cxn.get_server(self.analog_servername)
-        ac = yield aserver.get_channels()
-        self.analog_channels = json.loads(ac)
-        self.channels = self.digital_channels + self.analog_channels + [self.timing_channel]
+        sequencer = yield self.cxn.get_server(self.sequencer_servername)
+        channels = yield sequencer.get_channels()
+        self.channels = json.loads(channels)
+        yield sequencer.signal__update(self.config.sequencer_update_id)
+        yield sequencer.addListener(listener=self.update, source=None,
+                                    ID=self.sequencerupdate_id)
+        self.analog_channels = {k: c for k, c in channels.items() 
+                                     if c.channel_type == 'analog'}
+        self.digital_channels = {k: c for k, c in channels.items() 
+                                     if c.channel_type == 'digital'}
+        self.timing_channels = {k: c for k, c in channels.items() 
+                                     if c.channel_type == 'timing'}
+        self.config.timing_channels = self.timing_channels
+
         conductor = yield self.cxn.get_server(self.conductor_servername)
         yield conductor.signal__parameters_updated(self.config.conductor_update_id)
         yield conductor.addListener(listener=self.update_parameters, 
-            source=None, ID=self.conductor_update_id)
+                                    source=None, ID=self.conductor_update_id)
         self.populate()
-        self.default_sequence = dict(
-            [(nameloc, [{'type': 'lin', 'vf': 0, 'dt': 1}]) 
-                for nameloc in self.analog_channels]
+        
+        self.setSequence(dict(
+              [(nameloc, [{'type': 'lin', 'vf': 0, 'dt': 1}]) 
+                              for nameloc in self.analog_channels]
             + [(nameloc, [0]) for nameloc in self.digital_channels] 
-            + [(self.timing_channel, [1])])
-        self.setSequence(self.default_sequence)
-        yield dserver.notify_listeners()
+            + [(nameloc, [1]) for nameloc in self.timing_channels]))
 
     def populate(self):
         self.loadSaveRun = LoadSaveRun()
