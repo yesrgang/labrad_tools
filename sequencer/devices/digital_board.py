@@ -1,5 +1,9 @@
 from twisted.internet.defer import inlineCallbacks, returnValue
 
+T_TRIG = 10e-6
+T_END = 1e0
+TRIGGER_CHANNEL = 'Trigger@D15'
+
 def time_to_ticks(clk, time):
     return int(clk*time)
 
@@ -9,9 +13,9 @@ def get_out(channel_sequence, t):
             return s['out']
 
 class DigitalChannel(object):
-    channel_type = 'digital'
     def __init__(self, config):
         """ defaults """
+        self.channel_type = 'digital'
         self.mode = 'auto'
         self.manual_output = 0
         self.invert = 0
@@ -34,7 +38,7 @@ class DigitalChannel(object):
 
     @inlineCallbacks
     def set_manual_output(self, state):
-        self.state = state
+        self.manual_output = state
         yield self.board.write_channel_manual_outputs()
 
 class DigitalBoard(object):
@@ -96,16 +100,18 @@ class DigitalBoard(object):
     def start_sequence(self):
         yield self.set_mode('run')
 
-    def make_sequence(self, sequence):
+    def make_sequence_bytes(self, sequence):
         # make sure trigger happens on first run
         for c in self.channels:
-            sequence[c.key].insert(0, sequence[c.key][0])
-        sequence['Trigger@D15'][0]['out'] = 1
+            s = {'dt': T_TRIG, 'out': sequence[c.key][0]['out']}
+            sequence[c.key].insert(0, s)
 
-        # allow for analog's ramp to zero
-        for c in self.channels:
-            sequence[c.key].append(sequence[c.key][-1])
-        sequence['Trigger@D15'][-1]['out'] = 1
+        # trigger other boards
+        for s in sequence[TRIGGER_CHANNEL]:
+            s['out'] = False
+        sequence[TRIGGER_CHANNEL][0]['out'] = True
+        # allow for analog's ramp to zero, last item will not be written
+        sequence[TRIGGER_CHANNEL].append({'dt': T_END, 'out': True})
 
         for c in self.channels:
             total_ticks = 0
@@ -114,23 +120,28 @@ class DigitalBoard(object):
                 s.update({'dt': dt, 't': total_ticks})
                 total_ticks += dt
 
+        # each sequence point updates all outs for some number of clock ticks
+        # since some channels may have different 'dt's, every time any channel 
+        # changes state we need to write all channel outs.
         t_ = sorted(list(set([s['t'] for c in self.channels 
                                      for s in sequence[c.key]])))
-        
+        dt_ = [t_[i+1] - t_[i] for i in range(len(t_)-1)] + [time_to_ticks(self.clk, T_END)]
 
-        # for now, assume each channel_sequence has same timings
-        programmable_sequence = [(dt, [sequence[c.key][i] 
-                for c in board.channels]) 
-                for i, dt in enumerate(sequence[self.timing_channel])]
+        programmable_sequence = [(dt, [get_out(sequence[c.key], t) 
+                for c in self.channels])
+                for dt, t in zip(dt_, t_)]
         
-        ba = []
+        byte_array = []
         for t, l in programmable_sequence:
-            ba += list([sum([2**j for j, b in enumerate(l[i:i+8]) if b]) 
+            # each point in sequence specifies all 64 logic outs with 64 bit number
+            # e.g. all off is 0...0, channel 1 on is 10...0
+            byte_array += list([sum([2**j for j, b in enumerate(l[i:i+8]) if b]) 
                     for i in range(0, 64, 8)])
-            ba += list([int(eval(hex(self.time_to_ticks(board, t))) 
-                    >> i & 0xff) for i in range(0, 32, 8)])
-        ba += [0]*96
-        return ba
+            # time to keep these outs is 32 bit number in units of clk ticks
+            byte_array += list([int(eval(hex(t)) >> i & 0xff) 
+                    for i in range(0, 32, 8)])
+        byte_array += [0]*24
+        return byte_array
     
     @inlineCallbacks
     def write_channel_modes(self):
@@ -140,6 +151,7 @@ class DigitalBoard(object):
         for value, wire in zip(values, self.channel_mode_wires):
             yield self.connection.set_wire_in(wire, value)
         yield self.connection.update_wire_ins()
+        yield self.write_channel_manual_outputs()
    
     @inlineCallbacks
     def write_channel_manual_outputs(self): 

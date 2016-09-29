@@ -1,9 +1,11 @@
+import sys
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal
-from connection import connection
 from twisted.internet.defer import inlineCallbacks
 import numpy as np
 import json
+sys.path.append('../../')
+from connection import connection
 from client_tools import SuperSpinBox
 
 class AnalogVoltageManualControl(QtGui.QGroupBox):
@@ -70,8 +72,8 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
         yield server.signal__update(self.update_id)
         yield server.addListener(listener=self.receive_update, source=None,
                                  ID=self.update_id)
-        yield self.cxn.add_on_connect(self.servername_alt, self.reinit)
-        yield self.cxn.add_on_disconnect(self.servername_alt, self.disable)
+        yield self.cxn.add_on_connect(self.servername, self.reinit)
+        yield self.cxn.add_on_disconnect(self.servername, self.disable)
 
         self.mode_button.released.connect(self.onNewMode)
         self.voltage_box.returnPressed.connect(self.onNewVoltage)
@@ -84,23 +86,27 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
     @inlineCallbacks
     def requestValues(self, c=None):
         server = yield self.cxn.get_server(self.servername)
-        yield server.notify_listeners()
+        yield server.send_update()
 
+    @inlineCallbacks
     def receive_update(self, c, signal):
-        self.free = False
-        signal = json.loads(signal)
-        for s in signal:
-            if signal[s]['name'] == self.name:
-                update = signal[s]
-        #print update
-        if update['mode'] == 'manual':
-            self.mode_button.setChecked(1)
-            self.mode_button.setText('Manual')
-        else:
-            self.mode_button.setChecked(0)
-            self.mode_button.setText('Auto')
-        self.voltage_box.display(update['manual_voltage'])
-        self.free = True
+        if signal:
+            self.free = False
+            sequencer = yield self.cxn.get_server(self.servername)
+            channels = yield sequencer.get_channels()
+            for k, c in json.loads(channels).items():
+                if k.split('@')[0] == self.name:
+                    update = c
+            print update
+            #print update
+            if update['mode'] == 'manual':
+                self.mode_button.setChecked(1)
+                self.mode_button.setText('Manual')
+            else:
+                self.mode_button.setChecked(0)
+                self.mode_button.setText('Auto')
+            self.voltage_box.display(update['manual_output'])
+            self.free = True
 
     def enterEvent(self, c):
         self.mouseHover.emit(True)
@@ -122,7 +128,7 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
     def writeValues(self):
         if self.hasNewVoltage:
             server = yield self.cxn.get_server(self.servername)
-            yield server.channel_manual_voltage(self.name,
+            yield server.channel_manual_output(self.name,
                                                 self.voltage_box.value())
             self.hasNewVoltage = False
 
@@ -136,7 +142,7 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
         yield server.signal__update(self.update_id, context=self.context)
         yield server.addListener(listener=self.receive_update, source=None,
                                  ID=self.update_id, context=self.context)
-	yield server.notify_listeners()
+        yield server.send_update()
 
 
     def disable(self):
@@ -146,60 +152,10 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
 #    def closeEvent(self, x):
 #        self.reactor.stop()
 
-class ManyChannels(QtGui.QWidget):
-    def __init__(self, reactor, cxn=None):
-        QtGui.QDialog.__init__(self)
-        self.channels = [
-            'Alpha Intensity', 
-            'Beta Intensity', 
-            'X Comp. Coil', 
-            'Y Comp. Coil', 
-            'Z Comp. Coil', 
-            'HODT Intensity', 
-            'VODT Intensity', 
-            '813 H1 Intensity', 
-            '813 H2 Intensity', 
-            '813 V Intensity',
-        ]
-        self.reactor = reactor
-        self.cxn = cxn
-        self.connect()
-
-    @inlineCallbacks
-    def connect(self):
-        if self.cxn is None:
-            self.cxn = connection()
-            yield self.cxn.connect()
-        self.context = yield self.cxn.context()
-        try:
-            self.populateGUI()
-        except Exception, e:
-            print e
-            self.setDisabled(True)
-
-    def populateGUI(self):
-        self.layout = QtGui.QHBoxLayout()
-        for c in self.channels:
-            conf = ControlConfig()
-            conf.name = c
-            w = AnalogVoltageManualControl(conf, reactor, self.cxn)
-            self.layout.addWidget(w)
-	    h = w.height()
-	    wid = w.width()
-	print h, wid
-	self.setFixedSize(wid*len(self.channels)+5, h+20)
-	#self.layout.setSpacing(0)
-        self.setLayout(self.layout)
-    
-    def closeEvent(self, x):
-        self.reactor.stop()
-
-
 class ControlConfig(object):
     def __init__(self):
-        self.name = 'Spin Pol. Intensity'
-        self.servername = 'yesr20_analog_sequencer'
-        self.servername_alt = 'yesr20_analog_sequencer'
+        self.name = 'Alpha Intensity'
+        self.servername = 'sequencer'
         self.update_id = 461023
         self.update_time = 100 # [ms]
 
@@ -213,11 +169,7 @@ if __name__ == '__main__':
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-    if len(sys.argv) > 1:
-        conf = ControlConfig()
-        conf.name = sys.argv[1]
-        widget = AnalogVoltageManualControl(conf, reactor)
-    else:
-        widget = ManyChannels(reactor)
+    conf = ControlConfig()
+    widget = AnalogVoltageManualControl(conf, reactor)
     widget.show()
     reactor.run()

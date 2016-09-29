@@ -1,6 +1,6 @@
+import sys
 import json
-from PyQt4 import QtGui, QtCore, Qt
-from PyQt4.QtCore import pyqtSignal 
+from PyQt4 import QtGui, QtCore
 from twisted.internet.defer import inlineCallbacks, returnValue
 import numpy as np
 import matplotlib
@@ -11,15 +11,9 @@ from matplotlib.figure import Figure
 
 from connection import connection
 from client_tools import SuperSpinBox
-from analog_ramps import RampMaker
-
-sequence = {'a': [{'type': 'sexp', 'dt': 1.0, 'vi': 2.0, 'vf': 5, 'tau': .5, 'pts': 5}, {'type': 'exp', 'dt': 1.0, 'vf': 0, 'tau': -.5, 'pts': 5}]}
-
-def merge_dicts(*dictionaries):
-    merged_dictionary = {}
-    for d in dictionaries:
-        merged_dictionary.update(d)
-    return merged_dictionary
+from helpers import merge_dicts, get_sequence_parameters, substitute_sequence_parameters
+sys.path.append('../../../')
+from sequencer.devices.lib.analog_ramps import RampMaker
 
 class ParameterWidget(QtGui.QWidget):
     def __init__(self, ramp_type, ramp):
@@ -290,9 +284,13 @@ class AnalogVoltageEditor(QtGui.QDialog):
     @inlineCallbacks
     def get_plottable_sequence(self):
         sequence = self.ramp_table.get_channel_sequence()
-	conductor = yield self.cxn.get_server(self.config.conductor_servername)
-	plottable_sequence = yield conductor.evaluate_sequence_parameters(json.dumps(sequence))
-        returnValue(self.ramp_maker(json.loads(plottable_sequence)).get_plottable())
+        parameters = {'sequencer': get_sequence_parameters(sequence)}
+        parameters_json = json.dumps(parameters)
+        conductor = yield self.cxn.get_server(self.config.conductor_servername)
+        pv_json = yield conductor.get_parameter_values(parameters_json, True)
+        parameter_values = json.loads(pv_json)['sequencer']
+        plottable_sequence = substitute_sequence_parameters(sequence, parameter_values)
+        returnValue(self.ramp_maker(plottable_sequence).get_plottable())
 
     def get_sequence(self):
         channel_sequence = self.ramp_table.get_channel_sequence()
@@ -324,6 +322,8 @@ class FakeConfig(object):
         self.conductor_update_id = 461349
 
 if __name__ == '__main__':
+    SEQUENCE = {'a': [{'type': 'sexp', 'dt': 1.0, 'vi': 2.0, 'vf': 5, 'tau': .5, 'pts': 5}, 
+                      {'type': 'exp', 'dt': 1.0, 'vf': 0, 'tau': -.5, 'pts': 5}]}
     a = QtGui.QApplication([])
     import qt4reactor 
     qt4reactor.install()

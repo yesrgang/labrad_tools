@@ -1,15 +1,18 @@
+import sys
 import time
+
+sys.path.append('../../sequencer/devices/lib')
 from analog_ramps import RampMaker
 
 class SequencerConfig(object):
     def __init__(self):
-        self.digital_servername = 'yesr20_digital_sequencer'
-        self.analog_servername = 'yesr20_analog_sequencer'
-        self.conductor_servername = 'yesr20_conductor'
+        self.sequencer_servername = 'sequencer'
+        self.conductor_servername = 'conductor'
+        self.timing_channel = 'Trigger@D15'
         self.base_directory = 'Z:\\SrQ\\data\\'
         self.sequence_directory = lambda: self.base_directory + '{}\\sequences\\'.format(time.strftime('%Y%m%d'))
+        self.sequencer_update_id = 689223
         self.conductor_update_id = 689222
-        self.digital_update_id = 689223
         self.spacer_width = 65
         self.spacer_height = 15
         self.namecolumn_width = 130

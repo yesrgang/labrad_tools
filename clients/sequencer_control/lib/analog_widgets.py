@@ -8,6 +8,8 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
+from helpers import substitute_sequence_parameters
+
 class NameBox(QtGui.QLabel):
     clicked = QtCore.pyqtSignal()
     def __init__(self, nameloc):
@@ -41,9 +43,10 @@ class AnalogNameColumn(QtGui.QWidget):
 
 
 class AnalogArray(FigureCanvas):
-    def __init__(self, channels, RampMaker):
+    def __init__(self, channels, config):
         self.channels = channels
-        self.rampMaker = RampMaker
+        self.config = config
+        self.rampMaker = self.config.rampMaker
         self.populate()
        
     def populate(self):
@@ -69,16 +72,16 @@ class AnalogArray(FigureCanvas):
             self.axes.plot(T, V)
         for i in range(len(self.channels)-1):
             self.axes.axhline(-10-i*20, linestyle="--", color='grey')
-        for i in range(len(sequence['digital@T'])-1):
+        for i in range(len(sequence[self.config.timing_channel])-1):
             self.axes.axvline(i*99+98, color='grey')
         self.axes.set_ylim(-20*len(self.channels)+10, 10)
         self.axes.set_xlim(0, len(T))
         self.draw()
 
 
-class AnalogSequencer(QtGui.QWidget):
+class AnalogControl(QtGui.QWidget):
     def __init__(self, channels, config):
-        super(AnalogSequencer, self).__init__(None)
+        super(AnalogControl, self).__init__(None)
         self.channels = channels
         self.config = config
         self.sequence = {}
@@ -93,7 +96,7 @@ class AnalogSequencer(QtGui.QWidget):
         self.nameColumn.scrollArea.setVerticalScrollBarPolicy(1)
         self.nameColumn.scrollArea.setFrameShape(0)
        	
-        self.array = AnalogArray(self.channels, self.config.rampMaker)
+        self.array = AnalogArray(self.channels, self.config)
         self.array.scrollArea = QtGui.QScrollArea()
         self.array.scrollArea.setWidget(self.array)
         self.array.scrollArea.setWidgetResizable(True)
@@ -117,11 +120,13 @@ class AnalogSequencer(QtGui.QWidget):
 
         self.connectWidgets()
 
-    def setSequence(self, sequence):
+    def displaySequence(self, sequence):
         self.sequence = sequence
 
-    def displaySequence(self, sequence):
-        self.array.plotSequence(sequence)
+    def updateParameters(self, parameter_values):
+        plottable_sequence = substitute_sequence_parameters(self.sequence,
+                                                            parameter_values)
+        self.array.plotSequence(plottable_sequence)
     
     def connectWidgets(self):
         self.vscrolls = [self.nameColumn.scrollArea.verticalScrollBar(), 

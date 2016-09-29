@@ -22,6 +22,7 @@ import os
 import ok
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.threads import deferToThread
 
 SEP = os.path.sep
 
@@ -29,6 +30,7 @@ class OKFPGAServer(LabradServer):
     name = '%LABRADNODE%_okfpga'
     @setting(1, device_id='s', returns='b')
     def open(self, c, device_id):
+        c['device_id'] = device_id
         fp = ok.FrontPanel()
         module_count = fp.GetDeviceCount()
         print "found {} unused devices".format(module_count)
@@ -48,7 +50,6 @@ class OKFPGAServer(LabradServer):
     def close(self, c):
         if c.has_key('xem'):
             xem = c.pop('xem')
-#            xem = None
         return True
     
     @setting(3, filename='s')
@@ -59,19 +60,20 @@ class OKFPGAServer(LabradServer):
             return False
         return True
     
-    @setting(11, wire='i', byte_array='*i')
+    @setting(11, wire='i', byte_array='*i', returns='b')
     def write_to_pipe_in(self, c, wire, byte_array):
-        c['xem'].WriteToPipeIn(wire, bytearray(byte_array))
+        print '{} piping in sequence to {}'.format(c['device_id'], wire)
+        yield deferToThread(c['xem'].WriteToPipeInThr, wire, bytearray(byte_array))
+        returnValue(True)
 
     @setting(12, wire='i', value='i')
     def set_wire_in(self, c, wire, value):
+        print 'setting {} wire {} to {}'.format(c['device_id'], wire, value)
         c['xem'].SetWireInValue(wire, value)
-        print value
     
     @setting(13)
     def update_wire_ins(self, c):
         c['xem'].UpdateWireIns()
-        print 'ok'
 
 if __name__ == "__main__":
     from labrad import util

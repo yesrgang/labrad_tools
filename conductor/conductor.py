@@ -25,11 +25,17 @@ import time
 from collections import deque
 
 from labrad.server import LabradServer, setting, Signal
+from labrad.wrappers import connectAsync
 from twisted.internet.reactor import callLater
 from twisted.internet.defer import inlineCallbacks, returnValue
-from twisted.internet.task import LoopingCall
+from influxdb import InfluxDBClient
 
 from devices.generic_parameter import GenericParameter
+
+REGISTRY_PARAMETERS_DIR = ['', 'Servers', 'conductor', 'parameters']
+DB_QUERY_STRING = 'SELECT value FROM "experiment parameters" WHERE "device" = \
+                  \'sequence\' AND "parameter" = \'{}\' ORDER BY time \
+                  DESC LIMIT 1'
 
 def get_device_config(device_name):
     path = 'devices.{}'.format(device_name)
@@ -83,8 +89,10 @@ class ConductorServer(LabradServer):
 
     @inlineCallbacks
     def initServer(self):
+        self.dbclient = InfluxDBClient.from_DSN(os.getenv('INFLUXDBDSN'))
         yield LabradServer.initServer(self)
-        yield self.register_parameters(None, self.default_parameters)
+        callLater(1, self.register_parameters, None, self.default_parameters)
+#        yield self.register_parameters(None, self.default_parameters)
 
     @setting(2, config='s', returns='b')
     def register_parameters(self, c, config):
@@ -112,7 +120,6 @@ class ConductorServer(LabradServer):
                 self.parameters[device_name][parameter_name] = parameter
                 yield parameter.initialize()
                 yield self.update_parameter(device_name, parameter_name)
-
         returnValue(True)
 
     @setting(3, config='s', returns='b')
@@ -154,11 +161,54 @@ class ConductorServer(LabradServer):
                 self.parameters[device_name][parameter_name].value = parameter_value
         return True
 
-    @setting(5, returns='s')
-    def get_parameter_values(self, c):
-        return json.dumps({dn: {pn: get_parameter_value(p)} 
-                           for pn, p in d.items()
-                           for dn, d in self.parameters.items()})
+    @setting(5, parameters='s', use_registry='b', returns='s')
+    def get_parameter_values(self, c, parameters=None, use_registry=False):
+        if parameters is None:
+            parameters = {dn: dp.keys() for dn, dp in self.parameters.items()}
+        else:
+            parameters = json.loads(parameters)
+
+        parameter_values = {}
+        for device_name, device_parameters in parameters.items():
+            parameter_values[device_name] = {}
+            for parameter_name in device_parameters:
+                parameter_values[device_name][parameter_name] = \
+                        yield self.get_parameter_value(device_name, 
+                                                       parameter_name,
+                                                       use_registry)
+        returnValue(json.dumps(parameter_values))
+#        return json.dumps(parameter_values)
+
+    @inlineCallbacks
+    def get_parameter_value(self, device_name, parameter_name, use_registry=False):
+        message = None
+        try:
+            parameter = self.parameters[device_name][parameter_name]
+            value = get_parameter_value(parameter)
+        except:
+            if use_registry:
+                try: 
+#                    dbqs = DB_QUERY_STRING.format(parameter_name)
+#                    from_db = self.dbclient.query(dbqs)
+#                    value = from_db.get_points().next()['value']
+
+                    yield self.client.registry.cd(REGISTRY_PARAMETERS_DIR
+                                                  + [device_name])
+                    value = yield self.client.registry.get(parameter_name)
+
+                    yield self.set_parameter_values(None, 
+                            json.dumps({device_name: {parameter_name: value}}))
+                except Exception, e:
+                    print e
+                    message = 'unable to get most recent value for\
+                               {} {}'.format(device_name, parameter_name)
+            else:
+                message = '{} {} is not an active parameter'.format(device_name,
+                                                                 parameter_name)
+        if message:
+            raise Exception(message)
+        returnValue(value)
+#        return value
     
     @setting(8, experiment='s', returns='i')
     def queue_experiment(self, c, experiment):
@@ -242,7 +292,7 @@ class ConductorServer(LabradServer):
         advanced = False
         # check if we need to load next experiment
         if not remaining_points(self.parameters):
-            advanced = self.advance_experiment()
+            advanced = yield self.advance_experiment()
 
         # sort by priority. higher priority is called first. 
         # keep in mind still async...
@@ -273,10 +323,32 @@ class ConductorServer(LabradServer):
             yield parameter.update(value)
         except Exception, e:
             print e
-            print 'could not update {} {}. removing parameter'
+            print 'could not update {}\'s {}. removing parameter'.format(
+                                              device_name, parameter_name)
             self.remove_parameter(device_name, parameter_name)
 
+    @inlineCallbacks
     def save_parameters(self):
+        """ save current parameter values 
+
+        set most recent parameter values in registry
+        append parameter values to self.data for current scan to be saved to disk
+        """
+        # first set most recent values in registry
+        for device_name, device_parameters in self.parameters.items():
+            yield self.client.registry.cd(REGISTRY_PARAMETERS_DIR)
+            devices = yield self.client.registry.dir()
+            if device_name not in devices:
+                yield self.client.registry.mkdir(device_name)
+            yield self.client.registry.cd(device_name)
+            for parameter_name, parameter in device_parameters.items():
+                value = get_parameter_value(parameter)
+                try:
+                    yield self.client.registry.set(parameter_name, value)
+                except:
+                    pass
+
+        # save data to disk
         if self.data:
             data_length = max([len(p) for dp in self.data.values()
                                       for p in dp.values()])
@@ -299,10 +371,14 @@ class ConductorServer(LabradServer):
             with open(self.data_path, 'w+') as outfile:
                 json.dump(self.data, outfile)
 
-    @setting(14)
-    def advance(self, c):
-        self.save_parameters()
-        yield self.advance_parameters()
+    @setting(15)
+    def advance(self, c, delay=0):
+        if delay:
+            callLater(delay, self.advance, c)
+        else:
+            yield self.save_parameters()
+            yield self.advance_parameters()
+            print 'tick'
 
 if __name__ == "__main__":
     from labrad import util

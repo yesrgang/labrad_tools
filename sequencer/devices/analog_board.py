@@ -1,3 +1,5 @@
+import numpy as np
+
 from twisted.internet.defer import inlineCallbacks, returnValue
 from lib.analog_ramps import RampMaker
 
@@ -19,9 +21,9 @@ def voltage_to_unsigned(voltage):
     voltage = sorted([min_voltage, voltage, max_voltage])[1] - min_voltage
     return int(voltage/voltage_span*(2**DAC_BITS-1))
 
-def ramp_rate(voltage_diff, clk, time):
+def ramp_rate(voltage_diff, ticks):
     v = voltage_to_signed(voltage_diff)
-    t = time_to_ticks(clk, time)
+    t = ticks
     signed_ramp_rate = int(v*2.**int(np.log2(t)-1)/t)
     if signed_ramp_rate > 0:
         return signed_ramp_rate
@@ -38,9 +40,9 @@ class AnalogChannel(object):
         'manual_output': 0, # default manual voltage. between -10, 10.
     }
     """
-    channel_type = 'analog'
     def __init__(self, config):
         """ defaults """
+        self.channel_type = 'analog'
         self.mode = 'auto'
         self.manual_output = 'manual'
         board_name = config['board_name']
@@ -131,18 +133,7 @@ class AnalogBoard(object):
         
         # ramp to zero at end
         for c in self.channels:
-            sequence[c.key].append({'dt': 10e-3, 'type': 'lin', 'vf': 0})def get_sequence_parameters(x):
-    if type(x).__name__ in ['str', 'unicode']:
-        if x[0] == '*':
-            return [x]
-        else:
-            return []
-    elif type(x).__name__ == 'list':
-        return list(chain.from_iterable([get_sequence_parameters(xx) for xx in x]))
-    elif type(x).__name__ == 'dict':
-        return list(chain.from_iterable([get_sequence_parameters(v) for v in x.values()]))
-
-
+            sequence[c.key].append({'dt': 10e-3, 'type': 'lin', 'vf': 0})
             sequence[c.key].append({'dt': 10, 'type': 'lin', 'vf': 0})
 
         # break into smaller pieces [(T, loc, {dt, dv})]
@@ -151,23 +142,24 @@ class AnalogBoard(object):
             ramps = RampMaker(sequence[c.key]).get_programmable()
             T = 0
             for r in ramps:
+                r['dt'] = time_to_ticks(self.clk, r['dt'])
                 unsorted_ramps.append((T, c.loc, r))
-                T += time_to_ticks(self.clk, r['dt'])
+                T += r['dt']
 
         # order ramps by when the happen, then physical location on board
         sorted_ramps = sorted(unsorted_ramps)
         
         # ints to bytes
-        ba = []
+        byte_array = []
         for r in sorted_ramps:
-            ba += [int(eval(hex(self.ramp_rate(board, r[2]['dv'], r[2]['dt']))) 
+            byte_array += [int(eval(hex(ramp_rate(r[2]['dv'], r[2]['dt']))) 
                        >> i & 0xff) for i in range(0, 16, 8)]
-            ba += [int(eval(hex(self.time_to_ticks(board, r[2]['dt']))) 
+            byte_array += [int(eval(hex(r[2]['dt'])) 
                        >> i & 0xff) for i in range(0, 32, 8)]
         
         # add dead space
-        ba += [0]*24
-        return bytearray(ba)
+        byte_array += [0]*24
+        return byte_array
     
     @inlineCallbacks
     def write_channel_modes(self):

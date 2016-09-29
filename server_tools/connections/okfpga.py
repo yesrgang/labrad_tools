@@ -13,18 +13,22 @@ class OKFPGAConnection(object):
         self.context = self.server.context()
         self.ID = self.server.ID
 
-        self.server.open(device.address)
-
+        yield self.server.open(device.address)
+    
+    @inlineCallbacks
     def program_bitfile(self, bit_file):
-        return self.server.program_bitfile(bit_file)
-        
+        yield self.server.program_bitfile(bit_file)
+    
+    @inlineCallbacks
     def write_to_pipe_in(self, wire, byte_array):
-        return self.server.write_to_pipe_in(wire, byte_array)
-
+        yield self.server.write_to_pipe_in(wire, byte_array)
+    
+    @inlineCallbacks
     def set_wire_in(self, wire, value):
-        return self.server.set_wire_in(wire, value)
-
+        yield self.server.set_wire_in(wire, value)
+    
+    @inlineCallbacks
     def update_wire_ins(self):
-        return self.server.update_wire_ins()
+        yield self.server.update_wire_ins()
 
 

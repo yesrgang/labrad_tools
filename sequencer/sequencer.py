@@ -26,9 +26,10 @@ from server_tools.device_server import DeviceServer
 UPDATE_ID = 698032
 
 class SequencerServer(DeviceServer):
-    update = Signal(UPDATE_ID, 'signal: update', 's')
+    #update = Signal(UPDATE_ID, 'signal: update', 's')
+    update = Signal(UPDATE_ID, 'signal: update', 'b')
     name = 'sequencer'
-
+    
     def id2channel(self, channel_id):
         """
         expect 3 possibilities for channel_id.
@@ -60,11 +61,11 @@ class SequencerServer(DeviceServer):
         return channel
 
     @setting(10)
-    def get_channels(self, c):
-        channels = {c.key: c 
+    def get_channels(self, cntx):
+        channels = {c.key: c.__dict__
                 for d in self.devices.values() 
                 for c in d.channels}
-        return json.dumps(channels)
+        return json.dumps(channels, default=lambda x: None)
     
     @setting(11, sequence='s')
     def run_sequence(self, c, sequence):
@@ -87,7 +88,6 @@ class SequencerServer(DeviceServer):
         channel = self.id2channel(channel_id)
         if output is not None:
             yield channel.set_manual_output(output)
-            print channel.name, channel.manual_output
         yield self.send_update(c)
         returnValue(channel.manual_output)
 
@@ -97,10 +97,13 @@ class SequencerServer(DeviceServer):
         sequence_keyfix = self._fix_sequence_keys(sequence)
         return json.dumps(sequence)
     
+    @setting(15, sequencer='s', returns='s')
+    def sequencer_mode(self, c, sequencer):
+        return self.devices[sequencer].mode
+    
     def _fix_sequence_keys(self, sequence):
         # take sequence name@loc to configuration name@loc
         locs = [key.split('@')[1] for key in sequence.keys()]
-
         for key in sequence.keys():
             name, loc = key.split('@')
             for d in self.devices.values():
@@ -112,6 +115,11 @@ class SequencerServer(DeviceServer):
                         sequence.update({c.key: [c.manual_output 
                                 for dt in sequence[self.timing_channel]]})
         return sequence
+    
+    @setting(2)
+    def send_update(self, c):
+        yield self.update(True)
+        print 'updated'
     
 if __name__ == "__main__":
     from labrad import util

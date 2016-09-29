@@ -4,7 +4,6 @@ import numpy as np
 import json
 import matplotlib
 matplotlib.use('Qt4Agg')
-import digital_channel_control as dcc
 
 class Spacer(QtGui.QFrame):
     def __init__(self, config):
@@ -64,7 +63,7 @@ class DigitalColumn(QtGui.QWidget):
 
     def setLogic(self, sequence):
         for nameloc in self.channels:
-            self.buttons[nameloc].setChecked(sequence[nameloc][self.position])
+            self.buttons[nameloc].setChecked(sequence[nameloc][self.position]['out'])
 
 
 class DigitalArray(QtGui.QWidget):
@@ -85,7 +84,7 @@ class DigitalArray(QtGui.QWidget):
 
     def displaySequence(self, sequence): 
         shown_columns = sum([1 for c in self.columns if not c.isHidden()])
-        num_to_show = len(sequence['digital@T'])
+        num_to_show = len(sequence[self.config.timing_channel])
         if shown_columns > num_to_show:
             for c in self.columns[num_to_show: shown_columns][::-1]:
                 c.hide()
@@ -113,7 +112,7 @@ class NameBox(QtGui.QLabel):
 
     def displayModeState(self, x):
         if x['mode'] == 'manual':
-            if x['manual_state']:
+            if x['manual_output']:
                 self.setStyleSheet('QWidget {background-color: %s}' % self.on_color)
             else:
                 self.setStyleSheet('QWidget {background-color: %s}' % self.off_color)
@@ -141,9 +140,9 @@ class DigitalNameColumn(QtGui.QWidget):
         self.layout.addWidget(QtGui.QWidget())
         self.setLayout(self.layout)
 
-class DigitalSequencer(QtGui.QWidget):
+class DigitalControl(QtGui.QWidget):
     def __init__(self, channels, config):
-        super(DigitalSequencer, self).__init__(None)
+        super(DigitalControl, self).__init__(None)
         self.channels = channels
         self.config = config
         self.populate()
@@ -180,9 +179,12 @@ class DigitalSequencer(QtGui.QWidget):
         self.setLayout(self.layout)
 
         self.connectWidgets()
-
+    
     def displaySequence(self, sequence):
         self.array.displaySequence(sequence)
+
+    def updateParameters(self, parameter_values):
+        pass
     
     def connectWidgets(self):
         self.vscrolls = [self.nameColumn.scrollArea.verticalScrollBar(),
