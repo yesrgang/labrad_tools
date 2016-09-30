@@ -42,8 +42,8 @@ class LDC80xx(CurrentController):
         yield self._lock.acquire()
         yield self.set_slot()
         yield self.connection.write(command)
-        self.power = yield self.get_power()
         yield self._lock.release()
+        self.power = yield self.get_power()
 
     @inlineCallbacks
     def get_power(self):
@@ -93,9 +93,6 @@ class LDC80xx(CurrentController):
         yield self.set_state(True)
         yield self.dial_current(self.default_current)
         callLater(6, self.get_parameters)
-        #self.state = yield self.get_state()
-        #self.current = yield self.get_current()
-        #self.power = yield self.get_power()
 
     @inlineCallbacks
     def shutdown(self):

@@ -6,9 +6,9 @@ from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
 from twisted.internet.defer import inlineCallbacks
 
-sys.path.append('../')
+sys.path.append('../../client_tools')
 from connection import connection
-from client_tools import SuperSpinBox
+from widgets import SuperSpinBox
 
 class CurrentControl(QtGui.QGroupBox):
     mouseHover = pyqtSignal(bool)

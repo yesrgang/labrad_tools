@@ -2,6 +2,7 @@ import re
 import json
 import types
 import inflection
+import os
 
 from twisted.internet.defer import returnValue, inlineCallbacks
 from labrad.server import LabradServer, setting
