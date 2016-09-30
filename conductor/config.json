@@ -1,0 +1,10 @@
+{
+    "data_directory": "Z:\\SrQ\\data\\{}\\",
+    "time_format": "%Y%m%d",
+    "registry_directory": ["", "Servers", "conductor", "parameters"],
+    "default_parameters": {
+        "sequencer": {
+            "sequence": null
+        }
+    }
+}

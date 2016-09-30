@@ -16,87 +16,46 @@ timeout = 20
 ### END NODE INFO
 """
 
-import copy
-import inflection
 import json
 import os
-import time
 
 from collections import deque
+from copy import deepcopy
 
 from labrad.server import LabradServer, setting, Signal
-from labrad.wrappers import connectAsync
 from twisted.internet.reactor import callLater
 from twisted.internet.defer import inlineCallbacks, returnValue
-from influxdb import InfluxDBClient
 
-from devices.generic_parameter import GenericParameter
-
-REGISTRY_PARAMETERS_DIR = ['', 'Servers', 'conductor', 'parameters']
-DB_QUERY_STRING = 'SELECT value FROM "experiment parameters" WHERE "device" = \
-                  \'sequence\' AND "parameter" = \'{}\' ORDER BY time \
-                  DESC LIMIT 1'
-
-def get_device_config(device_name):
-    path = 'devices.{}'.format(device_name)
-    module = __import__(path, fromlist=['config'])
-    return module.config
-
-def import_parameter(device_name, parameter_name):
-    path = 'devices.{}'.format(device_name)
-    class_name = inflection.camelize(parameter_name)
-    module = __import__(path, fromlist=[class_name])
-    return getattr(module, class_name)
-
-def remaining_points(parameters):
-    try:
-        return min([len(p.value) for dp in parameters.values() for p in dp.values()])
-    except:
-        return 0
-
-def advance_parameter_value(parameter):
-    value = parameter.value
-    if type(value).__name__ == 'list':
-        old = value.pop(0)
-        if len(value) <= 1:
-            parameter.value = value[0]
-
-def get_parameter_value(parameter):
-    value = parameter.value
-    if parameter.value_type == 'single' and type(value).__name__ == 'list':
-        return value[0]
-    else: 
-        return value
 
 class ConductorServer(LabradServer):
-    parameters_updated = Signal(698124, 'signal: parameters_updated', 'b')
     name = 'conductor'
+    parameters_updated = Signal(698124, 'signal: parameters_updated', 'b')
 
-    def __init__(self, config_name):
+    def __init__(self, config_path='./config.json'):
         self.parameters = {}
         self.experiment_queue = deque([])
         self.data = {}
         self.data_path = None
 
-        self.config_name = config_name
-        self.load_config()
+        self.load_config(config_path)
         LabradServer.__init__(self)
     
-    def load_config(self):
-        config = __import__(self.config_name).ConductorConfig()
-        for key, value in config.__dict__.items():
-            setattr(self, key, value)
+    def load_config(self, path=None):
+        if path is not None:
+            self.config_path = path
+        with open(self.config_path, 'r') as infile:
+            config = json.load(infile)
+            for key, value in config.items():
+                setattr(self, key, value)
 
     @inlineCallbacks
     def initServer(self):
-        self.dbclient = InfluxDBClient.from_DSN(os.getenv('INFLUXDBDSN'))
         yield LabradServer.initServer(self)
         callLater(1, self.register_parameters, None, self.default_parameters)
-#        yield self.register_parameters(None, self.default_parameters)
 
-    @setting(2, config='s', returns='b')
-    def register_parameters(self, c, config):
-        """
+    @setting(2, config='s', generic_parameter='b', returns='b')
+    def register_parameters(self, c, config, generic_parameter):
+        """ create device parameter according to config
         config = {
             device_name: {
                 parameter_name: {
@@ -104,10 +63,13 @@ class ConductorServer(LabradServer):
                                               'value' is pretty much anything.
                 }
         }
+
+        if no parameter_object is specified, will look through devices subdir.
+        if no suitable parameter is found and generic_parameter is True, 
+        a generic parameter will be created for holding values.
         """
         if type(config).__name__ == 'str':
             config = json.loads(config)
-
         for device_name, device_parameters in config.items():
             if not self.parameters.get(device_name):
                 self.parameters[device_name] = {}
@@ -115,7 +77,8 @@ class ConductorServer(LabradServer):
                 if not self.parameters.get(parameter_name):
                     self.parameters[device_name][parameter_name] = []
                 if not Parameter:
-                    Parameter = import_parameter(device_name, parameter_name)
+                    Parameter = import_parameter(device_name, parameter_name, 
+                                                 generic_parameter)
                 parameter = Parameter()
                 self.parameters[device_name][parameter_name] = parameter
                 yield parameter.initialize()
@@ -150,14 +113,15 @@ class ConductorServer(LabradServer):
             print '{} {} was improperly removed from available devices.'.format(
                                                     device_name, parameter_name)
 
-    @setting(4, config='s', returns='b')
-    def set_parameter_values(self, c, config):
+    @setting(4, config='s', generic_parameter='b', returns='b')
+    def set_parameter_values(self, c, config, generic_parameter=False):
         for device_name, device_parameters in json.loads(config).items():
             if not self.parameters.get(device_name):
                 self.parameters[device_name] = {}
             for parameter_name, parameter_value in device_parameters.items():
                 if not self.parameters[device_name].get(parameter_name):
-                    self.parameters[device_name][parameter_name] = GenericParameter()
+                    yield self.register_parameter(device_name, parameter_name, 
+                                                  generic_parameter)
                 self.parameters[device_name][parameter_name].value = parameter_value
         return True
 
@@ -177,7 +141,6 @@ class ConductorServer(LabradServer):
                                                        parameter_name,
                                                        use_registry)
         returnValue(json.dumps(parameter_values))
-#        return json.dumps(parameter_values)
 
     @inlineCallbacks
     def get_parameter_value(self, device_name, parameter_name, use_registry=False):
@@ -188,16 +151,11 @@ class ConductorServer(LabradServer):
         except:
             if use_registry:
                 try: 
-#                    dbqs = DB_QUERY_STRING.format(parameter_name)
-#                    from_db = self.dbclient.query(dbqs)
-#                    value = from_db.get_points().next()['value']
-
-                    yield self.client.registry.cd(REGISTRY_PARAMETERS_DIR
+                    yield self.client.registry.cd(self.registry_directory
                                                   + [device_name])
                     value = yield self.client.registry.get(parameter_name)
-
-                    yield self.set_parameter_values(None, 
-                            json.dumps({device_name: {parameter_name: value}}))
+                    config = json.dumps({device_name: {parameter_name: value}})
+                    yield self.set_parameter_values(None, config, True)
                 except Exception, e:
                     print e
                     message = 'unable to get most recent value for\
@@ -208,10 +166,9 @@ class ConductorServer(LabradServer):
         if message:
             raise Exception(message)
         returnValue(value)
-#        return value
     
-    @setting(8, experiment='s', returns='i')
-    def queue_experiment(self, c, experiment):
+    @setting(8, experiment='s', run_next='b', returns='i')
+    def queue_experiment(self, c, experiment, run_next=False):
         """ load experiment into queue
 
         experiments are json object 
@@ -222,7 +179,10 @@ class ConductorServer(LabradServer):
             'append data': bool, save data to previous file? optional.
             'loop': bool, inserts experiment back into begining of queue optional.
         """
-        self.experiment_queue.append(json.loads(experiment))
+        if run_next:
+            self.experiment_queue.appendleft(json.loads(experiment))
+        else:
+            self.experiment_queue.append(json.loads(experiment))
         return len(self.experiment_queue)
 
     @setting(9, experiment_queue='s', returns='i')
@@ -236,7 +196,10 @@ class ConductorServer(LabradServer):
 
     @setting(10, returns='b')
     def stop_experiment(self, c):
-        # !!! replace parameter value lists with single value.
+        # replace parameter value lists with single value.
+        for device_name, device_parameters in self.parameters.items():
+            for parameter_name, parameter in device_parameters.items():
+                parameter.value = get_parameter_value(parameter)
         self.data = {}
         return True
 
@@ -249,7 +212,7 @@ class ConductorServer(LabradServer):
         if len(self.experiment_queue):
             # get next experiment from queue and keep a copy
             experiment = self.experiment_queue.popleft()
-            experiment_copy = copy.deepcopy(experiment)
+            experiment_copy = deepcopy(experiment)
             
             parameter_values = experiment.get('parameter_values')
             if parameter_values:
@@ -266,7 +229,8 @@ class ConductorServer(LabradServer):
                 self.data = {}
 
                 # determine data path
-                data_directory = self.data_directory()
+                timestr = time.strftime('%Y%m%d')
+                data_directory = self.data_directory.format(timestr)
                 data_path = lambda i: str(data_directory 
                                           + experiment['name'] 
                                           + '#{}'.format(i))
@@ -289,13 +253,14 @@ class ConductorServer(LabradServer):
 
     @inlineCallbacks
     def advance_parameters(self):
+        """ get new parameter values then send to devices """
         advanced = False
         # check if we need to load next experiment
         if not remaining_points(self.parameters):
             advanced = yield self.advance_experiment()
 
         # sort by priority. higher priority is called first. 
-        # keep in mind still async...
+        # still async...
         # maybe in the future we can make some priority level blocking.
         priority_parameters = [(dn, pn, p) for dn, dp in self.parameters.items()
                                  for pn, p in dp.items()
@@ -317,6 +282,7 @@ class ConductorServer(LabradServer):
 
     @inlineCallbacks
     def update_parameter(self, device_name, parameter_name):
+        """ have device update parameter value """
         parameter = self.parameters[device_name][parameter_name]
         try:
             value = get_parameter_value(parameter)
@@ -331,12 +297,12 @@ class ConductorServer(LabradServer):
     def save_parameters(self):
         """ save current parameter values 
 
-        set most recent parameter values in registry
+        registry keeps track of most recent values.
         append parameter values to self.data for current scan to be saved to disk
         """
         # first set most recent values in registry
         for device_name, device_parameters in self.parameters.items():
-            yield self.client.registry.cd(REGISTRY_PARAMETERS_DIR)
+            yield self.client.registry.cd(self.registry_directory)
             devices = yield self.client.registry.dir()
             if device_name not in devices:
                 yield self.client.registry.mkdir(device_name)

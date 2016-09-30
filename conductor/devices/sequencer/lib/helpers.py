@@ -1,14 +1,10 @@
 import json
 import os
+
 from datetime import date, timedelta
 from itertools import chain
 
-from twisted.internet.defer import inlineCallbacks
-from twisted.internet.reactor import callLater
-from labrad.wrappers import connectAsync
-
 SEQUENCE_DIRECTORY = 'Z:\\SrQ\\data\\{}\\sequences\\'
-
 
 def value_to_sequence(value):
     if type(value).__name__ == 'list':
@@ -22,7 +18,7 @@ def read_sequence_file(filename):
     if not os.path.exists(filename):
         for i in range(365):
             day = date.today() - timedelta(i)
-            path = SEQ_DIRECTORY.format(day.strftime('%Y%m%d')) + filename
+            path = SEQUENCE_DIRECTORY.format(day.strftime('%Y%m%d')) + filename
             if os.path.exists(path):
                 filename = path
                 break
@@ -64,33 +60,3 @@ def substitute_sequence_parameters(x, parameter_values):
 def get_duration(sequence):
     return max([sum([s['dt'] for s in cs]) for cs in sequence.values()])
 
-class Sequence(object):
-    def __init__(self):
-        self.priority = 2
-        self.value_type = 'dict'
-        self.value = None
-
-    @inlineCallbacks
-    def initialize(self):
-        self.cxn = yield connectAsync()
-    
-    @inlineCallbacks
-    def stop(self):
-        yield None
-
-    @inlineCallbacks
-    def update(self, value):
-        """ value can be sequence or list of sequences """
-        t_advance = 5
-        if value:
-            parameterized_sequence = value_to_sequence(value)
-            parameters = get_parameters(parameterized_sequence)
-            parameters_json = json.dumps({'sequencer': parameters})
-            pv_json = yield self.cxn.conductor.get_parameter_values(parameters_json,
-                                                                    True)
-            parameter_values = json.loads(pv_json)['sequencer']
-            sequence = substitute_sequence_parameters(parameterized_sequence,
-                                                      parameter_values)
-            yield self.cxn.sequencer.run_sequence(json.dumps(sequence))
-            t_advance = get_duration(sequence)
-        yield self.cxn.conductor.advance(t_advance)
