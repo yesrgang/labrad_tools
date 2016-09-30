@@ -25,7 +25,10 @@ def add_quick_setting(srv, ID, setting_name, arg_type):
 
 def get_device_wrapper(device_config):
     device_type = device_config['device_type']
-    module_path = 'devices.{}'.format(underscore(device_type))
+    _device_type = underscore(device_type)
+    module_path = 'devices.{}'.format(_device_type)
+    if os.path.isdir(_device_type):
+        module_path += _device_type
     module = __import__(module_path, fromlist=[device_type])
     return getattr(module, device_type)
 
