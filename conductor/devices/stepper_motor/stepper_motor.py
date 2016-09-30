@@ -1,17 +1,21 @@
+import sys
+sys.path.append('../')
+from generic_device.generic_parameter import GenericParameter
+
 from twisted.internet.defer import inlineCallbacks
+from labrad.wrappers import connectAsync
 
-@inlineCallbacks
-def initialize_stepper_motor(self):
-    yield self.cxn.stepper_motor.select_device('nd_filter')
 
-@inlineCallbacks
-def update_stepper_motor(self, value):
-    yield self.cxn.stepper_motor.move_absolute(value)
+class Position(GenericParameter):
+    def __init__(self):
+        super(Position, self).__init__()
+        self.value = 2200
 
-config = {
-    'position': {
-        'initialize': initialize_stepper_motor,
-        'update': update_stepper_motor,
-        'value': 2200,
-    },
-},
+    @inlineCallbacks
+    def initialize(self):
+        self.cxn = yield connectAsync()
+        yield self.cxn.stepper_motor.select_device('nd_filter')
+    
+    @inlineCallbacks
+    def update(self, value):
+        yield self.cxn.stepper_motor.move_absolute(value)

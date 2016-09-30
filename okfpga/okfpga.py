@@ -60,15 +60,16 @@ class OKFPGAServer(LabradServer):
             return False
         return True
     
-    @setting(11, wire='i', byte_array='*i', returns='b')
+    @setting(11, wire='i', byte_array='s', returns='b')
     def write_to_pipe_in(self, c, wire, byte_array):
-        print '{} piping in sequence to {}'.format(c['device_id'], wire)
-        yield deferToThread(c['xem'].WriteToPipeInThr, wire, bytearray(byte_array))
+        #print '{} piping in sequence to {}'.format(c['device_id'], wire)
+        byte_array = json.loads(byte_array)
+        yield deferToThread(c['xem'].WriteToPipeIn, wire, bytearray(byte_array))
         returnValue(True)
 
     @setting(12, wire='i', value='i')
     def set_wire_in(self, c, wire, value):
-        print 'setting {} wire {} to {}'.format(c['device_id'], wire, value)
+        #print 'setting {} wire {} to {}'.format(c['device_id'], wire, value)
         c['xem'].SetWireInValue(wire, value)
     
     @setting(13)

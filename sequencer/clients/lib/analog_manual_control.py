@@ -4,9 +4,10 @@ from PyQt4.QtCore import pyqtSignal
 from twisted.internet.defer import inlineCallbacks
 import numpy as np
 import json
-sys.path.append('../../')
+
+sys.path.append('../../client_tools')
 from connection import connection
-from client_tools import SuperSpinBox
+from widgets import SuperSpinBox
 
 class AnalogVoltageManualControl(QtGui.QGroupBox):
     hasNewVoltage = False

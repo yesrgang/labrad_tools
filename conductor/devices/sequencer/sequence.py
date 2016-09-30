@@ -3,6 +3,7 @@ import json
 from twisted.internet.defer import inlineCallbacks
 from labrad.wrappers import connectAsync
 
+from lib.helpers import *
 
 class Sequence(object):
     def __init__(self):

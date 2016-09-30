@@ -24,6 +24,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from server_tools.device_server import DeviceServer
 
 UPDATE_ID = 698032
+TRIGGER_CHANNEL = 'Trigger@D15'
 
 class SequencerServer(DeviceServer):
     #update = Signal(UPDATE_ID, 'signal: update', 's')
@@ -112,14 +113,14 @@ class SequencerServer(DeviceServer):
                         s = sequence.pop(key)
                         sequence.update({c.key: s})
                     elif c.loc not in locs:
-                        sequence.update({c.key: [c.manual_output 
-                                for dt in sequence[self.timing_channel]]})
+                        sequence.update({c.key: [
+                            {'dt': dt, 'out': c.manual_output}
+                                for dt in sequence[TRIGGER_CHANNEL]]})
         return sequence
     
     @setting(2)
     def send_update(self, c):
         yield self.update(True)
-        print 'updated'
     
 if __name__ == "__main__":
     from labrad import util

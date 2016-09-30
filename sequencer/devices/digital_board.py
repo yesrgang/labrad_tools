@@ -1,3 +1,4 @@
+import json
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 T_TRIG = 10e-6
@@ -93,7 +94,7 @@ class DigitalBoard(object):
         byte_array = self.make_sequence_bytes(sequence)
         yield self.set_mode('idle')
         yield self.set_mode('load')
-        yield self.connection.write_to_pipe_in(self.sequence_pipe, byte_array)
+        yield self.connection.write_to_pipe_in(self.sequence_pipe, json.dumps(byte_array))
         yield self.set_mode('idle')
 
     @inlineCallbacks

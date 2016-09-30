@@ -26,6 +26,8 @@ from labrad.server import LabradServer, setting, Signal
 from twisted.internet.reactor import callLater
 from twisted.internet.defer import inlineCallbacks, returnValue
 
+from lib.helpers import *
+
 
 class ConductorServer(LabradServer):
     name = 'conductor'
@@ -54,7 +56,7 @@ class ConductorServer(LabradServer):
         callLater(1, self.register_parameters, None, self.default_parameters)
 
     @setting(2, config='s', generic_parameter='b', returns='b')
-    def register_parameters(self, c, config, generic_parameter):
+    def register_parameters(self, c, config, generic_parameter=False):
         """ create device parameter according to config
         config = {
             device_name: {
@@ -120,10 +122,10 @@ class ConductorServer(LabradServer):
                 self.parameters[device_name] = {}
             for parameter_name, parameter_value in device_parameters.items():
                 if not self.parameters[device_name].get(parameter_name):
-                    yield self.register_parameter(device_name, parameter_name, 
-                                                  generic_parameter)
+                    config = {device_name: {parameter_name: None}}
+                    yield self.register_parameters(c, config, generic_parameter)
                 self.parameters[device_name][parameter_name].value = parameter_value
-        return True
+        returnValue(True)
 
     @setting(5, parameters='s', use_registry='b', returns='s')
     def get_parameter_values(self, c, parameters=None, use_registry=False):
@@ -348,6 +350,5 @@ class ConductorServer(LabradServer):
 
 if __name__ == "__main__":
     from labrad import util
-    config_name = 'config'
-    server = ConductorServer(config_name)
+    server = ConductorServer()
     util.runServer(server)

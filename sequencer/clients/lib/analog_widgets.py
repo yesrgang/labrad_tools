@@ -65,8 +65,9 @@ class AnalogArray(FigureCanvas):
 
     def plotSequence(self, sequence):
         self.axes.cla()
-        for i, c in enumerate(self.channels):
-            channel_sequence = sequence[c]
+#        for i, c in enumerate(self.channels):
+        for i, nl in enumerate(sorted(self.channels, key=lambda nl: nl.split('@')[1])):
+            channel_sequence = sequence[nl]
             T, V = self.rampMaker(channel_sequence).get_plottable(scale='step')
             V = np.array(V) - i*20
             self.axes.plot(T, V)
