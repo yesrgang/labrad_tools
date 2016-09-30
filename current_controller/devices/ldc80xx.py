@@ -26,11 +26,11 @@ class LDC80xx(CurrentController):
 
     @inlineCallbacks
     def get_current(self):
-        self._lock.acquire()
+        yield self._lock.acquire()
         yield self.set_slot()
         ans = yield self.connection.query(':ILD:SET?')
+        yield self._lock.release()
         returnValue(float(ans[9:]))
-        self._lock.release()
 
     @inlineCallbacks
     def set_current(self, current):
@@ -39,18 +39,18 @@ class LDC80xx(CurrentController):
         current = sorted([min_current, current, max_current])[1]
         command = ':ILD:SET {}'.format(current)
         
-        self._lock.acquire()
+        yield self._lock.acquire()
         yield self.set_slot()
         yield self.connection.write(command)
         self.power = yield self.get_power()
-        self._lock.release()
+        yield self._lock.release()
 
     @inlineCallbacks
     def get_power(self):
-        self._lock.acquire()
+        yield self._lock.acquire()
         yield self.set_slot()
         ans = yield self.connection.query(':POPT:ACT?')
-        self._lock.release()
+        yield self._lock.release()
         returnValue(float(ans[10:]))
     
     @inlineCallbacks
@@ -59,10 +59,10 @@ class LDC80xx(CurrentController):
 
     @inlineCallbacks
     def get_state(self):
-        self._lock.acquire()
+        yield self._lock.acquire()
         yield self.set_slot()
         ans = yield self.connection.query(':LASER?')
-        self._lock.release()
+        yield self._lock.release()
         if ans == ':LASER ON':
             returnValue(True)
         elif ans == ':LASER OFF':
@@ -75,10 +75,10 @@ class LDC80xx(CurrentController):
         else:
             command = ':LASER OFF'
         
-        self._lock.acquire()
+        yield self._lock.acquire()
         yield self.set_slot()
         yield self.connection.write(command)
-        self._lock.release()
+        yield self._lock.release()
 
     @inlineCallbacks
     def dial_current(self, stop):
