@@ -6,9 +6,9 @@ from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
 from twisted.internet.defer import inlineCallbacks
 
-sys.path.append('../')
+sys.path.append('../../client_tools')
 from connection import connection
-from client_tools import SuperSpinBox
+from widgets import SuperSpinBox
 
 class ECDLControl(QtGui.QGroupBox):
     def __init__(self, config, reactor, cxn=None):
@@ -137,7 +137,11 @@ class ECDLControl(QtGui.QGroupBox):
         if self.free:
             server = yield self.cxn.get_server(self.servername)
             is_on = yield server.state()
-            yield server.state(not is_on)
+            print 'state', is_on
+            if is_on:
+                yield server.shutdown()
+            else:
+                yield server.warmup()
 
     def onNewPiezoVoltage(self):
         if self.free:

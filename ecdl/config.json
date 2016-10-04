@@ -3,11 +3,11 @@
         "blue_master": {
             "device_type": "AOSenseECDL",
             "connection_type": "Serial",
-            "servername": "yesr5_serial",
-            "address": "COM7",
-            "diode_current_range": [0.0, 165],
+            "servername": "yesr20_serial",
+            "address": "COM12",
+            "diode_current_range": [10.0, 165.0],
             "piezo_voltage_range": [0.0, 125.0],
-            "default_current": 130e-3
+            "default_current": 130.0
         }
     }
 }

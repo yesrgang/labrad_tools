@@ -7,6 +7,9 @@ import labrad.units as U
 
 from generic_ecdl import GenericECDL
 
+T_RAMP = 5
+N_RAMP = 10
+
 class AOSenseECDL(GenericECDL):
     timeout = 1 * U.s
     baudrate = 115200
@@ -28,90 +31,119 @@ class AOSenseECDL(GenericECDL):
 
     @inlineCallbacks
     def get_diode_current(self):
+        print 'gdc'
+        yield self._lock.acquire()
         yield self.connection.write('ILA\r\n')
         ans = yield self.connection.read_line()
-	s = ans.split('\r\n')[0].split('=')[-1] 
-	current = float(s)
+        print ans
+        s = ans.split('\r\n')[0].split('=')[-1] 
+        current = float(s)
+        print 'current: {}'.format(current)
         ans = yield self.connection.read_line()
         ans = yield self.connection.read_line()
+        yield self._lock.release()
         returnValue(current)
 
     @inlineCallbacks
     def set_diode_current(self, current):
-        min_current = self.diode_current_range[0]
-        max_current = self.diode_current_range[1]
+        print 'sdc', current
+        min_current = min(self.diode_current_range)
+        max_current = max(self.diode_current_range)
         current = sorted([min_current, current, max_current])[1]
-        command = 'ILA {}\r\n'.format(current)
+        command = 'ILA {}\r\n'.format(round(current, 5))
         
+        yield self._lock.acquire()
         yield self.connection.write(command)
         ans = yield self.connection.read_line()
+        print ans
         ans = yield self.connection.read_line()
+        print ans
         ans = yield self.connection.read_line()
+        print ans
+        yield self._lock.release()
 
     @inlineCallbacks
     def get_piezo_voltage(self):
+        print 'gpv'
+        yield self._lock.acquire()
         yield self.connection.write('UPZ\r\n')
         ans = yield self.connection.read_line()
-	s = ans.split('\r\n')[0].split('=')[-1]
-	voltage = float(s)
+        s = ans.split('\r\n')[0].split('=')[-1]
+        voltage = float(s)
+        print 'voltage: {}'.format(voltage)
         ans = yield self.connection.read_line()
         ans = yield self.connection.read_line()
+        yield self._lock.release()
         returnValue(voltage)
     
     @inlineCallbacks
     def set_piezo_voltage(self, voltage):
+        print 'spv'
         min_voltage = self.piezo_voltage_range[0]
         max_voltage = self.piezo_voltage_range[1]
         voltage = sorted([min_voltage, voltage, max_voltage])[1]
         command = 'UPZ {}\r\n'.format(voltage)
+        yield self._lock.acquire()
         yield self.connection.write(command)
         ans = yield self.connection.read_line()
         ans = yield self.connection.read_line()
         ans = yield self.connection.read_line()
+        yield self._lock.release()
     
     @inlineCallbacks
     def get_state(self):
+        print 'gs'
+        yield self._lock.acquire()
         yield self.connection.write('LASER\r\n')
         ans = yield self.connection.read_line()
-        if 'ON' in ans:
+        print ans
+        if 'OFF' not in ans:
             ans = yield self.connection.read_line()
             ans = yield self.connection.read_line()
-            returnValue(True)
+            state = True
         else:
             ans = yield self.connection.read_line()
             ans = yield self.connection.read_line()
-            returnValue(False)
+            state = False
+        yield self._lock.release()
+        print state
+        returnValue(state)
 
     @inlineCallbacks
     def set_state(self, state):
+        print 'ss'
         if state:
             command = 'LASER ON\r\n'
         else:
             command = 'LASER OFF\r\n'
         
+
+        yield self._lock.acquire()
         yield self.connection.write(command)
         ans = yield self.connection.read_line()
+        print ans
         ans = yield self.connection.read_line()
+        print ans
         ans = yield self.connection.read_line()
+        print ans
+        yield self._lock.release()
 
     @inlineCallbacks
     def dial_current(self, stop):
-        self._lock.acquire()
-        start = yield self.get_current()
-        values = np.linspace(start, stop, 20)[1:]
-        times = np.linspace(0, 5, 20)[1:]
+        start = yield self.get_diode_current()
+        values = np.linspace(start, stop, N_RAMP+1)[1:]
+        times = np.linspace(0, T_RAMP, N_RAMP+1)[1:]
         for t, v in zip(times, values): 
-            callLater(t, self.set_current, v)
-        callLater(6, self._lock.release)
+            callLater(t, self.set_diode_current, v)
 
     @inlineCallbacks
     def warmup(self):
         yield self.set_state(True)
         yield self.dial_current(self.default_current)
-        callLater(6, self.get_parameters)
+        callLater(T_RAMP + 1.0, self.get_parameters)
 
     @inlineCallbacks
     def shutdown(self):
-        yield self.dial_current(0)
-        callLater(5.1, self.set_state, False)
-        callLater(6, self.get_parameters)
+        yield self.dial_current(min(self.diode_current_range))
+        callLater(T_RAMP + 0.5, self.set_state, False)
+        callLater(T_RAMP + 4.0, self.get_parameters)
