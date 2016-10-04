@@ -17,6 +17,8 @@ timeout = 5
 """
 
 from labrad.server import Signal, setting
+from twisted.internet.reactor import callLater
+from twisted.internet.defer import returnValue
 
 from server_tools.device_server import DeviceServer
 from server_tools.decorators import quickSetting
