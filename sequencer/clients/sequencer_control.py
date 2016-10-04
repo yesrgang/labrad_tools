@@ -303,10 +303,12 @@ class SequencerControl(QtGui.QWidget):
         self.analogControl.nameColumn.scrollArea.horizontalScrollBar().setValue(val)
     
     def browse(self):
-        if os.path.exists(self.sequence_directory()):
-            directory = self.sequence_directory()
+        timestr = time.strftime(self.time_format)
+        directory = self.sequence_directory.format(timestr)
+        if os.path.exists(directory):
+            directory = directory
         else:
-            directory = self.base_directory
+            directory = self.sequence_directory.split('{}')[0]
         filepath = QtGui.QFileDialog().getOpenFileName(directory=directory)
         if filepath:
             self.loadSaveRun.locationBox.setText(filepath)
@@ -337,7 +339,9 @@ class SequencerControl(QtGui.QWidget):
             sequence = json.load(infile)
         if sequence.has_key('sequence'):
             sequence = sequence['sequence']
-            filepath = self.sequence_directory() + filepath.split('/')[-1].split('#')[0]
+            timestr = time.strftime(self.time_format)
+            directory = self.sequence_directory.format(timestr)
+            filepath = directory + filepath.split('/')[-1].split('#')[0]
         sequencer = yield self.cxn.get_server(self.sequencer_servername)
         sequence = yield sequencer.fix_sequence_keys(json.dumps(sequence))
         self.displaySequence(json.loads(sequence))

@@ -7,8 +7,8 @@ from lib.helpers import *
 
 class Sequence(object):
     def __init__(self):
-        self.priority = 2
-        self.value_type = 'dict'
+        self.priority = 10
+        self.value_type = 'list'
         self.value = None
 
     @inlineCallbacks

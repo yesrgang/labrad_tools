@@ -1,6 +1,7 @@
 {
     "data_directory": "Z:\\SrQ\\data\\{}\\",
     "time_format": "%Y%m%d",
+    "default_values_path": "./default_values.json",
     "registry_directory": ["", "Servers", "conductor", "parameters"],
     "default_parameters": {
         "sequencer": {
