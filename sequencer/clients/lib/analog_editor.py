@@ -161,7 +161,7 @@ class MplCanvas(FigureCanvas):
 
 class AnalogVoltageEditor(QtGui.QDialog):
     sequence_parameters = {}
-    def __init__(self, channel, sequence, ramp_maker, config, reactor=None, cxn=None, parent=None):
+    def __init__(self, channel, sequence, config, reactor=None, cxn=None, parent=None):
         super(AnalogVoltageEditor, self).__init__(parent)
         self.channel = str(channel)
         self.sequence = sequence

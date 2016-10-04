@@ -18,7 +18,7 @@ from lib.add_dlt_widgets import AddDltRow
 from lib.analog_editor import AnalogVoltageEditor
 from lib.analog_manual_control import AnalogVoltageManualControl
 from lib.analog_manual_control import ControlConfig as AnalogControlConfig
-from lib.helpers import get_sequence_parameters
+from lib.helpers import get_sequence_parameters, ConfigWrapper
 
 SEP = os.path.sep
 
@@ -42,17 +42,23 @@ class LoadSaveRun(QtGui.QWidget):
         self.setLayout(self.layout)
 
 class SequencerControl(QtGui.QWidget):
-    def __init__(self, config, reactor=None, cxn=None):
+    def __init__(self, reactor, config_path='./config.json', cxn=None):
         super(SequencerControl, self).__init__(None)
         self.sequence_parameters = {}
-        
-        for key, value in config.__dict__.items():
-            setattr(self, key, value)
-        
-        self.config = config
         self.reactor = reactor
+        self.load_config(config_path)
         self.cxn = cxn
+
         self.connect()
+
+    def load_config(self, path=None):
+        if path is not None:
+            self.config_path = path
+        with open(self.config_path, 'r') as infile:
+            config = json.load(infile)
+            self.config = ConfigWrapper(**config)
+            for key, value in config.items():
+                setattr(self, key, value)
 
     @inlineCallbacks
     def connect(self):
@@ -265,7 +271,7 @@ class SequencerControl(QtGui.QWidget):
                 dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose)
                 widget.show()
             elif QtGui.qApp.mouseButtons() & QtCore.Qt.LeftButton:
-                ave_args = (channel_name, self.getSequence(), self.rampMaker, self.config, self.reactor, self.cxn)
+                ave_args = (channel_name, self.getSequence(), self.config, self.reactor, self.cxn)
                 ave = AnalogVoltageEditor(*ave_args)
                 if ave.exec_():
                     sequence = ave.getEditedSequence().copy()
@@ -308,9 +314,11 @@ class SequencerControl(QtGui.QWidget):
     
     def saveSequence(self):
         filename = self.loadSaveRun.locationBox.text().split('/')[-1]
-        filepath = self.sequence_directory() + filename
-        if not os.path.exists(self.sequence_directory()):
-            os.makedirs(self.sequence_directory())
+        timestr = time.strftime(self.time_format)
+        directory = self.sequence_directory.format(timestr)
+        filepath = directory + filename
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         with open(filepath, 'w+') as outfile:
             sequence = self.getSequence()
             json.dump(sequence, outfile)
@@ -429,11 +437,10 @@ class SequencerControl(QtGui.QWidget):
         self.reactor.stop()
 
 if __name__ == '__main__':
-    from sequencer_config import SequencerConfig
     a = QtGui.QApplication([])
     import qt4reactor 
     qt4reactor.install()
     from twisted.internet import reactor
-    widget = SequencerControl(SequencerConfig(), reactor)
+    widget = SequencerControl(reactor)
     widget.show()
     reactor.run()

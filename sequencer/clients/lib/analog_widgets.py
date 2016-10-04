@@ -1,14 +1,18 @@
+import json
+import numpy as np
+import sys
+
+import matplotlib
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
-import numpy as np
-import json
-import matplotlib
 matplotlib.use('Qt4Agg')
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
 from helpers import substitute_sequence_parameters
+sys.path.append('../')
+from devices.lib.analog_ramps import RampMaker
 
 class NameBox(QtGui.QLabel):
     clicked = QtCore.pyqtSignal()
@@ -46,7 +50,7 @@ class AnalogArray(FigureCanvas):
     def __init__(self, channels, config):
         self.channels = channels
         self.config = config
-        self.rampMaker = self.config.rampMaker
+        self.rampMaker = RampMaker
         self.populate()
        
     def populate(self):

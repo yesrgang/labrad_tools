@@ -1,5 +1,9 @@
 from itertools import chain
 
+class ConfigWrapper(object):
+    def __init__(self, **config_entries):
+        self.__dict__.update(config_entries)
+
 def merge_dicts(*dictionaries):
     merged_dictionary = {}
     for d in dictionaries:
