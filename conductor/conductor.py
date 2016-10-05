@@ -55,7 +55,7 @@ class ConductorServer(LabradServer):
     @inlineCallbacks
     def initServer(self):
         yield LabradServer.initServer(self)
-        callLater(1, self.register_parameters, None, self.default_parameters)
+        callLater(3, self.register_parameters, None, self.default_parameters)
 
     @setting(2, config='s', generic_parameter='b', returns='b')
     def register_parameters(self, c, config, generic_parameter=False):
@@ -72,8 +72,10 @@ class ConductorServer(LabradServer):
         if no suitable parameter is found and generic_parameter is True, 
         a generic parameter will be created for holding values.
         """
-        if type(config).__name__ == 'str':
+        if type(config).__name__ in 'str':
             config = json.loads(config)
+        if type(config).__name__ in 'unicode':
+            config = json.loads(config, encoding='ISO-8859-1')
         for device_name, device_parameters in config.items():
             if not self.parameters.get(device_name):
                 self.parameters[device_name] = {}
@@ -301,28 +303,7 @@ class ConductorServer(LabradServer):
             print 'could not update {}\'s {}. removing parameter'.format(
                                               device_name, parameter_name)
             self.remove_parameter(device_name, parameter_name)
-
-#    @inlineCallbacks
-#    def save_parameters(self):
-#        """ save current parameter values 
-#
-#        registry keeps track of most recent values.
-#        append parameter values to self.data for current scan to be saved to disk
-#        """
-#        # first set most recent values in registry
-#        for device_name, device_parameters in self.parameters.items():
-#            yield self.client.registry.cd(self.registry_directory)
-#            devices = yield self.client.registry.dir()
-#            if device_name not in devices:
-#                yield self.client.registry.mkdir(device_name)
-#            yield self.client.registry.cd(device_name)
-#            for parameter_name, parameter in device_parameters.items():
-#                value = get_parameter_value(parameter)
-#                try:
-#                    yield self.client.registry.set(parameter_name, value)
-#                except:
-#                    pass
-
+    
     def save_parameters(self):
         # save data to disk
         if self.data:
@@ -347,22 +328,6 @@ class ConductorServer(LabradServer):
             with open(self.data_path, 'w+') as outfile:
                 json.dump(self.data, outfile)
 
-#    def save_default_values(self):
-#        try:
-#            with open(self.default_values_path, 'w+') as infile:
-#                values = json.load(infile)
-#        except:
-#            values = {}
-#
-#        for device_name, device_parameters in self.parameters.items():
-#            if not values.get(device_name):
-#                values[device_name] = {}
-#            for parameter_name, parameter in device_parameters.items():
-#                values[device_name][parameter_name] = get_parameter_value(parameter)
-#
-#        with open(self.default_values_path, 'w+') as outfile:
-#            json.dump(values, outfile)
-
 
     @inlineCallbacks
     def stopServer(self):
@@ -385,12 +350,10 @@ class ConductorServer(LabradServer):
             callLater(delay, self.advance, c)
         else:
             tick = time.time()
-            #yield self.save_parameters()
             yield deferToThread(self.save_parameters)
-#            yield deferToThread(self.save_default_values)
             yield self.advance_parameters()
             tock = time.time()
-#            print 'delay', tock-tick
+            print 'delay', tock-tick
 
 if __name__ == "__main__":
     from labrad import util

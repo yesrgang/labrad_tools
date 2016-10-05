@@ -6,4 +6,4 @@ from twisted.internet.defer import inlineCallbacks
 from labrad.wrappers import connectAsync
 
 
-class Dither(
+class Dither(GenericParameter):

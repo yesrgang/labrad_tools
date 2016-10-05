@@ -6,6 +6,9 @@
     "default_parameters": {
         "sequencer": {
             "sequence": null
+        },
+        "influxdb": {
+            "client": null
         }
     }
 }

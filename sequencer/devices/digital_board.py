@@ -112,7 +112,7 @@ class DigitalBoard(object):
             s['out'] = False
         sequence[TRIGGER_CHANNEL][0]['out'] = True
         # allow for analog's ramp to zero, last item will not be written
-        sequence[TRIGGER_CHANNEL].append({'dt': T_END, 'out': False})
+        sequence[TRIGGER_CHANNEL].append({'dt': T_END, 'out': True})
 
         for c in self.channels:
             total_ticks = 0
