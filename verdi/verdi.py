@@ -16,30 +16,15 @@ timeout = 20
 ### END NODE INFO
 """
 
-from datetime import datetime
-
 from labrad.server import Signal, setting
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 from server_tools.device_server import DeviceServer
 from server_tools.decorators import quickSetting
+from lib.helpers import seconds_til_start, cancel_delayed_calls
 
 UPDATE_ID = 698044
-
-def seconds_til_start(delta_day, hour):
-    now = datetime.now()
-    start = now.replace(day=now.day+delta_day, hour=hour, minute=0, second=0, 
-                        microsecond=0)
-    if now > start:
-        raise Exception('start time is in the past')
-    return (start-now).seconds
-
-def cancel_delayed_calls(device):
-    for call in device.delayed_calls:
-        if call.active():
-            call.cancel()
-    device.delayed_calls = []
 
 class VerdiServer(DeviceServer):
     update = Signal(UPDATE_ID, 'signal: update', 's')
