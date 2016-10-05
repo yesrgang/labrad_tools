@@ -4,8 +4,11 @@ from labrad.wrappers import connectAsync
 from lib.pid import Dither, DitherPIID
 
 class DitherLock(object):
-    pid = {}
-    def __init__(self):
+    def __init__(self, config):
+        self.pid = {lock_name: DitherPIID(**lock_conf['pid']) 
+            for lock_name, lock_conf in config.items()}
+        self.dither = {lock_name: Dither(**lock_conf['dither']) 
+            for lock_name, lock_conf in config.items()}
         self.priority = 9
         self.value_type = 'single'
         self.value = {}
@@ -25,8 +28,6 @@ class DitherLock(object):
             'pid': [pid_name, side],
         }
         """
-        print 'pids', self.pid.keys()
-        print value
         dither_value = value.get('dither')
         if dither_value:
             name = dither_value[0]

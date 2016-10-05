@@ -64,28 +64,23 @@ class ConductorServer(LabradServer):
         config = {
             device_name: {
                 parameter_name: {
-                    parameter_object... needs 'initialize', 'update', 'stop' callables
-                                              'value' is pretty much anything.
+                    parameter_config...
                 }
         }
 
-        if no parameter_object is specified, will look through devices subdir.
+        will look through devices subdir.
         if no suitable parameter is found and generic_parameter is True, 
         a generic parameter will be created for holding values.
         """
         if type(config).__name__ == 'str':
-            config = json.loads(config, encoding='ISO-8859-1')
-#            config = jsonpickle.decode(config)
+            config = json.loads(config)
         for device_name, device_parameters in config.items():
             if not self.parameters.get(device_name):
                 self.parameters[device_name] = {}
-            for parameter_name, Parameter in device_parameters.items():
-                if not Parameter:
-                    Parameter = import_parameter(device_name, parameter_name, 
-                                                 generic_parameter)
-                if type(Parameter).__name__ == 'unicode':
-                    Parameter = pickle.loads(Parameter.encode('ISO-8859-1'))
-                parameter = Parameter()
+            for parameter_name, parameter_config in device_parameters.items():
+                Parameter = import_parameter(device_name, parameter_name, 
+                                             generic_parameter)
+                parameter = Parameter(parameter_config)
                 self.parameters[device_name][parameter_name] = parameter
                 yield parameter.initialize()
                 yield self.update_parameter(device_name, parameter_name)
@@ -127,7 +122,7 @@ class ConductorServer(LabradServer):
             for parameter_name, parameter_value in device_parameters.items():
                 try: 
                     if not self.parameters[device_name].get(parameter_name):
-                        config = {device_name: {parameter_name: None}}
+                        config = {device_name: {parameter_name: {}}}
                         yield self.register_parameters(c, config, generic_parameter)
                     self.parameters[device_name][parameter_name].value = parameter_value
                 except Exception, e:

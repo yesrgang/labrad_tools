@@ -6,7 +6,7 @@ from labrad.wrappers import connectAsync
 from lib.helpers import *
 
 class Sequence(object):
-    def __init__(self):
+    def __init__(self, config):
         self.priority = 10
         self.value_type = 'list'
         self.value = None

@@ -7,8 +7,8 @@ from labrad.wrappers import connectAsync
 
 
 class Position(GenericParameter):
-    def __init__(self):
-        super(Position, self).__init__()
+    def __init__(self, config):
+        super(Position, self).__init__(config)
         self.value = 2200
 
     @inlineCallbacks

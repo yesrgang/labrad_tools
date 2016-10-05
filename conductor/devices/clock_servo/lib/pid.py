@@ -52,14 +52,11 @@ class DitherPID(object):
     def update_output(self):
         in_l = self.input_buffer['left'].pop()
         in_r = self.input_buffer['right'].pop()
-        print 'in: ', in_l, in_r
 
         self.error = in_l - in_r - self.input_offset
         if hasattr(self, 'error_function'):
-            print 'using error function'
             ef = pickle.loads(self.error_function.encode('ISO-8859-1'))
             self.error = ef(self.error)
-        print 'err', self.error
 
         b_0 = self.filter_coefficients['b_0']
         b_1 = self.filter_coefficients['b_1']
@@ -72,7 +69,6 @@ class DitherPID(object):
         y_ = self.ybuffer
         y  = b_0*x + b_1*x_[-1] + b_2*x_[-2] + a_2*y_[-2]
 
-        print 'y', y
         x_.append(x)
         y_.append(y)
 
@@ -132,7 +128,6 @@ class DitherPIID(object):
         ii = G*self.intint_gain
         d = G*self.diff_gain
 
-        print 'Gains: ', [G, T, p, i, ii, d]
 
         self.filter_coefficients = {
             'a_0': 0. + p + T/2.*i + 1.*T**2/4.*ii + 2./T*d,
@@ -153,14 +148,11 @@ class DitherPIID(object):
     def update_output(self):
         in_l = self.input_buffer['left'].pop()
         in_r = self.input_buffer['right'].pop()
-        print 'in: ', in_l, in_r
 
         self.error = in_l - in_r - self.input_offset
         if hasattr(self, 'error_function'):
-            print 'using error function'
             ef = pickle.loads(self.error_function.encode('ISO-8859-1'))
             self.error = ef(self.error)
-        print 'err', self.error
 
         a_0 = self.filter_coefficients['a_0']
         a_1 = self.filter_coefficients['a_1']
@@ -178,7 +170,6 @@ class DitherPIID(object):
         x_.append(x)
         y_.append(y)
 
-        print 'y: {}'.format(y)
 
         # offset
         y += self.output_offset

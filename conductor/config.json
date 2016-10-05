@@ -5,10 +5,10 @@
     "registry_directory": ["", "Servers", "conductor", "parameters"],
     "default_parameters": {
         "sequencer": {
-            "sequence": null
+            "sequence": {}
         },
         "influxdb": {
-            "client": null
+            "client": {}
         }
     }
 }
