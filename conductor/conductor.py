@@ -18,6 +18,7 @@ timeout = 20
 
 import json
 import os
+import pickle
 import time
 
 from collections import deque
@@ -72,23 +73,24 @@ class ConductorServer(LabradServer):
         if no suitable parameter is found and generic_parameter is True, 
         a generic parameter will be created for holding values.
         """
-        if type(config).__name__ in 'str':
-            config = json.loads(config)
-        if type(config).__name__ in 'unicode':
+        if type(config).__name__ == 'str':
             config = json.loads(config, encoding='ISO-8859-1')
+#            config = jsonpickle.decode(config)
         for device_name, device_parameters in config.items():
             if not self.parameters.get(device_name):
                 self.parameters[device_name] = {}
             for parameter_name, Parameter in device_parameters.items():
-                if not self.parameters.get(parameter_name):
-                    self.parameters[device_name][parameter_name] = []
+                print parameter_name, Parameter
                 if not Parameter:
                     Parameter = import_parameter(device_name, parameter_name, 
                                                  generic_parameter)
+                if type(Parameter).__name__ == 'unicode':
+                    Parameter = pickle.loads(Parameter.encode('ISO-8859-1'))
                 parameter = Parameter()
                 self.parameters[device_name][parameter_name] = parameter
                 yield parameter.initialize()
                 yield self.update_parameter(device_name, parameter_name)
+                print parameter_name, 'done!'
         returnValue(True)
 
     @setting(3, config='s', returns='b')
@@ -350,7 +352,7 @@ class ConductorServer(LabradServer):
             callLater(delay, self.advance, c)
         else:
             tick = time.time()
-            yield deferToThread(self.save_parameters)
+            #yield deferToThread(self.save_parameters)
             yield self.advance_parameters()
             tock = time.time()
             print 'delay', tock-tick
