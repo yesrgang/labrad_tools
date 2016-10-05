@@ -80,7 +80,6 @@ class ConductorServer(LabradServer):
             if not self.parameters.get(device_name):
                 self.parameters[device_name] = {}
             for parameter_name, Parameter in device_parameters.items():
-                print parameter_name, Parameter
                 if not Parameter:
                     Parameter = import_parameter(device_name, parameter_name, 
                                                  generic_parameter)
@@ -90,7 +89,6 @@ class ConductorServer(LabradServer):
                 self.parameters[device_name][parameter_name] = parameter
                 yield parameter.initialize()
                 yield self.update_parameter(device_name, parameter_name)
-                print parameter_name, 'done!'
         returnValue(True)
 
     @setting(3, config='s', returns='b')

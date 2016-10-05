@@ -25,26 +25,26 @@ class DitherLock(object):
             'pid': [pid_name, side],
         }
         """
-        yield None
-        print 'pid', self.pid
-#        dither_value = value.get('dither')
-#        if dither_value:
-#            name = dither_value[0]
-#            side = dither_value[1]
-#            center = self.pid[name].output
-#            out = self.dither[name].tick(dither_side, dither_center)
-#            clock_aom_value = {'clock_aom': {'frequency': out}}
-#            yield self.set_parameter_values(json.dumps(clock_aom_value))
-#
-#        pid_value = value.get('pid')
-#        if pid_value:
-#            name = pid_value[0]
-#            side = pid_value[1]
-#            data = yield self.cxn.get_data()
-#            frac = data['gage']['frac'][-1]
-#            out = self.pid[name].tick(side, frac)
-#            pid_value = {name: {'frequency': out}}
-#            yield self.set_parameter_values(json.dumps(pid_value))
+        print 'pids', self.pid.keys()
+        print value
+        dither_value = value.get('dither')
+        if dither_value:
+            name = dither_value[0]
+            side = dither_value[1]
+            center = self.pid[name].output
+            out = self.dither[name].tick(dither_side, dither_center)
+            clock_aom_value = {'clock_aom': {'frequency': out}}
+            yield self.set_parameter_values(json.dumps(clock_aom_value))
+
+        pid_value = value.get('pid')
+        if pid_value:
+            name = pid_value[0]
+            side = pid_value[1]
+            data = yield self.cxn.get_data()
+            frac = data['gage']['frac'][-1]
+            out = self.pid[name].tick(side, frac)
+            pid_value = {name: {'frequency': out}}
+            yield self.set_parameter_values(json.dumps(pid_value))
 
 
 def dither_lock_maker(config):
