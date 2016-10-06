@@ -85,7 +85,7 @@
             "servername": "yesr20_serial",
             "address": "COM6",
             "subaddress": 0,
-            "frequency": 91.25e6
+            "frequency": 81.25e6
         },
         "813_y_aom": {
             "device_type": "AD9854",
@@ -93,7 +93,7 @@
             "servername": "yesr20_serial",
             "address": "COM6",
             "subaddress": 1,
-            "frequency": 88.75e6
+            "frequency": 78.75e6
         },
         "813_z_aom": {
             "device_type": "AD9854",
@@ -101,7 +101,7 @@
             "servername": "yesr20_serial",
             "address": "COM6",
             "subaddress": 2,
-            "frequency": 135e6
+            "frequency": 125e6
         },
         "hodt_aom": {
             "device_type": "AD9854",
