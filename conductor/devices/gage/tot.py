@@ -7,11 +7,8 @@ from labrad.wrappers import connectAsync
 
 from lib.helpers import get_measurements
 
-class Sums(GenericParameter):
+class Tot(GenericParameter):
     @inlineCallbacks
     def update(self, value):
         yield None
-        self.value = get_measurements()
-
-
-        
+        self.value = get_measurements()['tot']
