@@ -4,7 +4,7 @@
 name = sequencer
 version = 1.0
 description = 
-instancename = %LABRADNODE%_sequencer
+instancename = sequencer
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -17,10 +17,12 @@ timeout = 20
 """
 import json
 import numpy as np
+import sys
 
 from labrad.server import setting, Signal
 from twisted.internet.defer import inlineCallbacks, returnValue
 
+sys.path.append('../')
 from server_tools.device_server import DeviceServer
 
 UPDATE_ID = 698032

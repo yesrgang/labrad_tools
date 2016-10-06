@@ -27,7 +27,7 @@ class Client(GenericParameter):
     @inlineCallbacks
     def update(self, value):
         self.counter += 1
-        if self.counter >= 10:
+        if self.counter >= 100:
             self.counter = 0
             print 'sending to db'
             parameters_json = yield self.cxn.conductor.get_parameter_values()

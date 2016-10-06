@@ -9,6 +9,9 @@
         },
         "influxdb": {
             "client": {}
+        },
+        "gage": {
+            "sums": {}
         }
     }
 }

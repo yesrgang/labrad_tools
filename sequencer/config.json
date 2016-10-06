@@ -599,7 +599,7 @@
                 },
                 {
                     "loc": 4, 
-                    "name": "DAC G04", 
+                    "name": "DACG04", 
                     "mode": "auto",
                     "manual_output": 0.0
                 },

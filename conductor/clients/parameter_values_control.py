@@ -1,12 +1,14 @@
-import numpy as np
 import json
+import numpy as np
+import sys
 
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal
 from twisted.internet.defer import inlineCallbacks
 
+sys.path.append('../../client_tools')
 from connection import connection
-from client_tools import NeatSpinBox
+from widgets import NeatSpinBox
 
 class ParameterRow(QtGui.QWidget):
     def __init__(self, configuration):
@@ -101,7 +103,7 @@ class ParameterControl(QtGui.QGroupBox):
     def do_update(self):
             server = yield self.cxn.get_server(self.servername)
 #            parameters_json = yield server.get_current_sequence_parameters()
-            parameters_json = yield server.set_parameters()
+            parameters_json = yield server.get_parameter_values()
             parameters = json.loads(parameters_json)[self.device]
             for pr in self.parameterRows:
                 parameterName = str(pr.nameBox.text())
@@ -115,7 +117,7 @@ class ParameterControl(QtGui.QGroupBox):
             value = float(parameterRow.valueBox.value())
             server = yield self.cxn.get_server(self.servername)
             #yield server.update_sequence_parameters(json.dumps({name: value}))
-            yield server.update_parameters(json.dumps({self.device: {name: value}}))
+            yield server.set_parameter_values(json.dumps({self.device: {name: value}}))
             parameterRow.valueBox.display(value)
         return wv
 
@@ -137,13 +139,13 @@ class ParameterControl(QtGui.QGroupBox):
 
 class ControlConfig(object):
     def __init__(self):
-        self.servername = 'yesr20_conductor'
+        self.servername = 'conductor'
         self.update_id = 461028
         self.updateTime = 100 # [ms]
         self.boxWidth = 80
         self.boxHeight = 20
         self.numRows = 10
-        self.device = 'sequence'
+        self.device = 'sequencer'
 
 if __name__ == '__main__':
     import sys

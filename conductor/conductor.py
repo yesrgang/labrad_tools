@@ -105,11 +105,17 @@ class ConductorServer(LabradServer):
     
     @inlineCallbacks
     def remove_parameter(self, device_name, parameter_name):
-        parameter = self.parameters[device_name].pop(parameter_name)
-        if not self.parameters[device_name]:
-            self.parameters.pop(device_name)
+        device = self.parameters.get(device_name)
+        if device:
+            parameter = self.parameters[device_name].get(parameter_name)
+            if parameter:
+                parameter = self.parameters[device_name].pop(parameter_name)
+        device = self.parameters.get(device_name)
+        if not device:
+            device = self.parameters.pop(device_name)
         try:
-            yield parameter.stop()
+            if hasattr(parameter, 'stop'):
+                yield parameter.stop()
         except:
             print '{} {} was improperly removed from available devices.'.format(
                                                     device_name, parameter_name)
@@ -127,7 +133,7 @@ class ConductorServer(LabradServer):
                     self.parameters[device_name][parameter_name].value = parameter_value
                 except Exception, e:
                     print e
-                    self.parameters[device_name].pop(parameter_name)
+                    yield self.remove_parameter(device_name, parameter_name)
                     print "{} {} is not an active parameter".format(device_name, parameter_name)
         returnValue(True)
 
@@ -345,7 +351,7 @@ class ConductorServer(LabradServer):
             callLater(delay, self.advance, c)
         else:
             tick = time.time()
-            #yield deferToThread(self.save_parameters)
+            yield deferToThread(self.save_parameters)
             yield self.advance_parameters()
             tock = time.time()
             print 'delay', tock-tick

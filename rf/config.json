@@ -101,7 +101,7 @@
             "servername": "yesr20_serial",
             "address": "COM6",
             "subaddress": 2,
-            "frequency": 135.e6
+            "frequency": 135e6
         },
         "hodt_aom": {
             "device_type": "AD9854",

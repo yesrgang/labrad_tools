@@ -7,16 +7,14 @@ node_dict = {
         'serial',
         'current_controller',
         'rf',
-        'TLB-6700',
+        'ecdl',
         'verdi',
         'dsa815',
         'msquared_comb_lock',
-        'digital_sequencer',
-        'analog_sequencer',
-        'clock_servo',
+        'sequencer',
     ],
-    'node yesr5': [
-        'msquared',
-        'serial',
-    ],
+#    'node yesr5': [
+#        'msquared',
+#        'serial',
+#    ],
 }
