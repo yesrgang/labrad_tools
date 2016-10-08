@@ -1,0 +1,16 @@
+[Unit]
+Description=labrad node
+After=network-online.target
+
+[Service]
+Type=simple
+User=srgang
+Group=srgang
+WorkingDirectory=/home/srgang/labrad_tools
+ExecStart=/usr/bin/python -m labrad.node
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target
+
