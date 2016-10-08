@@ -5,8 +5,7 @@ class GenericParameter(object):
     def __init__(self, config):
         self.priority = 1
         self.value_type = 'single'
-        if not hasattr(self, 'value'):
-            self.value = None
+        self._value = None
         for key, value in config.items():
             setattr(self, key, value)
 
@@ -21,3 +20,12 @@ class GenericParameter(object):
     @inlineCallbacks
     def update(self, value):
         yield None
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
+

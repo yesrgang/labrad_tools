@@ -8,8 +8,11 @@ from labrad.wrappers import connectAsync
 from lib.helpers import get_measurements
 
 class Frac(GenericParameter):
+    @property
     def value(self):
         return get_measurements()['frac']
 
+    @value.setter
+    def value(self, value):
+        pass
 
-        

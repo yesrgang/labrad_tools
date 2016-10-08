@@ -1,25 +1,24 @@
+import sys
 from twisted.internet.defer import inlineCallbacks
 from labrad.wrappers import connectAsync
 
+sys.path.append('../')
+from generic_device.generic_parameter import GenericParameter
 from lib.pid import Dither, DitherPIID
 
-class DitherLock(object):
+class DitherLock(GenericParameter):
     def __init__(self, config):
+        super(DitherLock, self).__init__(config)
         self.pid = {lock_name: DitherPIID(**lock_conf['pid']) 
             for lock_name, lock_conf in config.items()}
         self.dither = {lock_name: Dither(**lock_conf['dither']) 
             for lock_name, lock_conf in config.items()}
         self.priority = 9
-        self.value_type = 'single'
-        self.value = {}
+        self._value = {}
 
     @inlineCallbacks
     def initialize(self):
         self.cxn = yield connectAsync()
-    
-    @inlineCallbacks
-    def stop(self):
-        yield None
 
     @inlineCallbacks
     def update(self, value):
