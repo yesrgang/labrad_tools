@@ -50,6 +50,10 @@ def advance_parameter_value(parameter):
 
 def get_parameter_value(parameter):
     value = parameter.value
+    try:
+        value = parameter.value()
+    except:
+        value = parameter.value
     if parameter.value_type == 'single' and type(value).__name__ == 'list':
         return value[0]
     if parameter.value_type == 'list' and type(value).__name__ == 'list':

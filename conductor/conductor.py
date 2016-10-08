@@ -41,6 +41,7 @@ class ConductorServer(LabradServer):
         self.experiment_queue = deque([])
         self.data = {}
         self.data_path = None
+        self.do_print_delay = False
 
         self.load_config(config_path)
         LabradServer.__init__(self)
@@ -211,8 +212,10 @@ class ConductorServer(LabradServer):
         # replace parameter value lists with single value.
         for device_name, device_parameters in self.parameters.items():
             for parameter_name, parameter in device_parameters.items():
-                parameter.value = get_parameter_value(parameter)
+                if not type(parameter.value).__name__ == 'instancemethod':
+                    parameter.value = get_parameter_value(parameter)
         self.data = {}
+        self.data_path = None
         return True
 
     @setting(13, returns='s')
@@ -354,7 +357,14 @@ class ConductorServer(LabradServer):
             yield deferToThread(self.save_parameters)
             yield self.advance_parameters()
             tock = time.time()
-            print 'delay', tock-tick
+            if self.do_print_delay:
+                print 'delay', tock-tick
+
+    @setting(16, do_print_delay='b', returns='b')
+    def print_delat(self, c, do_print_delay=None):
+        if do_print_delay is not None:
+            self.do_print_delay = do_print_delay
+        return self.do_print_delay
 
 if __name__ == "__main__":
     from labrad import util

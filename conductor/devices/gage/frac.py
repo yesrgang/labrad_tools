@@ -8,10 +8,8 @@ from labrad.wrappers import connectAsync
 from lib.helpers import get_measurements
 
 class Frac(GenericParameter):
-    @inlineCallbacks
-    def update(self, value):
-        yield None
-        self.value = get_measurements()['frac']
+    def value(self):
+        return get_measurements()['frac']
 
 
         

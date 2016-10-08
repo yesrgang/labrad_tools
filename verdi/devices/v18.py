@@ -55,7 +55,7 @@ class V18(object):
     @inlineCallbacks
     def set_power(self, power):
         yield self.connection.write_line('Light: {}'.format(power))
-        ans = self.connection.read_line()
+        ans = yield self.connection.read_line()
 
     @inlineCallbacks
     def get_current(self):

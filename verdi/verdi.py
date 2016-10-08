@@ -15,11 +15,13 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
+import sys
 
 from labrad.server import Signal, setting
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 
+sys.path.append('../')
 from server_tools.device_server import DeviceServer
 from server_tools.decorators import quickSetting
 from lib.helpers import seconds_til_start, cancel_delayed_calls

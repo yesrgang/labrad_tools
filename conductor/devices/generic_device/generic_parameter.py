@@ -5,7 +5,8 @@ class GenericParameter(object):
     def __init__(self, config):
         self.priority = 1
         self.value_type = 'single'
-        self.value = None
+        if not hasattr(self, 'value'):
+            self.value = None
         for key, value in config.items():
             setattr(self, key, value)
 

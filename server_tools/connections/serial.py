@@ -34,25 +34,35 @@ class SerialConnection(object):
 
     @inlineCallbacks
     def write_line(self, x):
-        return self.server.write_line(x)
-
+        yield self.server.write_line(x)
+    
+    @inlineCallbacks
     def write_lines(self, x):
-        return self.server.write_lines(x)
-
+        yield self.server.write_lines(x)
+    
+    @inlineCallbacks
     def read(self, x=0):
-        return self.server.read(x)
-
+        ans = yield self.server.read(x)
+        returnValue(ans)
+    
+    @inlineCallbacks
     def read_line(self):
-        return self.server.read_line()
+        ans = yield self.server.read_line()
+        returnValue(ans)
 
+    @inlineCallbacks
     def read_lines(self):
-        return self.server.read()
+        ans = yield self.server.read()
+        returnValue(ans)
 
+    @inlineCallbacks
     def close(self):
-        return self.server.close()
-
+        yield self.server.close()
+    
+    @inlineCallbacks
     def flushinput(self):
-        return self.server.flushinput()
-
+        yield self.server.flushinput()
+    
+    @inlineCallbacks
     def flushoutput(self):
-        return self.server.flushoutput()
+        yield self.server.flushoutput()

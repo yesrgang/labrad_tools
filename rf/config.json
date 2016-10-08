@@ -3,7 +3,7 @@
         "spin_pol_aom": {
             "device_type": "DS345",
             "connection_type": "GPIB",
-            "servername": "yesr10_gpib",
+            "servername": "yesr9_gpib",
             "address": "GPIB0::21::INSTR",
             "state": true,
             "frequency": 20.07e6,
@@ -15,19 +15,22 @@
         "alpha": {
             "device_type": "E4432B",
             "connection_type": "GPIB",
-            "servername": "yesr10_gpib",
+            "servername": "yesr9_gpib",
             "address": "GPIB0::20::INSTR",
             "state": true,
             "frequency": 1.3629e9,
             "amplitude": 6.0,
             "amplitude_units": "dB",
             "frequency_range": [250e3, 3e9],
-            "amplitude_range": [-20, 20]
+            "amplitude_range": [-20, 20],
+            "init_commands": [
+                "FM1:DEV 1.2e6"
+            ]
         },
         "beta": {
             "device_type": "N5181A",
             "connection_type": "GPIB",
-            "servername": "yesr10_gpib",
+            "servername": "yesr9_gpib",
             "address": "GPIB0::19::INSTR",
             "state": true,
             "frequency": 100.28e6,

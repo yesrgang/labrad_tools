@@ -76,8 +76,12 @@ class SequencerServer(DeviceServer):
         for device in self.devices.values():
             yield device.program_sequence(sequence)
         for device in self.devices.values():
-            yield device.start_sequence()
-    
+            if device.sequencer_type == 'analog':
+                yield device.start_sequence()
+        for device in self.devices.values():
+            if device.sequencer_type == 'digital':
+                yield device.start_sequence()
+
     @setting(12, channel_id='s', mode='s')
     def channel_mode(self, c, channel_id, mode=None):
         channel = self.id2channel(channel_id)

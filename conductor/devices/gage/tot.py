@@ -8,7 +8,5 @@ from labrad.wrappers import connectAsync
 from lib.helpers import get_measurements
 
 class Tot(GenericParameter):
-    @inlineCallbacks
-    def update(self, value):
-        yield None
-        self.value = get_measurements()['tot']
+    def value(self):
+        return get_measurements()['tot']

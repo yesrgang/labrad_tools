@@ -4,7 +4,7 @@ import numpy as np
 DIRECTORY = 'Z:\\SrQ\\gage\\'
 FILENAME = 'measurements.json'
 
-def get_measurements()
+def get_measurements():
     with open(DIRECTORY + FILENAME, 'r') as infile:
         measurements = json.load(infile)
     return measurements
