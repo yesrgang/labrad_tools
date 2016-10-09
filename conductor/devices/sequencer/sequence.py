@@ -9,10 +9,10 @@ from generic_device.generic_parameter import GenericParameter
 from lib.helpers import *
 
 class Sequence(GenericParameter):
+    priority = 10
+    value_type = 'list'
     def __init__(self, config):
         super(Sequence, self).__init__({})
-        self.priority = 10
-        self.value_type = 'list'
         self.value = ['all_off']
 
     @inlineCallbacks

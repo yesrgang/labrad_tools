@@ -59,14 +59,14 @@ class DeviceServer(LabradServer):
 
     @inlineCallbacks
     def initServer(self):
-        yield self.initialize_devices()
+        for name, config in self.devices.items():
+            yield self.initialize_device(name, config)
 
     @inlineCallbacks 
-    def initialize_devices(self):
-        for name, device in self.devices.items():
-            device_wrapper = get_device_wrapper(device)
+    def initialize_device(self, name, config):
+            device_wrapper = get_device_wrapper(config)
             device_wrapper.name = name
-            device = device_wrapper(device)
+            device = device_wrapper(config)
             try: 
                 connection_name = device.servername + ' - ' + device.address
                 if connection_name not in self.open_connections:
@@ -88,6 +88,12 @@ class DeviceServer(LabradServer):
         print 'connection opened: {} - {}'.format(device.servername, device.address)
         returnValue(connection)
 
+    def get_device(self, c):
+        name = c.get('name')
+        if name is None:
+            raise Exception('select a device first')
+        return self.devices[name]
+
     @setting(0, returns='s')
     def get_device_list(self, c):
         return json.dumps(self.devices.keys())
@@ -102,13 +108,7 @@ class DeviceServer(LabradServer):
         device = self.get_device(c)
         return json.dumps(device.__dict__, default=lambda x: None)
 
-    def get_device(self, c):
-        name = c.get('name')
-        if name is None:
-            raise Exception('select a device first')
-        return self.devices[name]
-
-    @setting(2)
+    @setting(3)
     def send_update(self, c):
         device = self.get_device(c)
         update = {c['name']: {p: getattr(device, p) 

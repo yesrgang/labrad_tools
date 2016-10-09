@@ -7,6 +7,7 @@ from labrad.wrappers import connectAsync
 
 
 class Frequency(GenericParameter):
+    priority = 1
     @inlineCallbacks
     def initialize(self):
         self.cxn = yield connectAsync()
@@ -14,4 +15,4 @@ class Frequency(GenericParameter):
     
     @inlineCallbacks
     def update(self, value):
-        ans = yield self.cxn.rf.frequency(value)
+        yield self.cxn.rf.frequency(value)
