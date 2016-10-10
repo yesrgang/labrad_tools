@@ -127,14 +127,17 @@ class ConductorServer(LabradServer):
             if not self.parameters.get(device_name):
                 self.parameters[device_name] = {}
             for parameter_name, parameter_value in device_parameters.items():
-                try: 
-                    if not self.parameters[device_name].get(parameter_name):
+                parameter = self.parameters[device_name].get(parameter_name)
+                if not parameter and not generic_parameter:
+                    print "{} {} is not an active parameter".format(
+                           device_name, parameter_name)
+                else:
+                    if not parameter:
                         config = {device_name: {parameter_name: {}}}
-                        yield self.register_parameters(c, config, generic_parameter)
-                    self.parameters[device_name][parameter_name].value = parameter_value
-                except Exception, e:
-                    yield self.remove_parameter(device_name, parameter_name)
-                    print "{} {} is not an active parameter".format(device_name, parameter_name)
+                        yield self.register_parameters(c, config, 
+                                                       generic_parameter)
+                    parameter = self.parameters[device_name].get(parameter_name)
+                    parameter.value = parameter_value
         returnValue(True)
 
     @setting(5, parameters='s', use_registry='b', returns='s')
@@ -300,7 +303,6 @@ class ConductorServer(LabradServer):
         try:
             yield parameter.update()
         except Exception, e:
-            print e
             print 'could not update {}\'s {}. removing parameter'.format(
                     parameter.device_name, parameter.name)
             self.remove_parameter(parameter)
