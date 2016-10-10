@@ -276,8 +276,6 @@ class ConductorServer(LabradServer):
             advanced = yield self.advance_experiment()
 
         # sort by priority. higher priority is called first. 
-        # still async...
-        # maybe in the future we can make some priority level blocking.
         priority_parameters = [parameter for device_name, parameter_name 
                                          in self.parameters.items()
                                          for parameter_name, parameter 
