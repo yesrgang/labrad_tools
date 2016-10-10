@@ -20,11 +20,11 @@ class Sequence(GenericParameter):
         self.cxn = yield connectAsync()
 
     @inlineCallbacks
-    def update(self, value):
+    def update(self):
         """ value can be sequence or list of sub-sequences """
         t_advance = 5
-        if value:
-            parameterized_sequence = value_to_sequence(value)
+        if self.value:
+            parameterized_sequence = value_to_sequence(self.value)
             parameters = get_parameters(parameterized_sequence)
             parameters_json = json.dumps({'sequencer': parameters})
             pv_json = yield self.cxn.conductor.get_parameter_values(parameters_json,

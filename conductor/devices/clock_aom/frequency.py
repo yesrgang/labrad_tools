@@ -14,5 +14,5 @@ class Frequency(GenericParameter):
         yield self.cxn.rf.select_device('clock_steer')
     
     @inlineCallbacks
-    def update(self, value):
-        yield self.cxn.rf.frequency(value)
+    def update(self):
+        yield self.cxn.rf.frequency(self.value)

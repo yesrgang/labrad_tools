@@ -21,13 +21,13 @@ class DitherLock(GenericParameter):
         self.cxn = yield connectAsync()
 
     @inlineCallbacks
-    def update(self, value):
-        """ value = {
+    def update(self):
+        """ sefl.value == {
             'dither': [dither_name, side],
             'pid': [pid_name, side],
         }
         """
-        dither_value = value.get('dither')
+        dither_value = self.value.get('dither')
         if dither_value:
             name = dither_value[0]
             side = dither_value[1]
@@ -36,7 +36,7 @@ class DitherLock(GenericParameter):
             clock_aom_value = {'clock_aom': {'frequency': out}}
             yield self.set_parameter_values(json.dumps(clock_aom_value))
 
-        pid_value = value.get('pid')
+        pid_value = self.value.get('pid')
         if pid_value:
             name = pid_value[0]
             side = pid_value[1]

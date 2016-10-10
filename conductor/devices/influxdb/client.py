@@ -25,7 +25,7 @@ class Client(GenericParameter):
         self.dbclient = InfluxDBClient.from_DSN(os.getenv('INFLUXDBDSN'))
     
     @inlineCallbacks
-    def update(self, value):
+    def update(self):
         self.counter += 1
         if self.counter >= 100:
             self.counter = 0

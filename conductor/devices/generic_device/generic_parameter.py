@@ -14,7 +14,7 @@ class GenericParameter(object):
         yield None
     
     @inlineCallbacks
-    def update(self, value):
+    def update(self):
         yield None
 
     @inlineCallbacks

@@ -11,7 +11,7 @@ class Frac(GenericParameter):
     value_type = 'read'
 
     @inlineCallbacks
-    def update(self, value):
+    def update(self):
         yield None
         self._value = None
 

@@ -298,8 +298,7 @@ class ConductorServer(LabradServer):
     def update_parameter(self, parameter):
         """ have device update parameter value """
         try:
-            value = parameter.value
-            yield parameter.update(value)
+            yield parameter.update()
         except Exception, e:
             print e
             print 'could not update {}\'s {}. removing parameter'.format(
