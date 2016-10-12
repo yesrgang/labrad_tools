@@ -29,6 +29,7 @@ class AD9854(object):
 
         for key, value in config.items():
             setattr(self, key, value)
+        self.connection_name = self.servername + ' - ' + self.address
     
     def ftw(self):
         ftw = hex(int(self.frequency*2.**32/self.sysclk))[2:].zfill(8) # 32-bit dac

@@ -17,7 +17,6 @@ def underscore(name):
 def add_quick_setting(srv, ID, setting_name, arg_type):
     def setting(self, c, arg=None):
         pass
-   
     setting.__name__ = str(setting_name)
     setting.__doc__ = "get or change {} ".format(setting_name)
     method = types.MethodType(setting, srv)
@@ -38,6 +37,16 @@ def get_connection_wrapper(device):
     module = __import__(module_path, fromlist=[device.connection_type+'Connection'], level=1)
     return getattr(module, device.connection_type+'Connection')
 
+class DeviceWrapper(object):
+    def __init__(self, config={}):
+        for key, value in config.items():
+            setattr(self, key, value)
+        self.connection_name = self.servername + ' - ' + self.address
+    
+    @inlineCallbacks 
+    def initialize(self):
+        yield None
+        
 class DeviceServer(LabradServer):
     def __init__(self, config_path='./config.json'):
         LabradServer.__init__(self)
@@ -64,22 +73,21 @@ class DeviceServer(LabradServer):
 
     @inlineCallbacks 
     def initialize_device(self, name, config):
-            device_wrapper = get_device_wrapper(config)
-            device_wrapper.name = name
-            device = device_wrapper(config)
-            try: 
-                connection_name = device.servername + ' - ' + device.address
-                if connection_name not in self.open_connections:
-                    connection = yield self.init_connection(device)
-                    self.open_connections[connection_name] = connection
-                device.connection = self.open_connections[connection_name]
-                self.devices[name] = device
-                yield device.initialize()
-            except Exception, e:
-                print e
-                print 'could not initialize device {}'.format(name)
-                print 'removing {} from available devices'.format(name)
-                self.devices.pop(name)
+        device_wrapper = get_device_wrapper(config)
+        device_wrapper.name = name
+        device = device_wrapper(config)
+        try: 
+            if device.connection_name not in self.open_connections:
+                connection = yield self.init_connection(device)
+                self.open_connections[device.connection_name] = connection
+            device.connection = self.open_connections[device.connection_name]
+            self.devices[name] = device
+            yield device.initialize()
+        except Exception, e:
+            print e
+            print 'could not initialize device {}'.format(name)
+            print 'removing {} from available devices'.format(name)
+            self.devices.pop(name)
     
     @inlineCallbacks
     def init_connection(self, device):

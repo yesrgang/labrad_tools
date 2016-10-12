@@ -15,6 +15,7 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
+import sys
 
 import visa
 
@@ -25,7 +26,7 @@ from twisted.internet.reactor import callLater
 from server_tools.hardware_interface_server import HardwareInterfaceServer
 
 
-class GPIBServer(HardwareCommunicationServer):
+class GPIBServer(HardwareInterfaceServer):
     """Provides direct access to GPIB-enabled hardware."""
     name = '%LABRADNODE%_gpib'
 
@@ -33,8 +34,8 @@ class GPIBServer(HardwareCommunicationServer):
         """ fill self.interfaces with available connections """
         rm = visa.ResourceManager()
         addresses = rm.list_resources()
-        additions = set(addresses) - set(self.devices.keys())
-        deletions = set(self.devices.keys()) - set(addresses)
+        additions = set(addresses) - set(self.interfaces.keys())
+        deletions = set(self.interfaces.keys()) - set(addresses)
         for address in additions:
             if address.startswith('GPIB'):
                 inst = rm.get_instrument(address)
@@ -43,7 +44,7 @@ class GPIBServer(HardwareCommunicationServer):
                 self.interfaces[address] = inst
                 print 'connected to GPIB device ' + address
         for addr in deletions:
-            del self.devices[addr]
+            del self.interfaces[addr]
 
     @setting(3, data='s', returns='')
     def write(self, c, data):

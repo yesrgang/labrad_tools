@@ -5,6 +5,7 @@ class HardwareInterfaceServer(LabradServer):
     """ Template for hardware interface server """
 
     def initServer(self):
+        self.interfaces = {}
         self.refresh_available_interfaces()
 
     def stopServer(self):
@@ -12,7 +13,6 @@ class HardwareInterfaceServer(LabradServer):
 
     def refresh_available_interfaces(self):
         """ fill self.interfaces with available connections """
-        self.interfaces = {}
 
     def call_if_available(self, f, c, *args, **kwargs):
         try:
