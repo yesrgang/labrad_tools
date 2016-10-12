@@ -67,9 +67,8 @@ class GPIBServer(HardwareInterfaceServer):
         This query is atomic.  No other communication to the
         device will occur while the query is in progress.
         """
-        connection = self.get_connection(c)
-        self.call_if_available('write', data)
-        ans = self.call_if_available('read_raw')
+        self.call_if_available('write', c, data)
+        ans = self.call_if_available('read_raw', c)
         return str(ans).strip()
 
 if __name__ == '__main__':
