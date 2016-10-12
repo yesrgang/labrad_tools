@@ -1,7 +1,6 @@
 import re
 import json
 import types
-import inflection
 import os
 
 from twisted.internet.defer import returnValue, inlineCallbacks
@@ -46,7 +45,7 @@ class DeviceWrapper(object):
     @inlineCallbacks 
     def initialize(self):
         yield None
-        
+
 class DeviceServer(LabradServer):
     def __init__(self, config_path='./config.json'):
         LabradServer.__init__(self)
@@ -115,10 +114,12 @@ class DeviceServer(LabradServer):
         device = self.get_device(c)
         return json.dumps(device.__dict__, default=lambda x: None)
     
-    @setting(3, returns='s')
+    @setting(3, returns='b')
     def reinit_connection(self, c):
         device = self.get_device(c)
         yield self.init_connection(device)
+        device.connection = self.open_connections[device.connection_name]
+        returnValue(True)
 
     @setting(4)
     def send_update(self, c):

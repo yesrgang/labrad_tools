@@ -20,4 +20,3 @@ def quickSetting(lr_ID, arg_type):
             returnValue(getattr(device, name))
         return setting(lr_ID, name, arg_type)(wrapper)
     return decorator
-
