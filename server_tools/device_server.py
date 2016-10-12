@@ -78,8 +78,7 @@ class DeviceServer(LabradServer):
         device = device_wrapper(config)
         try: 
             if device.connection_name not in self.open_connections:
-                connection = yield self.init_connection(device)
-                self.open_connections[device.connection_name] = connection
+                yield self.init_connection(device)
             device.connection = self.open_connections[device.connection_name]
             self.devices[name] = device
             yield device.initialize()
@@ -94,7 +93,7 @@ class DeviceServer(LabradServer):
         connection = get_connection_wrapper(device)()
         yield connection.initialize(device)
         print 'connection opened: {} - {}'.format(device.servername, device.address)
-        returnValue(connection)
+        self.open_connections[device.connection_name] = connection
 
     def get_device(self, c):
         name = c.get('name')
@@ -115,8 +114,13 @@ class DeviceServer(LabradServer):
         c['name'] = name
         device = self.get_device(c)
         return json.dumps(device.__dict__, default=lambda x: None)
+    
+    @setting(3, returns='s')
+    def reinit_connection(self, c):
+        device = self.get_device(c)
+        yield self.init_connection(device)
 
-    @setting(3)
+    @setting(4)
     def send_update(self, c):
         device = self.get_device(c)
         update = {c['name']: {p: getattr(device, p) 
