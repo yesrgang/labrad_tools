@@ -20,8 +20,6 @@ import sys
 import visa
 
 from labrad.server import LabradServer, setting
-from twisted.internet.defer import inlineCallbacks
-from twisted.internet.reactor import callLater
 
 from server_tools.hardware_interface_server import HardwareInterfaceServer
 
