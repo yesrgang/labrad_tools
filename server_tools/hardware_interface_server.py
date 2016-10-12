@@ -15,7 +15,6 @@ class HardwareInterfaceServer(LabradServer):
         """ fill self.interfaces with available connections """
 
     def call_if_available(self, f, c, *args, **kwargs):
-        print 'cia c', c
         try:
             connection = self.get_connection(c)
             return getattr(connection, f)(*args, **kwargs)
@@ -25,7 +24,6 @@ class HardwareInterfaceServer(LabradServer):
             return getattr(connection, f)(*args, **kwargs)
 
     def get_connection(self, c):
-        print 'gc c', c
         if 'address' not in c:
             raise Exception('no interface selected')
         if c['address'] not in self.interfaces.keys():

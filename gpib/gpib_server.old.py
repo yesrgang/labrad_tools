@@ -1,24 +1,7 @@
-"""
-### BEGIN NODE INFO
-[info]
-name = gpib
-version = 1.3.2-no-refresh
-description = Gives access to GPIB devices via pyvisa.
-instancename = %LABRADNODE%_gpib
-
-[startup]
-cmdline = %PYTHON% %FILE%
-timeout = 20
-
-[shutdown]
-message = 987654321
-timeout = 20
-### END NODE INFO
-"""
-
 from labrad.server import LabradServer, setting
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.reactor import callLater
+from twisted.internet.task import LoopingCall
 from labrad.errors import DeviceNotSelectedError
 import labrad.units as units
 import visa
@@ -45,8 +28,8 @@ class GPIBBusServer(LabradServer):
         When the refresh loop is shutdown, we will wait for this
         deferred to fire to indicate that it has terminated.
         """
-        # self.refresher = LoopingCall(self.refreshDevices)
-        #self.refresherDone = self.refresher.start(self.refreshInterval, now=True)
+        self.refresher = LoopingCall(self.refreshDevices)
+        self.refresherDone = self.refresher.start(30, now=True)
         self.refreshDevices()
 
     @inlineCallbacks
@@ -79,6 +62,7 @@ class GPIBBusServer(LabradServer):
                     instr = rm.get_instrument(instName)
                     instr.write_termination = ''
                     instr.clear()
+                    instr.timeout = 1000
                     if addr.endswith('SOCKET'):
                         instr.write_termination = '\n'
                     self.devices[addr] = instr

@@ -15,23 +15,15 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
-
-import collections
-import os
-import os.path
 import sys
-import time
-from time import sleep
 
-from labrad import types as T
-from labrad.errors import Error
 from labrad.server import LabradServer, setting
-from twisted.internet import reactor, threads
 from twisted.internet.defer import inlineCallbacks, returnValue
-from twisted.internet.task import deferLater
 from serial import Serial
-from serial.serialutil import SerialException
 import serial.tools.list_ports
+
+sys.path.append('../')
+from server_tools.hardware_interface_server import HardwareInterfaceServer
 
 class SerialServer(HardwareInterfaceServer):
     """Provides access to hardware's serial interface """
@@ -73,7 +65,7 @@ class SerialServer(HardwareInterfaceServer):
         self.call_if_available('open', c)
         if baudrate is not None:
             self.call_if_available('setBaudrate', c, baudrate)
-        baudrate = self.call_if_available('getBaudrate', c, baudrate)
+        baudrate = self.call_if_available('getBaudrate', c)
         self.call_if_available('close', c)
         return baudrate
 
@@ -82,7 +74,7 @@ class SerialServer(HardwareInterfaceServer):
         self.call_if_available('open', c)
         if bytesize is not None:
             self.call_if_available('setByteSize', c, bytesize)
-        bytesize = self.call_if_available('getByteSize', c, bytesize)
+        bytesize = self.call_if_available('getByteSize', c)
         self.call_if_available('close', c)
         return bytesize
     
@@ -91,7 +83,7 @@ class SerialServer(HardwareInterfaceServer):
         self.call_if_available('open', c)
         if parity is not None:
             self.call_if_available('setParity', c, parity)
-        parity = self.call_if_available('getParity', c, parity)
+        parity = self.call_if_available('getParity', c)
         self.call_if_available('close', c)
         return parity
 
@@ -100,7 +92,7 @@ class SerialServer(HardwareInterfaceServer):
         self.call_if_available('open', c)
         if stopbits is not None:
             self.call_if_available('setStopBits', c, stopbits)
-        stopbits = self.call_if_available('getStopBits', c, stopbits)
+        stopbits = self.call_if_available('getStopBits', c)
         self.call_if_available('close', c)
         return stopbits
 
@@ -109,7 +101,7 @@ class SerialServer(HardwareInterfaceServer):
         self.call_if_available('open', c)
         if timeout is not None:
             self.call_if_available('setTimeout', c, timeout)
-        timeout = self.call_if_available('getTimeout', c, timeout)
+        timeout = self.call_if_available('getTimeout', c)
         self.call_if_available('close', c)
         return timeout
 
@@ -120,7 +112,7 @@ class SerialServer(HardwareInterfaceServer):
         self.call_if_available('close', c)
 
     @setting(9, dtr='s', returns='s')
-    def dtr(self, c, rts=None):
+    def dtr(self, c, dtr=None):
         self.call_if_available('open', c)
         self.call_if_available('setDTR', c, dtr)
         self.call_if_available('close', c)
@@ -133,6 +125,7 @@ class SerialServer(HardwareInterfaceServer):
         if not isinstance(data, str):
             data = ''.join(chr(x & 255) for x in data)
         self.call_if_available('write', c, data)
+        self.call_if_available('close', c)
         return long(len(data))
 
     @setting(11, data=['s: string', '*w: bytes'], returns='w: num bytes sent')
@@ -153,14 +146,14 @@ class SerialServer(HardwareInterfaceServer):
         self.call_if_available('close', c)
         return ans
     
-    @setting(13, n_bytes='w', returns='s')
+    @setting(13, returns='s')
     def readline(self, c):
         self.call_if_available('open', c)
         ans = self.call_if_available('readline', c)
         self.call_if_available('close', c)
         return ans
 
-    @setting(14, n_bytes='w', returns='s')
+    @setting(14, n_lines='w', returns='s')
     def readlines(self, c, n_lines):
         self.call_if_available('open', c)
         ans = self.call_if_available('readlines', c, n_lines)

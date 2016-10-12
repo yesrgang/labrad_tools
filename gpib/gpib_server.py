@@ -21,6 +21,7 @@ import visa
 
 from labrad.server import LabradServer, setting
 
+sys.path.append('../')
 from server_tools.hardware_interface_server import HardwareInterfaceServer
 
 
