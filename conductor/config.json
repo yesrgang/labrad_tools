@@ -12,7 +12,8 @@
         },
         "gage": {
             "frac": {},
-            "tot": {}
+            "tot": {},
+            "timestamp": {}
         }
     }
 }

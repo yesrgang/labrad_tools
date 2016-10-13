@@ -1,6 +1,6 @@
 class ControlConfig(object):
     def __init__(self):
-        self.servername = 'rf'
+        self.servername = 'rf9'
         self.name = 'beta'
         self.update_id = 461014
 

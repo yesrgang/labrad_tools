@@ -1,17 +1,19 @@
 node_dict = {
-    'node yesr10': [
+    'node yesr9': [
         'gpib',
     ],
     'node yesr20': [
         'gpib',
         'serial',
-        'current_controller',
+        'okfpga',
         'rf',
-        'ecdl',
+        'current_controller',
         'verdi',
+        'ecdl',
         'dsa815',
         'msquared_comb_lock',
         'sequencer',
+        'conductor',
     ],
 #    'node yesr5': [
 #        'msquared',

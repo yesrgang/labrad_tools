@@ -4,7 +4,7 @@
 name = conductor
 version = 1.0
 description = 
-instancename = %LABRADNODE%_conductor
+instancename = conductor
 
 [startup]
 cmdline = %PYTHON% %FILE%

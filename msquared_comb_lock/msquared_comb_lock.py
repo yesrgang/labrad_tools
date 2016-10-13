@@ -86,7 +86,7 @@ class MSquaredCombLockServer(LabradServer):
         value = round(feedback, 4)
         yield self.client.msquared.set_resonator_tune(value)
 
-        print 'Err %.3fMHz | Out %.4f' % (self.pid.error, feedback)
+        #print 'Err %.3fMHz | Out %.4f' % (self.pid.error, feedback)
 
         self.log()
 
