@@ -7,6 +7,7 @@ from labrad.wrappers import connectAsync
 
 
 class Position(GenericParameter):
+    priority = 1
     def __init__(self, config):
         super(Position, self).__init__(config)
         self.value = 2200
@@ -17,5 +18,5 @@ class Position(GenericParameter):
         yield self.cxn.stepper_motor.select_device('nd_filter')
     
     @inlineCallbacks
-    def update(self, value):
-        yield self.cxn.stepper_motor.move_absolute(value)
+    def update(self):
+        yield self.cxn.stepper_motor.move_absolute(self.value)

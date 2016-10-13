@@ -18,7 +18,5 @@ def quickSetting(lr_ID, arg_type):
             setattr(device, name, ans)
             yield self.send_update(c)
             returnValue(getattr(device, name))
-        kwargs = {'arg': arg_type}
         return setting(lr_ID, name, arg_type)(wrapper)
     return decorator
-

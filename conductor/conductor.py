@@ -18,7 +18,6 @@ timeout = 20
 
 import json
 import os
-import pickle
 import time
 
 from collections import deque
@@ -54,10 +53,8 @@ class ConductorServer(LabradServer):
             for key, value in config.items():
                 setattr(self, key, value)
 
-    @inlineCallbacks
     def initServer(self):
-        yield LabradServer.initServer(self)
-        callLater(3, self.register_parameters, None, self.default_parameters)
+        callLater(1, self.register_parameters, None, self.default_parameters)
 
     @setting(2, config='s', generic_parameter='b', returns='b')
     def register_parameters(self, c, config, generic_parameter=False):
@@ -82,9 +79,11 @@ class ConductorServer(LabradServer):
                 Parameter = import_parameter(device_name, parameter_name, 
                                              generic_parameter)
                 parameter = Parameter(parameter_config)
+                parameter.device_name = device_name
+                parameter.name = parameter_name
                 self.parameters[device_name][parameter_name] = parameter
                 yield parameter.initialize()
-                yield self.update_parameter(device_name, parameter_name)
+                yield self.update_parameter(parameter)
         returnValue(True)
 
     @setting(3, config='s', returns='b')
@@ -95,28 +94,29 @@ class ConductorServer(LabradServer):
             device_name: parameter_name,
         }
         """
-        if config in self.parameters:
-            device_name = config
-            for parameter_name in self.parameters[device_name].items():
-                yield self.remove_parameter(device_name, parameter_name)
-        else:
-            for device_name, parameter_name in json.loads(config).items():
-                yield self.remove_device_parameter(device_name, parameter_name)
+        for device_name, parameter_name in json.loads(config).items():
+            device = self.parameters.get(device_name)
+            if device:
+                parameter = device.get(parameter_name)
+                if not parameter:
+                    message = '{} {} is not an active parameter\
+                              '.format(device_name, parameter_name)
+                    raise Exception(message)
+            else:
+                message = '{} is not an active device'.format(device_name, 
+                                                              parameter_name)
+                raise Exception(message)
+            yield self.remove_parameter(parameter)
         returnValue(True)
     
     @inlineCallbacks
-    def remove_parameter(self, device_name, parameter_name):
-        device = self.parameters.get(device_name)
-        if device:
-            parameter = self.parameters[device_name].get(parameter_name)
-            if parameter:
-                parameter = self.parameters[device_name].pop(parameter_name)
-        device = self.parameters.get(device_name)
+    def remove_parameter(self, parameter):
+        device = self.parameters[parameter.device_name]
+        del device[parameter.name]
         if not device:
-            device = self.parameters.pop(device_name)
+            del self.parameters[parameter.device_name]
         try:
-            if hasattr(parameter, 'stop'):
-                yield parameter.stop()
+            yield parameter.stop()
         except:
             print '{} {} was improperly removed from available devices.'.format(
                                                     device_name, parameter_name)
@@ -127,15 +127,17 @@ class ConductorServer(LabradServer):
             if not self.parameters.get(device_name):
                 self.parameters[device_name] = {}
             for parameter_name, parameter_value in device_parameters.items():
-                try: 
-                    if not self.parameters[device_name].get(parameter_name):
+                parameter = self.parameters[device_name].get(parameter_name)
+                if not parameter and not generic_parameter:
+                    print "{} {} is not an active parameter".format(
+                           device_name, parameter_name)
+                else:
+                    if not parameter:
                         config = {device_name: {parameter_name: {}}}
-                        yield self.register_parameters(c, config, generic_parameter)
-                    self.parameters[device_name][parameter_name].value = parameter_value
-                except Exception, e:
-                    print e
-                    yield self.remove_parameter(device_name, parameter_name)
-                    print "{} {} is not an active parameter".format(device_name, parameter_name)
+                        yield self.register_parameters(c, config, 
+                                                       generic_parameter)
+                    parameter = self.parameters[device_name].get(parameter_name)
+                    parameter.value = parameter_value
         returnValue(True)
 
     @setting(5, parameters='s', use_registry='b', returns='s')
@@ -160,7 +162,7 @@ class ConductorServer(LabradServer):
         message = None
         try:
             parameter = self.parameters[device_name][parameter_name]
-            value = get_parameter_value(parameter)
+            value = parameter.value
         except:
             if use_registry:
                 try: 
@@ -212,8 +214,7 @@ class ConductorServer(LabradServer):
         # replace parameter value lists with single value.
         for device_name, device_parameters in self.parameters.items():
             for parameter_name, parameter in device_parameters.items():
-                if not type(parameter.value).__name__ == 'instancemethod':
-                    parameter.value = get_parameter_value(parameter)
+                parameter.value = parameter.value
         self.data = {}
         self.data_path = None
         return True
@@ -275,38 +276,34 @@ class ConductorServer(LabradServer):
             advanced = yield self.advance_experiment()
 
         # sort by priority. higher priority is called first. 
-        # still async...
-        # maybe in the future we can make some priority level blocking.
-        priority_parameters = [(dn, pn, p) for dn, dp in self.parameters.items()
-                                 for pn, p in dp.items()
-                                 if p.priority]
+        priority_parameters = [parameter for device_name, parameter_name 
+                                         in self.parameters.items()
+                                         for parameter_name, parameter 
+                                         in dp.items()
+                                         if p.priority]
 
         # advance parameter values if parameter has priority
-        for device_name, parameter_name, parameter in priority_parameters:
-            if not advanced:
-                advance_parameter_value(parameter)
+        if not advanced:
+            for parameter in priority_parameters:
+                parameter.advance()
         
         # call parameter updates in order of priority. 
         # 1 is called last. 0 is never called.
-        for device_name, parameter_name, parameter in sorted(
-                priority_parameters, key=lambda x: x[2].priority):
-            yield self.update_parameter(device_name, parameter_name)
+        for parameter in sorted(priority_parameters, key=lambda x: x.priority):
+            yield self.update_parameter(parameter)
 
         # signal update
         yield self.parameters_updated(True)
 
     @inlineCallbacks
-    def update_parameter(self, device_name, parameter_name):
+    def update_parameter(self, parameter):
         """ have device update parameter value """
-        parameter = self.parameters[device_name][parameter_name]
         try:
-            value = get_parameter_value(parameter)
-            yield parameter.update(value)
+            yield parameter.update()
         except Exception, e:
-            print e
             print 'could not update {}\'s {}. removing parameter'.format(
-                                              device_name, parameter_name)
-            self.remove_parameter(device_name, parameter_name)
+                    parameter.device_name, parameter.name)
+            self.remove_parameter(parameter)
     
     def save_parameters(self):
         # save data to disk
@@ -325,13 +322,12 @@ class ConductorServer(LabradServer):
                 parameter_data = self.data[device_name][parameter_name] 
                 while len(parameter_data) < data_length:
                     parameter_data.append(None)
-                new_value = get_parameter_value(parameter)
+                new_value = parameter.value
                 parameter_data.append(new_value)
         
         if self.data_path:
             with open(self.data_path, 'w+') as outfile:
                 json.dump(self.data, outfile)
-
 
     @inlineCallbacks
     def stopServer(self):
@@ -342,7 +338,7 @@ class ConductorServer(LabradServer):
                 yield self.client.registry.mkdir(device_name)
             yield self.client.registry.cd(device_name)
             for parameter_name, parameter in device_parameters.items():
-                value = get_parameter_value(parameter)
+                value = parameter.value
                 try:
                     yield self.client.registry.set(parameter_name, value)
                 except:

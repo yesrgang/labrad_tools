@@ -7,11 +7,12 @@ from labrad.wrappers import connectAsync
 
 
 class Frequency(GenericParameter):
+    priority = 1
     @inlineCallbacks
     def initialize(self):
         self.cxn = yield connectAsync()
         yield self.cxn.rf.select_device('clock_steer')
     
     @inlineCallbacks
-    def update(self, value):
-        ans = yield self.cxn.rf.frequency(value)
+    def update(self):
+        yield self.cxn.rf.frequency(self.value)

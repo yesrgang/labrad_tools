@@ -5,7 +5,6 @@ import sys
 from influxdb import InfluxDBClient
 from labrad.wrappers import connectAsync
 from twisted.internet.defer import inlineCallbacks
-from twisted.internet.threads import deferToThread
 from twisted.internet.reactor import callInThread
 
 sys.path.append('../')
@@ -18,6 +17,7 @@ def to_float(x):
         return 0.
 
 class Client(GenericParameter):
+    priority = 1
     @inlineCallbacks
     def initialize(self):
         self.cxn = yield connectAsync()
@@ -25,7 +25,7 @@ class Client(GenericParameter):
         self.dbclient = InfluxDBClient.from_DSN(os.getenv('INFLUXDBDSN'))
     
     @inlineCallbacks
-    def update(self, value):
+    def update(self):
         self.counter += 1
         if self.counter >= 100:
             self.counter = 0
@@ -41,5 +41,4 @@ class Client(GenericParameter):
                   for p, v in device.items()
             ]
         
-            #yield deferToThread(self.dbclient.write_points, to_db)
             callInThread(self.dbclient.write_points, to_db)
