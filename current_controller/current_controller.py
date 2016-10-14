@@ -36,15 +36,19 @@ class CurrentControllerServer(DeviceServer):
     def state(self, c, state=None):
         """ get or update state """
 
-    @quickSetting(11, 'v')
+    @quickSetting(11, 'b')
+    def shutter_state(self, c, state=None):
+        """ get or update shutter state """
+
+    @quickSetting(12, 'v')
     def current(self, c, current=None):
         """ get or update current """
 
-    @quickSetting(12, 'v')
+    @quickSetting(13, 'v')
     def power(self, c, power=None):
         """ get or update power """
 
-    @setting(13, warmup='b', returns='b')
+    @setting(14, warmup='b', returns='b')
     def warmup(self, c, warmup=True):
         device = self.get_device(c)
         if warmup:
@@ -60,7 +64,7 @@ class CurrentControllerServer(DeviceServer):
         device.delayed_calls.append(warmup_call)
         return delay
 
-    @setting(14, shutdown='b', returns='b')
+    @setting(16, shutdown='b', returns='b')
     def shutdown(self, c, shutdown=True):
         device = self.get_device(c)
         if shutdown:

@@ -26,8 +26,8 @@ class Verdi(DeviceWrapper):
     @inlineCallbacks
     def get_state(self):
         yield self.connection.write_line('Print Laser')
-        ans = yield self.connection.read_line()
-        returnValue(bool(ans))
+        ans = yield self.connection.read_lines()
+        returnValue(bool(ans[0]))
 
     @inlineCallbacks
     def set_state(self, state):
@@ -35,14 +35,14 @@ class Verdi(DeviceWrapper):
             yield self.connection.write_line('Laser: 1')
         else:
             yield self.connection.write_line('Laser: 0')
-        ans = yield self.connection.read_line()
+        ans = yield self.connection.read_lines()
 
 
     @inlineCallbacks
     def get_shutter_state(self):
         yield self.connection.write_line('Print Shutter')
-        ans = yield self.connection.read_line()
-        returnValue(bool(int(ans)))
+        ans = yield self.connection.read_lines()
+        returnValue(bool(int(ans[0])))
 
     @inlineCallbacks
     def set_shutter_state(self, shutter_state):
@@ -50,24 +50,24 @@ class Verdi(DeviceWrapper):
             yield self.connection.write_line('Shutter: 1')
         else:
             yield self.connection.write_line('Shutter: 0')
-        ans = yield self.connection.read_line()
+        ans = yield self.connection.read_lines()
 
     @inlineCallbacks
     def get_power(self):
         yield self.connection.write_line('Print Light')
-        ans = yield self.connection.read_line()
-        returnValue(float(ans))
+        ans = yield self.connection.read_lines()
+        returnValue(float(ans[0]))
 
     @inlineCallbacks
     def set_power(self, power):
         yield self.connection.write_line('Light: {}'.format(power))
-        ans = yield self.connection.read_line()
+        ans = yield self.connection.read_lines()
 
     @inlineCallbacks
     def get_current(self):
         yield self.connection.write_line('Print Current')
-        ans = yield self.connection.read_line()
-        returnValue(float(ans))
+        ans = yield self.connection.read_lines()
+        returnValue(float(ans[0]))
 
     @inlineCallbacks
     def set_current(self, current):
