@@ -1,17 +1,20 @@
-import labrad.types as T
-from twisted.internet.defer import inlineCallbacks, returnValue
-
 from time import sleep
 
-class V18(object):
+import labrad.types as T
+
+from twisted.internet.defer import inlineCallbacks, returnValue
+
+from server_tools.device_server import DeviceWrapper
+
+class V18(DeviceWrapper):
     def __init__(self, config):
-        self.timeout = T.Value(1, 's')
+        self.timeout = .1
         self.baudrate = 19200
-        self.stopbits = 1
-        self.bytesize = 8
         self.delayed_calls = []
         for key, value in config.items():
             setattr(self, key, value)
+
+        super(V18, self).__init__({})
 
     @inlineCallbacks
     def initialize(self):

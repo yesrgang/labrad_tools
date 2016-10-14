@@ -33,31 +33,27 @@ class SerialServer(HardwareInterfaceServer):
 
     def refresh_available_interfaces(self):
         if sys.platform.startswith('win32'):
-            try_ports = ['COM{}'.format(i) for i in range(1, 20)]
+            addresses = ['COM{}'.format(i) for i in range(1, 20)]
         else:
-            try_ports = [cp[0] for cp in serial.tools.list_ports.comports()]
+            addresses = [cp[0] for cp in serial.tools.list_ports.comports()]
         
-        addresses = []
-        for address in try_ports:
-           try:
-               ser = Serial(address)
-               ser.close()
-               addresses.append(address)
-               if address not in self.interfaces.keys():
-                   print '{} available'.format(address)
-           except:
-               pass
+        for address in addresses:
+            if address in self.interfaces.keys():
+                try:
+                    self.interfaces[address].isOpen()
+                except:
+                    print '{} unavailable'.format(address)
+                    del self.interfaces[address]
+            else:
+                try:
+                    ser = Serial(address)
+                    ser.setTimeout(0)
+                    ser.close()
+                    self.interfaces[address] = ser
+                    print '{} available'.format(address)
+                except:
+                    pass
         
-        additions = set(addresses) - set(self.interfaces.keys())
-        deletions = set(self.interfaces.keys()) - set(addresses)
-        for address in additions:
-            ser = Serial(address)
-            ser.setTimeout(0)
-            ser.close()
-            self.interfaces[address] = ser
-        for addr in deletions:
-            del self.interfaces[addr]
-    
     def get_connection(self, c):
         interface = super(SerialServer, self).get_connection(c)
         if not interface.isOpen():
@@ -102,7 +98,7 @@ class SerialServer(HardwareInterfaceServer):
         stopbits = self.call_if_available('getStopBits', c)
         return stopbits
 
-    @setting(7, timeout='w', returns='w')
+    @setting(7, timeout='v', returns='v')
     def timeout(self, c, timeout=None):
         if timeout is not None:
             self.call_if_available('setTimeout', c, timeout)
@@ -117,15 +113,19 @@ class SerialServer(HardwareInterfaceServer):
     def dtr(self, c, dtr=None):
         self.call_if_available('setDTR', c, dtr)
 
-    @setting(10, data=['s: string', '*w: bytes'], returns='w: num bytes sent')
+    @setting(10, data=['s: string', '*w: bytes', 'w: byte'], returns='w: num bytes sent')
     def write(self, c, data):
         """Sends data over the port."""
+        if not isinstance(data, str):
+            data = ''.join(chr(x & 255) for x in data)
         self.call_if_available('write', c, data)
         return long(len(data))
 
-    @setting(11, data=['s: string', '*w: bytes'], returns='w: num bytes sent')
+    @setting(11, data=['s: string', '*w: bytes', 'w: byte'], returns='w: num bytes sent')
     def write_line(self, c, data):
         """Sends data over the port. appends CR LF."""
+        if not isinstance(data, str):
+            data = ''.join(chr(x & 255) for x in data)
         data += '\r\n'
         self.call_if_available('write', c, data)
         return long(len(data))
@@ -140,9 +140,9 @@ class SerialServer(HardwareInterfaceServer):
         ans = self.call_if_available('readline', c)
         return ans.strip()
 
-    @setting(14, n_lines='w', returns='*s')
-    def read_lines(self, c, n_lines):
-        ans = self.call_if_available('readlines', c, n_lines)
+    @setting(14, n_bytes='w', returns='*s')
+    def read_lines(self, c, n_bytes=1000L):
+        ans = self.call_if_available('readlines', c, n_bytes)
         return [a.strip() for a in ans]
 
 __server__ = SerialServer()

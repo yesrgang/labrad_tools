@@ -12,10 +12,8 @@ def get_instruction_set(address, register, data):
 
 class AD9854(object):
     def __init__(self, config):
-        self.timeout = T.Value(1, 's')
+        self.timeout = .1
         self.baudrate = 4800
-        self.stopbits=1
-        self.bytesize=8
         self.init_commands = []
         
         self.freg = int(0x02)

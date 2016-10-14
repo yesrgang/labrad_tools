@@ -10,7 +10,7 @@ T_RAMP = 5
 N_RAMP = 10
 
 class AOSenseECDL(GenericECDL):
-    timeout = 1
+    timeout = 0.05
     baudrate = 115200
     @inlineCallbacks
     def initialize(self):
@@ -30,8 +30,7 @@ class AOSenseECDL(GenericECDL):
     def get_state(self):
         yield self._lock.acquire()
         yield self.connection.write_line('LASER')
-        ans = yield self.connection.read_lines(3)
-        print ans
+        ans = yield self.connection.read_lines()
         if 'OFF' not in ans[0]:
             state = True
         else:
@@ -47,19 +46,16 @@ class AOSenseECDL(GenericECDL):
             command = 'LASER OFF'
 
         yield self._lock.acquire()
-        yield self.connection.write(command)
-        ans = yield self.connection.read_lines(3)
+        yield self.connection.write_line(command)
+        ans = yield self.connection.read_lines()
         yield self._lock.release()
 
     @inlineCallbacks
     def get_diode_current(self):
         yield self._lock.acquire()
-        yield self.connection.write('ILA\r\n')
-        ans = yield self.connection.read_line()
-        s = ans.split('\r\n')[0].split('=')[-1] 
-        current = float(s)
-        ans = yield self.connection.read_line()
-        ans = yield self.connection.read_line()
+        yield self.connection.write_line('ILA')
+        ans = yield self.connection.read_lines()
+        current = float(ans[0].split('=')[-1])
         yield self._lock.release()
         returnValue(current)
 
@@ -68,24 +64,19 @@ class AOSenseECDL(GenericECDL):
         min_current = min(self.diode_current_range)
         max_current = max(self.diode_current_range)
         current = sorted([min_current, current, max_current])[1]
-        command = 'ILA {}\r\n'.format(round(current, 5))
+        command = 'ILA {}'.format(round(current, 5))
         
         yield self._lock.acquire()
-        yield self.connection.write(command)
-        ans = yield self.connection.read_line()
-        ans = yield self.connection.read_line()
-        ans = yield self.connection.read_line()
+        yield self.connection.write_line(command)
+        ans = yield self.connection.read_lines()
         yield self._lock.release()
 
     @inlineCallbacks
     def get_piezo_voltage(self):
         yield self._lock.acquire()
-        yield self.connection.write('UPZ\r\n')
-        ans = yield self.connection.read_line()
-        s = ans.split('\r\n')[0].split('=')[-1]
-        voltage = float(s)
-        ans = yield self.connection.read_line()
-        ans = yield self.connection.read_line()
+        yield self.connection.write_line('UPZ')
+        ans = yield self.connection.read_lines()
+        voltage = float(ans[0].split('=')[-1])
         yield self._lock.release()
         returnValue(voltage)
     
@@ -94,12 +85,10 @@ class AOSenseECDL(GenericECDL):
         min_voltage = self.piezo_voltage_range[0]
         max_voltage = self.piezo_voltage_range[1]
         voltage = sorted([min_voltage, voltage, max_voltage])[1]
-        command = 'UPZ {}\r\n'.format(voltage)
+        command = 'UPZ {}'.format(voltage)
         yield self._lock.acquire()
-        yield self.connection.write(command)
-        ans = yield self.connection.read_line()
-        ans = yield self.connection.read_line()
-        ans = yield self.connection.read_line()
+        yield self.connection.write_line(command)
+        ans = yield self.connection.read_lines()
         yield self._lock.release()
     
     @inlineCallbacks

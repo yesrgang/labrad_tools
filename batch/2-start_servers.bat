@@ -1,2 +1,2 @@
-python nodecontrol\nodecontrol_start.py
+python ..\nodecontrol\nodecontrol_start.py
 PAUSE

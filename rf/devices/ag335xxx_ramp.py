@@ -16,7 +16,7 @@ class AG335xxxRamp(AG335xxx):
         yield super(AG335xxxRamp, self).initialize()
         counter_cxn = yield connectAsync()
         self.counter = yield counter_cxn[self.counter_server]
-        self.counter.address(self.counter_address)
+        self.counter.connect(self.counter_address)
         ramprate = yield self.get_ramprate()
         yield self.set_ramprate(ramprate)
 
