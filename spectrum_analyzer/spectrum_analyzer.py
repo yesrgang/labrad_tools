@@ -43,7 +43,7 @@ class SpectrumAnalyzerServer(DeviceServer):
     def range(self, c):
         """ Get and set frequency range """
 
-    @quickSetting(12, '*v')
+    @quickSetting(12, 'v')
     def resolution_bandwidth(self, c):
         """ Get and set resolution bandwidth """
 

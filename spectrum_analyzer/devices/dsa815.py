@@ -32,11 +32,11 @@ class DSA815(SpectrumAnalyzer):
     @inlineCallbacks
     def set_resolution_bandwidth(self, value):
         command = ':SENSe:BANDwidth:RESolution {}'.format(value)
-        yield self.instrument.write(command)
+        yield self.connection.write(command)
 
     @inlineCallbacks
     def get_resolution_bandwidth(self):
         command = ':SENSe:BANDwidth:RESolution?'
-        resolution_bandwidth = yield self.instrument.ask(command)
+        resolution_bandwidth = yield self.connection.ask(command)
         returnValue(resolution_bandwidth)
 
