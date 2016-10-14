@@ -20,5 +20,5 @@ def import_parameter(device_name, parameter_name, generic=False):
 
 def remaining_points(parameters):
     return max([parameter.remaining_values() 
-        for device_parameter in parameters.values()
+        for device_parameters in parameters.values()
         for parameter in device_parameters.values()])

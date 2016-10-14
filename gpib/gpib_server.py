@@ -48,7 +48,6 @@ class GPIBServer(HardwareInterfaceServer):
     @setting(3, data='s', returns='')
     def write(self, c, data):
         """Write a string to the GPIB bus."""
-        connection = self.get_connection(c)
         self.call_if_available('write', c, data)
 
     @setting(4, n_bytes='w', returns='s')

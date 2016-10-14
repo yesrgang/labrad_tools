@@ -10,10 +10,8 @@ class OKFPGAConnection(object):
     def initialize(self, device):
         self.connection = yield connectAsync(LABRADHOST)
         self.server = yield self.connection[device.servername]
-        self.context = self.server.context()
-        self.ID = self.server.ID
 
-        yield self.server.open(device.address)
+        yield self.server.connect(device.address)
     
     @inlineCallbacks
     def program_bitfile(self, bit_file):

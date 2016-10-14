@@ -1,3 +1,5 @@
+from time import sleep
+
 from labrad.server import LabradServer, setting
 from twisted.internet.defer import inlineCallbacks
 
@@ -17,7 +19,8 @@ class HardwareInterfaceServer(LabradServer):
     def call_if_available(self, f, c, *args, **kwargs):
         try:
             connection = self.get_connection(c)
-            return getattr(connection, f)(*args, **kwargs)
+            ans = getattr(connection, f)(*args, **kwargs)
+            return ans
         except:
             self.refresh_available_interfaces()
             connection = self.get_connection(c)

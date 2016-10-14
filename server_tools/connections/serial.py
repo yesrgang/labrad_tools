@@ -10,10 +10,7 @@ class SerialConnection(object):
     def initialize(self, device):
         self.connection = yield connectAsync(LABRADHOST)
         self.server = yield self.connection[device.servername]
-        self.context = yield self.server.context()
-        self.ID = self.server.ID
-
-        yield self.server.open(device.address)
+        yield self.server.connect(device.address)
         
         for attr in ['timeout', 'baudrate', 'stopbits', 'bytesize']:
             if hasattr(device, attr): 
@@ -22,23 +19,28 @@ class SerialConnection(object):
     
     @inlineCallbacks
     def baudrate(self, x=None):
-        yield self.server.baudrate(x)
+        ans = yield self.server.baudrate(x)
+        returnValue(ans)
    
     @inlineCallbacks
     def timeout(self, x=None):
-        yield self.server.timeout(x)
+        ans = yield self.server.timeout(x)
+        returnValue(ans)
     
     @inlineCallbacks
     def write(self, x):
-        yield self.server.write(x)
+        ans = yield self.server.write(x)
+        returnValue(ans)
 
     @inlineCallbacks
     def write_line(self, x):
-        yield self.server.write_line(x)
+        ans = yield self.server.write_line(x)
+        returnValue(ans)
     
     @inlineCallbacks
     def write_lines(self, x):
-        yield self.server.write_lines(x)
+        ans = yield self.server.write_lines(x)
+        returnValue(ans)
     
     @inlineCallbacks
     def read(self, x=0):
@@ -52,7 +54,7 @@ class SerialConnection(object):
 
     @inlineCallbacks
     def read_lines(self):
-        ans = yield self.server.read()
+        ans = yield self.server.read_lines()
         returnValue(ans)
 
     @inlineCallbacks

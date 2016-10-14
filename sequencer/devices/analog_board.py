@@ -2,6 +2,8 @@ import numpy as np
 import json
 
 from twisted.internet.defer import inlineCallbacks, returnValue
+
+from server_tools.device_server import DeviceWrapper
 from lib.analog_ramps import RampMaker
 
 VOLTAGE_RANGE = (-10., 10.)
@@ -68,7 +70,7 @@ class AnalogChannel(object):
         yield self.board.write_channel_manual_outputs()
 
 
-class AnalogBoard(object):
+class AnalogBoard(DeviceWrapper):
     sequencer_type = 'analog'
     def __init__(self, config):
         """ defaults """
@@ -101,6 +103,8 @@ class AnalogBoard(object):
 
         for c in self.channels:
             c.board = self
+
+        super(AnalogBoard, self).__init__({})
 
     @inlineCallbacks
     def initialize(self):

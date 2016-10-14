@@ -330,7 +330,7 @@ class SequencerControl(QtGui.QWidget):
         self.saveSequence()
         sequence = self.getSequence()
         conductor = yield self.cxn.get_server(self.conductor_servername)
-        sequence_json = json.dumps({'sequencer': {'sequence': sequence}})
+        sequence_json = json.dumps({'sequencer': {'sequence': [sequence]}})
         yield conductor.set_parameter_values(sequence_json)
     
     @inlineCallbacks

@@ -4,7 +4,7 @@
 name = dsa815
 version = 1.0
 description = 
-instancename = dsa815
+instancename = %LABRADNODE%_dsa815
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -25,7 +25,7 @@ class DSA815Server(LabradServer):
     """
     DSA815 (Rigol 1.5 GHz spectrum analyzer) LabRAD server
     """
-    name = 'dsa815'
+    name = '%LABRADNODE%_dsa815'
 
     def __init__(self, config_path='./config.json'):
         self.config = self.load_config(config_path)

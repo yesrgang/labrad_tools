@@ -1,7 +1,8 @@
-import labrad.units as U
 from twisted.internet.defer import inlineCallbacks
 
-class GenericECDL(object):
+from server_tools.device_server import DeviceWrapper
+
+class GenericECDL(DeviceWrapper):
     """" template for configuration """
     def __init__(self, config):
         self.update_parameters = ['state', 'diode_current', 'piezo_voltage']
@@ -9,3 +10,4 @@ class GenericECDL(object):
         for key, value in config.items():
             setattr(self, key, value)
     
+        super(GenericECDL, self).__init__({})

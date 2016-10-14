@@ -1,6 +1,8 @@
 import json
 from twisted.internet.defer import inlineCallbacks, returnValue
 
+from server_tools.device_server import DeviceWrapper
+
 T_TRIG = 10e-6
 T_END = 1e0
 TRIGGER_CHANNEL = 'Trigger@D15'
@@ -42,7 +44,7 @@ class DigitalChannel(object):
         self.manual_output = state
         yield self.board.write_channel_manual_outputs()
 
-class DigitalBoard(object):
+class DigitalBoard(DeviceWrapper):
     sequencer_type = 'digital'
     def __init__(self, config):
         """ defaults """
@@ -75,6 +77,8 @@ class DigitalBoard(object):
 
         for c in self.channels:
             c.board = self
+        
+        super(DigitalBoard, self).__init__({})
 
     @inlineCallbacks
     def initialize(self):

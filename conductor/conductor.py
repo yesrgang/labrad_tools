@@ -54,7 +54,7 @@ class ConductorServer(LabradServer):
                 setattr(self, key, value)
 
     def initServer(self):
-        callLater(1, self.register_parameters, None, self.default_parameters)
+        callLater(.1, self.register_parameters, None, self.default_parameters)
 
     @setting(2, config='s', generic_parameter='b', returns='b')
     def register_parameters(self, c, config, generic_parameter=False):
@@ -276,11 +276,11 @@ class ConductorServer(LabradServer):
             advanced = yield self.advance_experiment()
 
         # sort by priority. higher priority is called first. 
-        priority_parameters = [parameter for device_name, parameter_name 
+        priority_parameters = [parameter for device_name, device_parameters
                                          in self.parameters.items()
                                          for parameter_name, parameter 
-                                         in dp.items()
-                                         if p.priority]
+                                         in device_parameters.items()
+                                         if parameter.priority]
 
         # advance parameter values if parameter has priority
         if not advanced:

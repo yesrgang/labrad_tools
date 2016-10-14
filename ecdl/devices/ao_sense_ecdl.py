@@ -3,7 +3,6 @@ import time
 
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
 from twisted.internet.reactor import callLater
-import labrad.units as U
 
 from generic_ecdl import GenericECDL
 
@@ -11,10 +10,8 @@ T_RAMP = 5
 N_RAMP = 10
 
 class AOSenseECDL(GenericECDL):
-    timeout = 1 * U.s
+    timeout = 1
     baudrate = 115200
-    stopbits = 1
-    bytesize = 8
     @inlineCallbacks
     def initialize(self):
         self._lock = DeferredLock()
@@ -28,6 +25,31 @@ class AOSenseECDL(GenericECDL):
         self.state = yield self.get_state()
         self.diode_current = yield self.get_diode_current()
         self.piezo_voltage = yield self.get_piezo_voltage()
+
+    @inlineCallbacks
+    def get_state(self):
+        yield self._lock.acquire()
+        yield self.connection.write_line('LASER')
+        ans = yield self.connection.read_lines(3)
+        print ans
+        if 'OFF' not in ans[0]:
+            state = True
+        else:
+            state = False
+        yield self._lock.release()
+        returnValue(state)
+
+    @inlineCallbacks
+    def set_state(self, state):
+        if state:
+            command = 'LASER ON'
+        else:
+            command = 'LASER OFF'
+
+        yield self._lock.acquire()
+        yield self.connection.write(command)
+        ans = yield self.connection.read_lines(3)
+        yield self._lock.release()
 
     @inlineCallbacks
     def get_diode_current(self):
@@ -80,37 +102,6 @@ class AOSenseECDL(GenericECDL):
         ans = yield self.connection.read_line()
         yield self._lock.release()
     
-    @inlineCallbacks
-    def get_state(self):
-        yield self._lock.acquire()
-        yield self.connection.write('LASER\r\n')
-        ans = yield self.connection.read_line()
-        if 'OFF' not in ans:
-            ans = yield self.connection.read_line()
-            ans = yield self.connection.read_line()
-            state = True
-        else:
-            ans = yield self.connection.read_line()
-            ans = yield self.connection.read_line()
-            state = False
-        yield self._lock.release()
-        returnValue(state)
-
-    @inlineCallbacks
-    def set_state(self, state):
-        if state:
-            command = 'LASER ON\r\n'
-        else:
-            command = 'LASER OFF\r\n'
-        
-
-        yield self._lock.acquire()
-        yield self.connection.write(command)
-        ans = yield self.connection.read_line()
-        ans = yield self.connection.read_line()
-        ans = yield self.connection.read_line()
-        yield self._lock.release()
-
     @inlineCallbacks
     def dial_current(self, stop):
         start = yield self.get_diode_current()

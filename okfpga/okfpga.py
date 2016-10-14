@@ -18,63 +18,55 @@ timeout = 20
 import json
 import numpy as np
 import os
+import sys
 
 import ok
+
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.threads import deferToThread
 
+sys.path.append('../')
+from server_tools.hardware_interface_server import HardwareInterfaceServer
+
 SEP = os.path.sep
 
-class OKFPGAServer(LabradServer):
+class OKFPGAServer(HardwareInterfaceServer):
     name = '%LABRADNODE%_okfpga'
-    @setting(1, device_id='s', returns='b')
-    def open(self, c, device_id):
-        c['device_id'] = device_id
+
+    def refresh_available_interfaces(self):
+        for device_id, device in self.interfaces.items():
+            try: 
+                device.GetDeviceID()
+            except:
+                del self.interfaces[device_id]
+
         fp = ok.FrontPanel()
-        module_count = fp.GetDeviceCount()
-        print "found {} unused devices".format(module_count)
-        for i in range(module_count):
+        device_count = fp.GetDeviceCount()
+        for i in range(device_count):
             serial = fp.GetDeviceListSerial(i)
             tmp = ok.FrontPanel()
             tmp.OpenBySerial(serial)
-            iden = tmp.GetDeviceID()
-            if iden == device_id:
-                c['xem'] = tmp
-                print 'connected to {}'.format(iden)
-                c['xem'].LoadDefaultPLLConfiguration() 
-                return True
-        return False
+            device_id = tmp.GetDeviceID()
+            tmp.LoadDefaultPLLConfiguration()
+            self.interfaces[device_id] = tmp
 
-    @setting(2, returns='b')
-    def close(self, c):
-        if c.has_key('xem'):
-            xem = c.pop('xem')
-        return True
-    
     @setting(3, filename='s')
     def program_bitfile(self, c, filename):
-        error = c['xem'].ConfigureFPGA('bit_files'+SEP+filename)
-        if error:
-            print "unable to program sequencer"
-            return False
-        return True
+        self.call_if_available('ConfigureFPGA', c, 'bit_files'+SEP+filename)
     
-    @setting(11, wire='i', byte_array='s', returns='b')
+    @setting(11, wire='i', byte_array='s')
     def write_to_pipe_in(self, c, wire, byte_array):
-        #print '{} piping in sequence to {}'.format(c['device_id'], wire)
         byte_array = json.loads(byte_array)
-        yield deferToThread(c['xem'].WriteToPipeIn, wire, bytearray(byte_array))
-        returnValue(True)
+        self.call_if_available('WriteToPipeIn', c, wire, bytearray(byte_array))
 
     @setting(12, wire='i', value='i')
     def set_wire_in(self, c, wire, value):
-        #print 'setting {} wire {} to {}'.format(c['device_id'], wire, value)
-        c['xem'].SetWireInValue(wire, value)
+        self.call_if_available('SetWireInValue', c, wire, value)
     
     @setting(13)
     def update_wire_ins(self, c):
-        c['xem'].UpdateWireIns()
+        self.call_if_available('UpdateWireIns', c)
 
 if __name__ == "__main__":
     from labrad import util
