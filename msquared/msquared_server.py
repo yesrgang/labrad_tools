@@ -4,7 +4,7 @@
 name = msquared
 version = 1.0
 description = 
-instancename = msquared
+instancename = %LABRADNODE%_msquared
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -25,7 +25,7 @@ class MSquaredServer(LabradServer):
     """
     M-squared LabRAD server
     """
-    name = 'msquared'
+    name = '%LABRADNODE%_msquared'
 
     def __init__(self, config_path='./config.json'):
         self.config = self.load_config(config_path)
