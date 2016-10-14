@@ -1,7 +1,5 @@
-from time import sleep
-
 from labrad.server import LabradServer, setting
-from twisted.internet.defer import inlineCallbacks
+
 
 class HardwareInterfaceServer(LabradServer):
     """ Template for hardware interface server """
@@ -14,19 +12,19 @@ class HardwareInterfaceServer(LabradServer):
         """ notify connected device servers of closing connetion"""
 
     def refresh_available_interfaces(self):
-        """ fill self.interfaces with available connections """
+        """ fill self.interfaces with available hardware """
 
     def call_if_available(self, f, c, *args, **kwargs):
         try:
-            connection = self.get_connection(c)
-            ans = getattr(connection, f)(*args, **kwargs)
+            interface = self.get_interface(c)
+            ans = getattr(interface, f)(*args, **kwargs)
             return ans
         except:
             self.refresh_available_interfaces()
-            connection = self.get_connection(c)
-            return getattr(connection, f)(*args, **kwargs)
+            interface = self.get_interface(c)
+            return getattr(interface, f)(*args, **kwargs)
 
-    def get_connection(self, c):
+    def get_interface(self, c):
         if 'address' not in c:
             raise Exception('no interface selected')
         if c['address'] not in self.interfaces.keys():
@@ -42,7 +40,7 @@ class HardwareInterfaceServer(LabradServer):
         return sorted(self.interfaces.keys())
 
     @setting(1, address='s', returns='s')
-    def connect(self, c, address):
+    def select_interface(self, c, address):
         self.refresh_available_interfaces()
         if address not in self.interfaces:
             raise Exception(c['address'] + 'is unavailable')

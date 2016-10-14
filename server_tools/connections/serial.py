@@ -10,7 +10,7 @@ class SerialConnection(object):
     def initialize(self, device):
         self.connection = yield connectAsync(LABRADHOST)
         self.server = yield self.connection[device.servername]
-        yield self.server.connect(device.address)
+        yield self.server.select_interface(device.address)
         
         for attr in ['timeout', 'baudrate', 'stopbits', 'bytesize']:
             if hasattr(device, attr): 

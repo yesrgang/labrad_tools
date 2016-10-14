@@ -54,8 +54,8 @@ class SerialServer(HardwareInterfaceServer):
                 except:
                     pass
         
-    def get_connection(self, c):
-        interface = super(SerialServer, self).get_connection(c)
+    def get_interface(self, c):
+        interface = super(SerialServer, self).get_interface(c)
         if not interface.isOpen():
             interface.open()
         return interface
@@ -65,7 +65,7 @@ class SerialServer(HardwareInterfaceServer):
         self.refresh_available_interfaces()
         if c['address'] not in self.interfaces:
             raise Exception(c['address'] + 'is unavailable')
-        interface = self.get_connection(c)
+        interface = self.get_interface(c)
         interface.close()
         del c['address']
         return True

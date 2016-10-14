@@ -11,7 +11,7 @@ class OKFPGAConnection(object):
         self.connection = yield connectAsync(LABRADHOST)
         self.server = yield self.connection[device.servername]
 
-        yield self.server.connect(device.address)
+        yield self.server.select_interface(device.address)
     
     @inlineCallbacks
     def program_bitfile(self, bit_file):
