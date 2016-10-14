@@ -1,0 +1,16 @@
+{
+    "devices": {
+        "m2_pump": {
+            "update_parameters": [],
+            "device_type": "V18",
+            "connection_type": "Serial",
+            "servername": "yesr20_serial",
+            "address": "COM8",
+            "power_range": [0, 18], 
+            "init_power": 16,
+            "full_power": 18,
+            "shutter_delay": 600,
+            "full_power_delay": 1800
+        }
+    }
+}

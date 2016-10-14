@@ -2,7 +2,9 @@ import labrad.types as T
 
 from twisted.internet.defer import inlineCallbacks, returnValue
 
-class SilverPack17(object):
+from server_tools.device_server import DeviceWrapper
+
+class SilverPack17(DeviceWrapper):
     def __init__(self, config):
         self.timeout = T.Value(1, 's')
         self.baudrate = 9600
@@ -18,6 +20,8 @@ class SilverPack17(object):
         for key, value in config.items():
             setattr(self, key, value)
    
+        super(SilverPack17, self).__init__({})
+
     @inlineCallbacks
     def initialize(self):
         for command in self.init_commands:

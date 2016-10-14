@@ -6,3 +6,4 @@
 *.fls
 *.fdb_latexmk
 *.out
+config.json
