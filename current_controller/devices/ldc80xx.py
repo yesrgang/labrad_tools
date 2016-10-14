@@ -6,6 +6,9 @@ from twisted.internet.reactor import callLater
 
 from generic_current_controller import CurrentController
 
+T_RAMP = 5
+N_RAMP = 10
+
 class LDC80xx(CurrentController):
     @inlineCallbacks
     def initialize(self):
@@ -83,8 +86,8 @@ class LDC80xx(CurrentController):
     @inlineCallbacks
     def dial_current(self, stop):
         start = yield self.get_current()
-        values = np.linspace(start, stop, 20)[1:]
-        times = np.linspace(0, 5, 20)[1:]
+        values = np.linspace(start, stop, N_RAMP+1)[1:]
+        times = np.linspace(0, T_RAMP, N_RAMP+1)[1:]
         for t, v in zip(times, values): 
             callLater(t, self.set_current, v)
 
@@ -92,10 +95,12 @@ class LDC80xx(CurrentController):
     def warmup(self):
         yield self.set_state(True)
         yield self.dial_current(self.default_current)
-        callLater(6, self.get_parameters)
+        callLater(T_RAMP+.5, self.get_parameters)
+        returnValue(T_RAMP+1.)
 
     @inlineCallbacks
     def shutdown(self):
         yield self.dial_current(0)
-        callLater(6, self.set_state, False)
-        callLater(7, self.get_parameters)
+        callLater(T_RAMP+.5, self.set_state, False)
+        callLater(T_RAMP+1., self.get_parameters)
+        returnValue(T_RAMP+1.5)

@@ -29,6 +29,18 @@
             "current_range": [0, 0.153],
             "default_current": 0.1486,
             "current_stepsize": 1e-4
+        },
+        "m2_pump": {
+            "device_type": "Verdi",
+            "connection_type": "Serial",
+            "servername": "yesr20_serial",
+            "address": "COM8",
+            "power_range": [0, 18], 
+            "init_power": 16,
+            "full_power": 18,
+            "shutter_delay": 600,
+            "full_power_delay": 1800,
+            "update_parameters": []
         }
     }
 }
