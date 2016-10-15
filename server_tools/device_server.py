@@ -100,9 +100,9 @@ class DeviceServer(LabradServer):
             raise Exception('select a device first')
         return self.devices[name]
 
-    @setting(0, returns='s')
+    @setting(0, returns='*s')
     def get_device_list(self, c):
-        return json.dumps(self.devices.keys())
+        return self.devices.keys()
     
     @setting(1, name='s', returns='s')
     def select_device(self, c, name):

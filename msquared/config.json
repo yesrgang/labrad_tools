@@ -1,4 +1,10 @@
-{
-  "host": "128.138.107.135",
-  "port": 39933
+{   
+    "devices": {
+        "srq_m2": {
+            "device_type": "Solstis",
+            "connection_type": "Socket",
+            "servername": "128.138.107.135",
+            "address": 39933,
+        }
+    }
 }

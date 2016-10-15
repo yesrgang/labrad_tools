@@ -40,11 +40,11 @@ class SpectrumAnalyzerServer(DeviceServer):
         """ Get data points from trace """
     
     @quickSetting(11, '*v')
-    def range(self, c):
+    def frequency_range(self, c, frequency_range=None):
         """ Get and set frequency range """
 
     @quickSetting(12, 'v')
-    def resolution_bandwidth(self, c):
+    def resolution_bandwidth(self, c, resolution_bandwidth=None):
         """ Get and set resolution bandwidth """
 
 if __name__ == '__main__':
