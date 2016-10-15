@@ -48,7 +48,7 @@ class Solstis(MSquared):
         self.etalon_tune = percentage
 
     @inlineCallbacks
-    def get_resonator_tune(self):
+    def get_etalon_tune(self):
         yield None
         returnValue(self.etalon_tune)
     
