@@ -1,3 +1,5 @@
+import json
+
 from numpy import random
 
 class MSquaredMessage(object):

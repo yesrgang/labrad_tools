@@ -4,7 +4,7 @@
             "device_type": "Solstis",
             "connection_type": "Socket",
             "servername": "128.138.107.135",
-            "address": 39933,
+            "address": "39933"
         }
     }
 }

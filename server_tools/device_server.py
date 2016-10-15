@@ -32,7 +32,7 @@ def get_device_wrapper(device_config):
     return getattr(module, device_type)
 
 def get_connection_wrapper(device):
-    module_path = 'server_tools.connections.{}'.format(device.connection_type.lower())
+    module_path = 'server_tools.connections.{}_connection'.format(device.connection_type.lower())
     module = __import__(module_path, fromlist=[device.connection_type+'Connection'], level=1)
     return getattr(module, device.connection_type+'Connection')
 

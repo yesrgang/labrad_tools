@@ -2,7 +2,7 @@ def normalize_parameters(p):
     parameters = dict(p)
 
     if parameters['status']: 
-        del params['status']
+        del parameters['status']
 
     for key, value in parameters.iteritems():
         if (isinstance(value, list) and len(value) == 1):

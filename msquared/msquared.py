@@ -42,15 +42,15 @@ class MSquaredServer(DeviceServer):
     def etalon_lock(self, c, state=None):
         """ get or set etalon lock state """
     
-    @quickSetting(12, 's')
+    @quickSetting(12, 'v')
     def etalon_tune(self, c, percentage=None):
         """ get or set etalon tune percentage """
 
-    @quickSetting(13, 's')
+    @quickSetting(13, 'v')
     def resonator_tune(self, c, percentage=None):
         """ get or set resonator tune percentage """
 
-    @quickSetting(13, 's')
+    @quickSetting(14, 'v')
     def resonator_fine_tune(self, c, percentage=None):
         """ get or set resonator fine tune percentage """
 

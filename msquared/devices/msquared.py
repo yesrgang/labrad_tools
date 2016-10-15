@@ -1,4 +1,7 @@
+import json
+
 from twisted.internet.threads import deferToThread
+from twisted.internet.defer import inlineCallbacks, returnValue
 
 from server_tools.device_server import DeviceWrapper
 from lib.msquared_message import MSquaredMessage
@@ -15,17 +18,17 @@ class MSquared(DeviceWrapper):
     
     @inlineCallbacks
     def initialize(self):
-        interface = yield deferToThread(self.connection.getsocketname()[0])
+        interface = yield self.connection.getsockname()
         response_message = yield self.send(op='start_link',
-                                     params={ 'ip_address': interface })
+                                     parameters={ 'ip_address': interface[0]})
 
     @inlineCallbacks
     def send(self, **kwargs):
         message = MSquaredMessage(**kwargs)
         message_json = message.to_json()
-        yield deferToThread(self.connection.send(message_json))
-        response_json = yield deferToThread(self.connection.recv(1024))
-        return MSquaredMessage.from_json(response_json)
+        yield self.connection.send(message_json)
+        response_json = yield self.connection.recv(1024)
+        returnValue(MSquaredMessage.from_json(response_json))
     
     @inlineCallbacks
     def set(self, setting, value, key_name='setting'):
@@ -34,12 +37,12 @@ class MSquared(DeviceWrapper):
             parameters[key_name] = [parameters[key_name]]
         response_message = yield self.send(op=setting, parameters=parameters)
         ok = response_message.is_ok(status=[0])
-        return bool(ok)
+        returnValue(bool(ok))
     
     @inlineCallbacks
     def get(self, setting):
         response_message = yield self.send(op=setting, parameters=None)
         if response_message.is_ok(status=[0]):
-            return normalize_parameters(response_message.parameters)
+            returnValue(normalize_parameters(response_message.parameters))
         else:
-            return None
+            returnValue(None)

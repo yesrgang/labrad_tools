@@ -1,12 +1,14 @@
+import json
+
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.threads import deferToThread
 
 from msquared import MSquared
 
 class Solstis(MSquared):
-    etalon_tune = None
-    resonator_tune = None
-    resonator_fine_tune = None
+    etalon_tune = 0.
+    resonator_tune = 0.
+    resonator_fine_tune = 0.
 
     @inlineCallbacks
     def set_system_status(self, value):
@@ -21,9 +23,9 @@ class Solstis(MSquared):
                     response[key] = False
                 if (value == 'on'): 
                     response[key] = True
-            return json.dumps(response)
+            returnValue(json.dumps(response))
         else:
-            return json.dumps({})
+            returnValue(json.dumps({}))
     
     @inlineCallbacks
     def set_etalon_lock(self, value):
@@ -35,9 +37,9 @@ class Solstis(MSquared):
     def get_etalon_lock(self):
         response = yield self.get('etalon_lock_status')
         if response:
-            return response['condition'] == 'on'
+            returnValue(response['condition'] == 'on')
         else:
-            return False
+            returnValue(False)
     
     @inlineCallbacks
     def set_etalon_tune(self, value):
