@@ -27,8 +27,8 @@ class Sequence(GenericParameter):
             parameterized_sequence = value_to_sequence(self.value)
             parameters = get_parameters(parameterized_sequence)
             parameters_json = json.dumps({'sequencer': parameters})
-            pv_json = yield self.cxn.conductor.get_parameter_values(parameters_json,
-                                                                    True)
+            pv_json = yield self.cxn.conductor.get_parameter_values(
+                    parameters_json, True)
             parameter_values = json.loads(pv_json)['sequencer']
             sequence = substitute_sequence_parameters(parameterized_sequence,
                                                       parameter_values)

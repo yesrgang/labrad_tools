@@ -9,8 +9,20 @@ from generic_device.generic_parameter import GenericParameter
 
 
 class Timestamp(GenericParameter):
+    @inlineCallbacks
+    def update(self):
+        yield None
+        self._value = None
+
+    @property
     def value(self):
-        return time.time()
+        if not self._value:
+            self._value = time.time()
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        pass
 
 
         

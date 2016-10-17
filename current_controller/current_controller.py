@@ -20,12 +20,14 @@ import sys
 from labrad.server import Signal, setting
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.reactor import callLater
+from twisted.internet import reactor
 
 sys.path.append('../')
 from server_tools.device_server import DeviceServer
 from server_tools.decorators import quickSetting
 
 UPDATE_ID = 698027
+reactor.suggestThreadPoolSize(30)
 
 class CurrentControllerServer(DeviceServer):
     """ Provides basic control for current controllers """

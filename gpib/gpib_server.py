@@ -57,8 +57,8 @@ class GPIBServer(HardwareInterfaceServer):
         If specified, reads only the given number of bytes.
         Otherwise, reads until the device stops sending.
         """
-        ans = self.call_if_available('read_raw', c)
-        return str(ans).strip()
+        response = self.call_if_available('read', c)
+        return response.strip()
 
     @setting(5, data='s', returns='s')
     def query(self, c, data):
@@ -67,9 +67,10 @@ class GPIBServer(HardwareInterfaceServer):
         This query is atomic.  No other communication to the
         device will occur while the query is in progress.
         """
-        self.call_if_available('write', c, data)
-        ans = self.call_if_available('read_raw', c)
-        return str(ans).strip()
+#        self.call_if_available('write', c, data)
+#        ans = self.call_if_available('read_raw', c)
+        response = self.call_if_available('query', c, data)
+        return response.strip()
 
 if __name__ == '__main__':
     from labrad import util

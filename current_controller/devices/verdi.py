@@ -10,7 +10,7 @@ from lib.helpers import seconds_til_start, cancel_delayed_calls
 
 class Verdi(DeviceWrapper):
     def __init__(self, config):
-        self.timeout = .1
+        self.timeout = .25
         self.baudrate = 19200
         self.delayed_calls = []
         self.update_parameters = []
