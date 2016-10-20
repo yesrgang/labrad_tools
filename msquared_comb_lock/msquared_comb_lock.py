@@ -53,10 +53,13 @@ class MSquaredCombLockServer(LabradServer):
         self.lock_span = sa_config['lock_span']
 
         LabradServer.__init__(self)
-
+    
+    @defer.inlineCallbacks
     def initServer(self):
+        yield self.client.spectrum_analyzer.select_device(self.config['spectrum_analyzer_name'])
+        yield self.client.msquared.select_device(self.config['msquared_name'])
         self.feedbackTask = task.LoopingCall(self.feedback)
-        self.feedbackTask.start(0.1)
+        self.feedbackTask.start(5)
 
     def stopServer(self):
         self.feedbackTask.stop()
@@ -65,8 +68,11 @@ class MSquaredCombLockServer(LabradServer):
     def feedback(self):
         if not self.is_locked:
             return
+        shutter_open = yield self.client.sequencer.channel_manual_output(self.config['shutter_name'])
+        if not shutter_open:
+            return
 
-        trace = yield self.spectrum_analyzer.get_trace()
+        trace = yield self.spectrum_analyzer.trace()
         trace = np.array(trace)
 
         position = np.where(trace == np.max(trace))[0][0]
@@ -84,7 +90,7 @@ class MSquaredCombLockServer(LabradServer):
         feedback = self.pid.tick(frequency/1e6)
 
         value = round(feedback, 4)
-        yield self.client.msquared.set_resonator_tune(value)
+        yield self.client.msquared.resonator_tune(value)
 
         #print 'Err %.3fMHz | Out %.4f' % (self.pid.error, feedback)
 
@@ -115,10 +121,10 @@ class MSquaredCombLockServer(LabradServer):
             raise Exception('Cannot get lock points while being locked. Unlock first')
 
         # zoom out
-        yield self.spectrum_analyzer.set_range(*self.capture_range)
+        yield self.spectrum_analyzer.frequency_range(*self.capture_range)
 
         # find peaks
-        trace = yield self.spectrum_analyzer.get_trace()
+        trace = yield self.spectrum_analyzer.trace()
         trace = np.array(trace)
         average = np.average(trace)
 
@@ -175,7 +181,7 @@ class MSquaredCombLockServer(LabradServer):
 
         # zoom into lock point
         df = self.lock_span/2
-        yield self.spectrum_analyzer.set_range(f_0-df, f_0+df)
+        yield self.spectrum_analyzer.frequency_range(f_0-df, f_0+df)
 
         # set pid setpoint to f_0
         self.pid.setpoint = f_0/1e6
@@ -218,7 +224,7 @@ class MSquaredCombLockServer(LabradServer):
         yield self.stop_logging(c)
 
         # zoom out
-        yield self.spectrum_analyzer.set_range(*self.capture_range)
+        yield self.spectrum_analyzer.frequency_range(*self.capture_range)
 
     @setting(5, 'get_lock_status', returns='b')
     def get_lock_status(self, c):

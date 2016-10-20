@@ -2,8 +2,9 @@ from twisted.internet.defer import inlineCallbacks
 from labrad.wrappers import connectAsync
 
 class GenericParameter(object):
-    priority = 0
+    priority = 1
     value_type = 'single'
+
     def __init__(self, config):
         self._value = None
         for key, value in config.items():

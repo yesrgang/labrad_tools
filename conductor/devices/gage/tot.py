@@ -9,6 +9,7 @@ from lib.helpers import get_measurements
 
 class Tot(GenericParameter):
     value_type = 'read'
+    priority = 1
 
     @inlineCallbacks
     def update(self):
@@ -17,8 +18,9 @@ class Tot(GenericParameter):
 
     @property
     def value(self):
-        if not self._value:
-            self._value = get_measurements()['tot']
+#        if not self._value:
+#            self._value = get_measurements()['tot']
+        self._value = get_measurements()['tot']
         return self._value
 
     @value.setter

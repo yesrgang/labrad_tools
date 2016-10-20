@@ -7,6 +7,9 @@
         "sequencer": {
             "sequence": {}
         },
+        "clock_aom": {
+            "frequency": {}
+        },
         "influxdb": {
             "client": {}
         },

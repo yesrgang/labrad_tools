@@ -9,6 +9,7 @@ from lib.helpers import get_measurements
 
 class Frac(GenericParameter):
     value_type = 'read'
+    priority = 1
 
     @inlineCallbacks
     def update(self):
@@ -17,8 +18,9 @@ class Frac(GenericParameter):
 
     @property
     def value(self):
-        if not self._value:
-            self._value = get_measurements()['frac']
+#        if not self._value:
+#            self._value = get_measurements()['frac']
+        self._value = get_measurements()['frac']
         return self._value
 
     @value.setter

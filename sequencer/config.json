@@ -324,14 +324,14 @@
                 {
                     "loc": ["C", 13],
                     "name": "SrQ Comb Shutter",
-                    "mode": "auto",
+                    "mode": "manual",
                     "manual_output": 0,
                     "invert": 0
                 },
                 {
                     "loc": ["C", 14],
                     "name": "Sr1 Comb Shutter",
-                    "mode": "auto",
+                    "mode": "manual",
                     "manual_output": 0,
                     "invert": 0
                 },
