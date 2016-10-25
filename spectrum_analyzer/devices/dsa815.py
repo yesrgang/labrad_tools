@@ -43,7 +43,7 @@ class DSA815(SpectrumAnalyzer):
     @inlineCallbacks
     def get_offset(self):
         offset = self.connection.ask(':DISPlay:WINdow:TRACe:Y:SCALe:RLEVel?')
-        returnValue(float(scale))
+        returnValue(float(offset))
  
     @inlineCallbacks
     def set_offset(self), value):
