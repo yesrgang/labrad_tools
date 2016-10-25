@@ -51,6 +51,11 @@ class SpectrumAnalyzerServer(DeviceServer):
     def amplitude_scale(self, c, amplitude_scale=None):
         """ Get and set amplitude scale """
 
+    @quickSetting(14, 'v')
+    def offset(self, c, offset=None):
+        """ Get and set amplitude offset"""
+
+
 if __name__ == '__main__':
     from labrad import util
     util.runServer(SpectrumAnalyzerServer())
