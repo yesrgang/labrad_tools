@@ -52,6 +52,7 @@ class MSquaredCombLockServer(LabradServer):
         self.capture_range = sa_config['capture_range']
         self.lock_span = sa_config['lock_span']
 
+        self.name = '{}_comb_lock'.format(self.config['lock_name'])
         LabradServer.__init__(self)
     
     @defer.inlineCallbacks
@@ -85,6 +86,10 @@ class MSquaredCombLockServer(LabradServer):
             self.lock_status = False
             print 'Feedback disabled due to bad signal'
             return
+        
+        shutter_open = yield self.client.sequencer.channel_manual_output(self.config['shutter_name'])
+        if not shutter_open:
+            return
 
         self.lock_status = True
         feedback = self.pid.tick(frequency/1e6)
@@ -105,7 +110,7 @@ class MSquaredCombLockServer(LabradServer):
 
     @property
     def spectrum_analyzer(self):
-        return self.client.dsa815
+        return self.client.spectrum_analyzer
 
     @property
     def msquared(self):
@@ -319,7 +324,7 @@ class MSquaredCombLockServer(LabradServer):
         """
         Sets PID offset to <offset>
         """
-
+        yield self.msquared.resonator_tune(offset)
         self.pid.offset = offset
 
     @setting(17, 'get_offset', returns='v[]')
