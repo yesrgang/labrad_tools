@@ -34,6 +34,16 @@ class StepperMotorServer(DeviceServer):
             yield device.move_absolute(position)
         returnValue(device.position)
 
+    @setting(11, position1='i', position2='i')
+    def toggle_absolute(self, c, position1=None, position2=None):
+        device = self.get_device(c)
+        if (position1 is not None) and (position2 is not None):
+            yield device.toggle_absolute(position1,position2)
+
+
+
+
+
 if __name__ == "__main__":
     from labrad import util
     util.runServer(StepperMotorServer())

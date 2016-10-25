@@ -34,3 +34,11 @@ class SilverPack17(DeviceWrapper):
         yield self.connection.write(command)
         ans = yield self.connection.read_line()
         self.position = position
+
+    @inlineCallbacks
+    def toggle_absolute(self,position1,position2):
+	command = '/1s0gH04A{}H14A{}G0R\r'.format(position1,position2)
+	yield self.connection.write(command)
+	ans = yield self.connection.read_line()
+        
+
