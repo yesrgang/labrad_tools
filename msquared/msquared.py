@@ -4,7 +4,7 @@
 name = msquared
 version = 1.0
 description = 
-instancename = %LABRADNODE%_msquared
+instancename = msquared
 
 [startup]
 cmdline = %PYTHON% %FILE%
