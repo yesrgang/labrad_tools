@@ -52,7 +52,7 @@ class SpectrumAnalyzerServer(DeviceServer):
         """ Get and set amplitude scale """
 
     @quickSetting(14, 'v')
-    def offset(self, c, offset=None):
+    def amplitude_offset(self, c, offset=None):
         """ Get and set amplitude offset"""
 
 
