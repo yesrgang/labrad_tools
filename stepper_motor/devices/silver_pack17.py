@@ -6,10 +6,7 @@ from server_tools.device_server import DeviceWrapper
 
 class SilverPack17(DeviceWrapper):
     def __init__(self, config):
-        self.timeout = T.Value(1, 's')
-        self.baudrate = 9600
-        self.stopbits=1
-        self.bytesize=8
+        self.timeout = .5
         
         self.init_commands = [
             '/1m30h10R\r' # current
@@ -37,8 +34,11 @@ class SilverPack17(DeviceWrapper):
 
     @inlineCallbacks
     def toggle_absolute(self,position1,position2):
-	command = '/1s0gH04A{}H14A{}G0R\r'.format(position1,position2)
-	yield self.connection.write(command)
-	ans = yield self.connection.read_line()
+        command = '/1s0gH04A{}H14A{}G0R\r'.format(position1,position2)
+        yield self.connection.write(command)
+        ans = yield self.connection.read_line()
+        yield self.connection.write('/1e0R\r')
+        ans = yield self.connection.read_line()
+        print ans
         
 
