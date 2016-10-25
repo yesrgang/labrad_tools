@@ -46,7 +46,7 @@ class DSA815(SpectrumAnalyzer):
         returnValue(float(offset))
  
     @inlineCallbacks
-    def set_offset(self), value):
+    def set_offset(self, value):
         offset_command = ':DISPlay:WINdow:TRACe:Y:SCALe:RLEVel {}'.format(value)
         yield self.connection.write(offset_command)
    
