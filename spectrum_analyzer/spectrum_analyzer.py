@@ -47,6 +47,10 @@ class SpectrumAnalyzerServer(DeviceServer):
     def resolution_bandwidth(self, c, resolution_bandwidth=None):
         """ Get and set resolution bandwidth """
 
+    @quickSetting(13, 'v')
+    def amplitude_scale(self, c, amplitude_scale=None):
+        """ Get and set amplitude scale """
+
 if __name__ == '__main__':
     from labrad import util
     util.runServer(SpectrumAnalyzerServer())

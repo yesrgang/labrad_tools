@@ -16,6 +16,12 @@ class DSA815(SpectrumAnalyzer):
         ans = yield self.connection.ask(command)
         trace = re.compile('^#[0-9]+\s(.+)$').match(ans).group(1).split(', ')
         returnValue([float(s) for s in trace])
+   
+    @inlineCallbacks
+    def get_frequency_range(self):
+        start = yield self.connection.ask(':SENSe:FREQuency:STARt?')
+        stop = yield self.connection.ask(':SENSe:FREQuency:STOP?')
+        returnValue([float(start), float(stop)])
 
     @inlineCallbacks
     def set_frequency_range(self, value):
@@ -25,11 +31,15 @@ class DSA815(SpectrumAnalyzer):
         yield self.connection.write(stop_command)
 
     @inlineCallbacks
-    def get_frequency_range(self):
-        start = yield self.connection.ask(':SENSe:FREQuency:STARt?')
-        stop = yield self.connection.ask(':SENSe:FREQuency:STOP?')
-        returnValue([float(start), float(stop)])
-    
+    def get_amplitude_scale(self):
+        scale = yield self.connection.ask(':DISPlay:WINdow:TRACe:Y[:SCALe]:PDIVision?')
+        returnValue(float(scale))
+ 
+    @inlineCallbacks
+    def set_amplitude_scale(self, value):
+        scale_command = ':DISPlay:WINdow:TRACe:Y[:SCALe]:PDIVision {}'.format(value)
+        yield self.connection.write(scale_command)
+       
     @inlineCallbacks
     def set_resolution_bandwidth(self, value):
         command = ':SENSe:BANDwidth:RESolution {}'.format(value)
