@@ -32,14 +32,24 @@ class DSA815(SpectrumAnalyzer):
 
     @inlineCallbacks
     def get_amplitude_scale(self):
-        scale = yield self.connection.ask(':DISPlay:WINdow:TRACe:Y[:SCALe]:PDIVision?')
+        scale = yield self.connection.ask(':DISPlay:WINdow:TRACe:Y:SCALe:PDIVision?')
         returnValue(float(scale))
  
     @inlineCallbacks
     def set_amplitude_scale(self, value):
-        scale_command = ':DISPlay:WINdow:TRACe:Y[:SCALe]:PDIVision {}'.format(value)
+        scale_command = ':DISPlay:WINdow:TRACe:Y:SCALe:PDIVision {}'.format(value)
         yield self.connection.write(scale_command)
-       
+    
+    @inlineCallbacks
+    def get_amplitude_offset(self):
+        offset = yield self.connection.ask(':DISPlay:WINdow:TRACe:Y:SCALe:RLEVel?')
+        returnValue(float(offset))
+ 
+    @inlineCallbacks
+    def set_amplitude_offset(self, value):
+        offset_command = ':DISPlay:WINdow:TRACe:Y:SCALe:RLEVel {}'.format(value)
+        yield self.connection.write(offset_command)
+   
     @inlineCallbacks
     def set_resolution_bandwidth(self, value):
         command = ':SENSe:BANDwidth:RESolution {}'.format(value)
