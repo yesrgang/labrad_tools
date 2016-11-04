@@ -60,7 +60,7 @@ class MSquaredCombLockServer(LabradServer):
         yield self.client.spectrum_analyzer.select_device(self.config['spectrum_analyzer_name'])
         yield self.client.msquared.select_device(self.config['msquared_name'])
         self.feedbackTask = task.LoopingCall(self.feedback)
-        self.feedbackTask.start(5)
+        self.feedbackTask.start(2)
 
     def stopServer(self):
         self.feedbackTask.stop()

@@ -41,11 +41,14 @@ class SequencerServer(DeviceServer):
         3) name@loc -> first try name, then location
         """
         channel = None
-        try:
-            name, loc = channel_id.split('@')
-        except:
-            name = channel_id
-            loc = None
+        nameloc = channel_id.split('@') + ['']
+        name = nameloc[0]
+        loc = nameloc[1]
+#        try:
+#            name, loc = channel_id.split('@')
+#        except:
+#            name = channel_id
+#            loc = None
 
         if name:
             for d in self.devices.values():
@@ -72,9 +75,9 @@ class SequencerServer(DeviceServer):
     
     @setting(11, sequence='s')
     def run_sequence(self, c, sequence):
-        sequence = self._fix_sequence_keys(json.loads(sequence))
+        fixed_sequence = self._fix_sequence_keys(json.loads(sequence))
         for device in self.devices.values():
-            yield device.program_sequence(sequence)
+            yield device.program_sequence(fixed_sequence)
         for device in self.devices.values():
             if device.sequencer_type == 'analog':
                 yield device.start_sequence()
@@ -102,7 +105,7 @@ class SequencerServer(DeviceServer):
     def fix_sequence_keys(self, c, sequence):
         sequence = json.loads(sequence)
         sequence_keyfix = self._fix_sequence_keys(sequence)
-        return json.dumps(sequence)
+        return json.dumps(sequence_keyfix)
     
     @setting(15, sequencer='s', returns='s')
     def sequencer_mode(self, c, sequencer):
@@ -110,19 +113,32 @@ class SequencerServer(DeviceServer):
     
     def _fix_sequence_keys(self, sequence):
         # take sequence name@loc to configuration name@loc
-        locs = [key.split('@')[1] for key in sequence.keys()]
-        for key in sequence.keys():
-            name, loc = key.split('@')
-            for d in self.devices.values():
-                for c in d.channels:
-                    if c.loc == loc:
-                        s = sequence.pop(key)
-                        sequence.update({c.key: s})
-                    elif c.loc not in locs:
-                        sequence.update({c.key: [
-                            {'dt': dt, 'out': c.manual_output}
-                                for dt in sequence[TRIGGER_CHANNEL]]})
-        return sequence
+#        locs = [key.split('@')[1] for key in sequence.keys()]
+#        for key in sequence.keys():
+#            name, loc = key.split('@')
+#            for d in self.devices.values():
+#                for c in d.channels:
+#                    if c.loc == loc:
+#                        s = sequence.pop(key)
+#                        sequence.update({c.key: s})
+#                    elif c.loc not in locs:
+#                        sequence.update({c.key: [
+#                            {'dt': dt, 'out': c.manual_output}
+#                                for dt in sequence[TRIGGER_CHANNEL]]})
+#        return sequence
+        fixed_sequence = {}
+        for old_id, channel_sequence in sequence.items():
+            channel = self.id2channel(old_id)
+            fixed_sequence[channel.key] = channel_sequence
+
+        # make sure every channel has defined sequence
+        for d in self.devices.values():
+            for c in d.channels:
+                if c.key not in fixed_sequence:
+                    default_sequence = [{'dt': s['dt'], 'out': c.manual_output} 
+                                        for s in sequence[TRIGGER_CHANNEL]]
+                    fixed_sequence.update({c.key: default_sequence})
+        return fixed_sequence
     
     @setting(2)
     def send_update(self, c):

@@ -128,16 +128,24 @@ class ConductorServer(LabradServer):
                 self.parameters[device_name] = {}
             for parameter_name, parameter_value in device_parameters.items():
                 parameter = self.parameters[device_name].get(parameter_name)
-                if not parameter and not generic_parameter:
-                    print "{} {} is not an active parameter".format(
-                           device_name, parameter_name)
-                else:
-                    if not parameter:
-                        config = {device_name: {parameter_name: {}}}
-                        yield self.register_parameters(c, config, 
-                                                       generic_parameter)
-                    parameter = self.parameters[device_name].get(parameter_name)
-                    parameter.value = parameter_value
+#                if not parameter and not generic_parameter:
+#                    print "{} {} is not an active parameter".format(
+#                           device_name, parameter_name)
+#                else:
+#                    if not parameter:
+#                        config = {device_name: {parameter_name: {}}}
+#                        yield self.register_parameters(c, config, 
+#                                                       generic_parameter)
+#                    parameter = self.parameters[device_name].get(parameter_name)
+#                    parameter.value = parameter_value
+                if not parameter:
+                    if parameter_name[0] == '*':
+                        generic_parameter = True
+                    config = {device_name: {parameter_name: {}}}
+                    yield self.register_parameters(c, config, 
+                                                   generic_parameter)
+                parameter = self.parameters[device_name].get(parameter_name)
+                parameter.value = parameter_value
         returnValue(True)
 
     @setting(5, parameters='s', use_registry='b', returns='s')
@@ -301,6 +309,7 @@ class ConductorServer(LabradServer):
         try:
             yield parameter.update()
         except Exception, e:
+            print e
             print 'could not update {}\'s {}. removing parameter'.format(
                     parameter.device_name, parameter.name)
             self.remove_parameter(parameter)

@@ -45,12 +45,12 @@ class GenericParameter(object):
         if self.value_type == 'single':
             if type(self._value).__name__ == 'list':
                 old = self._value.pop(0)
-                if len(self._value) <= 1:
+                if not len(self._value):
                     self.value = old
         if self.value_type == 'list':
             if type(self._value[0]).__name__ == 'list':
                 old = self._value.pop(0)
-                if len(self._value) <= 1:
+                if not len(self._value):
                     self.value = old
 
     def remaining_values(self):

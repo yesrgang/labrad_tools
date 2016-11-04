@@ -11,7 +11,9 @@ def import_parameter(device_name, parameter_name, generic=False):
             device_name = 'generic_device'
             parameter_name = 'generic_parameter'
         else: 
-            return None
+            message = "could not import parameter {} {}\
+                      ".format(device_name, parameter_name)
+            raise Exception(message)
     module_name = 'devices.{}.{}'.format(device_name, parameter_name)
     class_name = camelize(parameter_name)
     module = __import__(module_name, fromlist=[class_name])
