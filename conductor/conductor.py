@@ -336,7 +336,7 @@ class ConductorServer(LabradServer):
         
         if self.data_path:
             with open(self.data_path, 'w+') as outfile:
-                json.dump(self.data, outfile)
+                json.dump(self.data, outfile, default=lambda x: None)
 
     @inlineCallbacks
     def stopServer(self):
@@ -366,7 +366,7 @@ class ConductorServer(LabradServer):
                 print 'delay', tock-tick
 
     @setting(16, do_print_delay='b', returns='b')
-    def print_delat(self, c, do_print_delay=None):
+    def print_delay(self, c, do_print_delay=None):
         if do_print_delay is not None:
             self.do_print_delay = do_print_delay
         return self.do_print_delay

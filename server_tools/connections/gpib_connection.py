@@ -30,3 +30,8 @@ class GPIBConnection(object):
     def list_devices(self):
         ans = yield self.server.list_devices()
         returnValue(ans)
+
+    @inlineCallbacks
+    def timeout(self, timeout):
+        ans = yield self.server.timeout(timeout)
+        returnValue(ans)
