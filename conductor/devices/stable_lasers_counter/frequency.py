@@ -11,11 +11,12 @@ from labrad.wrappers import connectAsync
 
 class Frequency(GenericParameter):
     priority = 1
+
     @inlineCallbacks
     def initialize(self):
-        self.cxn = yield connectAsync()
-        yield self.cxn.frequency_counter.select_device('stable_lasers_beat')
+        self.cxn = yield connectAsync(host='128.138.107.239')
+        yield self.cxn.kk.filename(self.filename)
    
     @inlineCallbacks
     def update(self):
-        self._value = yield self.cxn.frequency_counter.frequency(wait=False)
+        self.value = yield self.cxn.kk.frequency(self.time_window)
