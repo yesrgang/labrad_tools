@@ -1,23 +1,33 @@
+<!DOCTYPE html>
 <html>
-hey...
-<script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
-<script type="text/javascript" src="http://mpld3.github.io/js/mpld3.v0.3.js"></script>
-<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
-
-<style></style>
+<head>
+    <script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+</head>
 <div id="figure"></div>
-<script type="text/javascript">
+<script type="text/javascript" style="position:absolute; left:0; top:0">
 function loop() {
     $.ajax({
-        url: "./figure.json",
-        success: function(json_data) {
-        d3.select("#figure").selectAll("*").remove();
-        mpld3.draw_figure("figure", json_data);
+        url: "./figure.svg",
+        dataType: "text",
+        success: function(figure_data) {
+            if (figure_data.slice(-7) == "</svg>\n") {
+                var svg = new DOMParser().parseFromString(figure_data, 'application/xml');
+                while (document.getElementById("figure").hasChildNodes()) {
+                    document.getElementById("figure").removeChild(document.getElementById("figure").lastChild);
+                }
+                document.getElementById("figure").appendChild(
+                    document.getElementById("figure").ownerDocument.importNode(
+                        svg.documentElement, true));
+                document.getElementById("figure").firstChild.style.height = "100vh";
+                document.getElementById("figure").firstChild.style.left = "0";
+                document.getElementById("figure").firstChild.style.top = "0";
+                document.getElementById("figure").firstChild.style.position = "absolute";
+            }
         }
     });
-    setTimeout(loop, 500);
+    setTimeout(loop, 2000);
 };
 loop();
 </script>
-
 </html>
