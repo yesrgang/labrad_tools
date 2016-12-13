@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
     <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
 </head>
 <div id="figure"></div>
-<script type="text/javascript" style="position:absolute; left:0; top:0">
+<script type="text/javascript">
 function loop() {
     $.ajax({
         url: "./figure.svg",
@@ -13,16 +12,14 @@ function loop() {
         success: function(figure_data) {
             if (figure_data.slice(-7) == "</svg>\n") {
                 var svg = new DOMParser().parseFromString(figure_data, 'application/xml');
-                while (document.getElementById("figure").hasChildNodes()) {
-                    document.getElementById("figure").removeChild(document.getElementById("figure").lastChild);
+                var figure = document.getElementById("figure")
+                while (figure.hasChildNodes()) {
+                    figure.removeChild(figure.lastChild);
                 }
-                document.getElementById("figure").appendChild(
-                    document.getElementById("figure").ownerDocument.importNode(
+                figure.appendChild(
+                    figure.ownerDocument.importNode(
                         svg.documentElement, true));
-                document.getElementById("figure").firstChild.style.height = "100vh";
-                document.getElementById("figure").firstChild.style.left = "0";
-                document.getElementById("figure").firstChild.style.top = "0";
-                document.getElementById("figure").firstChild.style.position = "absolute";
+                figure.firstChild.style.height = "100vh";
             }
         }
     });
