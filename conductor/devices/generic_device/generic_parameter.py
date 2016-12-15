@@ -30,10 +30,11 @@ class GenericParameter(object):
             else:
                 return self._value
         elif self.value_type == 'list':
-            if type(self._value[0]).__name__ == 'list':
-                return self._value[0]
-            else:
-                return self._value
+            if self._value:
+                if type(self._value[0]).__name__ == 'list':
+                    return self._value[0]
+                else:
+                    return self._value
         else:
             return None
 
@@ -48,17 +49,19 @@ class GenericParameter(object):
                 if not len(self._value):
                     self.value = old
         if self.value_type == 'list':
-            if type(self._value[0]).__name__ == 'list':
-                old = self._value.pop(0)
-                if not len(self._value):
-                    self.value = old
+            if self._value:
+                if type(self._value[0]).__name__ == 'list':
+                    old = self._value.pop(0)
+                    if not len(self._value):
+                        self.value = old
 
     def remaining_values(self):
         if self.priority:
             if self.value_type == 'single':
                 if type(self._value).__name__ == 'list':
-                    return len(self._value)
+                    return len(self._value) - 1
             if self.value_type == 'list':
-                if type(self._value[0]).__name__ == 'list':
-                    return len(self._value)
+                if self._value:
+                    if type(self._value[0]).__name__ == 'list':
+                        return len(self._value) - 1
 

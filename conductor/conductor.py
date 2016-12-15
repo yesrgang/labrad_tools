@@ -267,7 +267,7 @@ class ConductorServer(LabradServer):
                 if not os.path.exists(data_directory):
                     os.mkdir(data_directory)
 
-                returnValue(True)
+            returnValue(True)
         else:
             self.data = {}
             if self.data_path:
@@ -280,8 +280,11 @@ class ConductorServer(LabradServer):
         """ get new parameter values then send to devices """
         advanced = False
         # check if we need to load next experiment
-        if not remaining_points(self.parameters):
+        pts = remaining_points(self.parameters)
+        if not pts:
             advanced = yield self.advance_experiment()
+        else:
+            print pts
 
         # sort by priority. higher priority is called first. 
         priority_parameters = [parameter for device_name, device_parameters
@@ -297,7 +300,7 @@ class ConductorServer(LabradServer):
         
         # call parameter updates in order of priority. 
         # 1 is called last. 0 is never called.
-        for parameter in sorted(priority_parameters, key=lambda x: x.priority):
+        for parameter in sorted(priority_parameters, key=lambda x: x.priority)[::-1]:
             yield self.update_parameter(parameter)
 
         # signal update
