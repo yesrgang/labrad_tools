@@ -43,17 +43,13 @@ class PlotterServer(LabradServer):
     def initServer(self):
         self.data = None
         self.do_plot()
-#        self._loop = LoopingCall(self.do_plot)
-#        self._loop.start(5)
 
     @setting(0, json_data='s')
     def plot(self, c, json_data):
 	self.data = json.loads(json_data)
-        print 'new plot'
 
     def do_plot(self):
         if self.data:
-            print '!'
             data = self.data
             path = data['plotter_path']
             function_name = data['plotter_function']
@@ -63,12 +59,9 @@ class PlotterServer(LabradServer):
             try:
                 d = deferToThread(function, *data['args'], **data['kwargs'])
 		d.addCallback(save_and_close)	
-#                fig.savefig('figure.svg')
-#                plt.close()
             except Exception, e:
                 print e
         callLater(2, self.do_plot)
-        print time()
             
 
 if __name__ == "__main__":
