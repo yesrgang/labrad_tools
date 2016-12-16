@@ -5,7 +5,7 @@ class ControlConfig(object):
         self.update_id = 461100
         
         self.frequency_display_units = [(6, 'MHz')]
-        self.frequency_digits = 6
+        self.frequency_digits = 2
         self.amplitude_display_units = [(0, 'arb')]
         self.amplitude_digits = 2
         self.update_time = 100

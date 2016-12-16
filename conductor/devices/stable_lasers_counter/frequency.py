@@ -1,13 +1,11 @@
 import sys
-sys.path.append('../')
-from generic_device.generic_parameter import GenericParameter
-
-import labrad
+import numpy as np
 
 from twisted.internet.defer import inlineCallbacks
-from twisted.internet.threads import deferToThread
 from labrad.wrappers import connectAsync
 
+sys.path.append('../')
+from generic_device.generic_parameter import GenericParameter
 
 class Frequency(GenericParameter):
     priority = 1
@@ -19,4 +17,11 @@ class Frequency(GenericParameter):
    
     @inlineCallbacks
     def update(self):
-        self.value = yield self.cxn.kk.frequency(self.time_window)
+        response = yield self.cxn.kk.frequency(self.time_window)
+        try:
+            self.value = {
+                'mean': np.mean(response),
+                'std': np.std(response),
+            }
+        except:
+            self.value = {}

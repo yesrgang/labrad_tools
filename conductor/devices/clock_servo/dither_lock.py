@@ -9,6 +9,7 @@ from lib.pid import Dither, DitherPIID
 
 class DitherLock(GenericParameter):
     priority = 9
+#    value_type = 'list'
     def __init__(self, config):
         super(DitherLock, self).__init__(config)
         self.pid = {lock_name: DitherPIID(**lock_conf['pid']) 
@@ -28,6 +29,7 @@ class DitherLock(GenericParameter):
             'pid': [pid_name, side],
         }
         """
+#        print 'update: ', self._value
         dither_value = self.value.get('dither')
         if dither_value:
             name = dither_value[0]
@@ -46,5 +48,5 @@ class DitherLock(GenericParameter):
                 frac = data['gage']['frac'][-1]
                 out = self.pid[name].tick(side, frac)
                 pid_value = {name: {'frequency': out}}
-                print side, frac, out
+#                print 'lock: ', side, frac, out
                 yield self.cxn.conductor.set_parameter_values(json.dumps(pid_value), True)
