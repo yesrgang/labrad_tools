@@ -5,6 +5,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
 from twisted.internet.reactor import callLater
 
 from generic_current_controller import CurrentController
+from lib.helpers import sleep
 
 T_RAMP = 5
 N_RAMP = 10
@@ -89,7 +90,9 @@ class LDC80xx(CurrentController):
         values = np.linspace(start, stop, N_RAMP+1)[1:]
         times = np.linspace(0, T_RAMP, N_RAMP+1)[1:]
         for t, v in zip(times, values): 
-            callLater(t, self.set_current, v)
+            self.set_current(v)
+            yield sleep(float(T_RAMP)/N_RAMP)
+#            callLater(t, self.set_current, v)
 
     @inlineCallbacks
     def warmup(self):

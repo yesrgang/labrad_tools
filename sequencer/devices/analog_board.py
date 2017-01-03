@@ -51,6 +51,7 @@ class AnalogChannel(object):
         board_name = config['board_name']
         loc = config['loc']
         self.name = 'DAC'+board_name+str(loc).zfill(2)
+        self.voltage_range = [-10., 10.]
         
         """ non-defaults """
         for key, value in config.items():
@@ -66,7 +67,9 @@ class AnalogChannel(object):
 
     @inlineCallbacks
     def set_manual_output(self, manual_output):
-        self.manual_output = manual_output
+        self.manual_output = sorted([min(self.voltage_range), 
+                                     manual_output, 
+                                     max(self.voltage_range)])[1]
         yield self.board.write_channel_manual_outputs()
 
 

@@ -128,16 +128,24 @@ class ConductorServer(LabradServer):
                 self.parameters[device_name] = {}
             for parameter_name, parameter_value in device_parameters.items():
                 parameter = self.parameters[device_name].get(parameter_name)
-                if not parameter and not generic_parameter:
-                    print "{} {} is not an active parameter".format(
-                           device_name, parameter_name)
-                else:
-                    if not parameter:
-                        config = {device_name: {parameter_name: {}}}
-                        yield self.register_parameters(c, config, 
-                                                       generic_parameter)
-                    parameter = self.parameters[device_name].get(parameter_name)
-                    parameter.value = parameter_value
+#                if not parameter and not generic_parameter:
+#                    print "{} {} is not an active parameter".format(
+#                           device_name, parameter_name)
+#                else:
+#                    if not parameter:
+#                        config = {device_name: {parameter_name: {}}}
+#                        yield self.register_parameters(c, config, 
+#                                                       generic_parameter)
+#                    parameter = self.parameters[device_name].get(parameter_name)
+#                    parameter.value = parameter_value
+                if not parameter:
+                    if parameter_name[0] == '*':
+                        generic_parameter = True
+                    config = {device_name: {parameter_name: {}}}
+                    yield self.register_parameters(c, config, 
+                                                   generic_parameter)
+                parameter = self.parameters[device_name].get(parameter_name)
+                parameter.value = parameter_value
         returnValue(True)
 
     @setting(5, parameters='s', use_registry='b', returns='s')
@@ -259,7 +267,7 @@ class ConductorServer(LabradServer):
                 if not os.path.exists(data_directory):
                     os.mkdir(data_directory)
 
-                returnValue(True)
+            returnValue(True)
         else:
             self.data = {}
             if self.data_path:
@@ -272,8 +280,11 @@ class ConductorServer(LabradServer):
         """ get new parameter values then send to devices """
         advanced = False
         # check if we need to load next experiment
-        if not remaining_points(self.parameters):
+        pts = remaining_points(self.parameters)
+        if not pts:
             advanced = yield self.advance_experiment()
+        else:
+            print pts
 
         # sort by priority. higher priority is called first. 
         priority_parameters = [parameter for device_name, device_parameters
@@ -289,7 +300,7 @@ class ConductorServer(LabradServer):
         
         # call parameter updates in order of priority. 
         # 1 is called last. 0 is never called.
-        for parameter in sorted(priority_parameters, key=lambda x: x.priority):
+        for parameter in sorted(priority_parameters, key=lambda x: x.priority)[::-1]:
             yield self.update_parameter(parameter)
 
         # signal update
@@ -301,6 +312,7 @@ class ConductorServer(LabradServer):
         try:
             yield parameter.update()
         except Exception, e:
+            print e
             print 'could not update {}\'s {}. removing parameter'.format(
                     parameter.device_name, parameter.name)
             self.remove_parameter(parameter)
@@ -327,7 +339,7 @@ class ConductorServer(LabradServer):
         
         if self.data_path:
             with open(self.data_path, 'w+') as outfile:
-                json.dump(self.data, outfile)
+                json.dump(self.data, outfile, default=lambda x: None)
 
     @inlineCallbacks
     def stopServer(self):
@@ -357,7 +369,7 @@ class ConductorServer(LabradServer):
                 print 'delay', tock-tick
 
     @setting(16, do_print_delay='b', returns='b')
-    def print_delat(self, c, do_print_delay=None):
+    def print_delay(self, c, do_print_delay=None):
         if do_print_delay is not None:
             self.do_print_delay = do_print_delay
         return self.do_print_delay

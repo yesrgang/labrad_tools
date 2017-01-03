@@ -12,6 +12,18 @@
             "frequency_range": [1, 30e6],
             "amplitude_range": [-36, 20]
         },
+        "clock_center": {
+            "device_type": "DS345",
+            "connection_type": "GPIB",
+            "servername": "yesr20_gpib",
+            "address": "GPIB0::21::INSTR",
+            "state": true,
+            "frequency": 27e6,
+            "amplitude": 0.5,
+            "amplitude_units": "Vpp",
+            "frequency_range": [1, 30e6],
+            "amplitude_range": [0.0, 1.0]
+        },
         "alpha": {
             "device_type": "E4432B",
             "connection_type": "GPIB",
@@ -104,7 +116,7 @@
             "servername": "yesr20_serial",
             "address": "COM6",
             "subaddress": 2,
-            "frequency": 30e6
+            "frequency": 125e6
         },
         "hodt_aom": {
             "device_type": "AD9854",

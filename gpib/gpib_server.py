@@ -72,6 +72,14 @@ class GPIBServer(HardwareInterfaceServer):
         response = self.call_if_available('query', c, data)
         return response.strip()
 
+    @setting(6, timeout='v', returns='v')
+    def timeout(self, c, timeout=None):
+        interface = self.get_interface(c)
+        if timeout is not None:
+            interface.timeout = timeout
+        return interface.timeout
+
+
 if __name__ == '__main__':
     from labrad import util
     util.runServer(GPIBServer())
