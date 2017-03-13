@@ -8,8 +8,7 @@
             "sequence": {}
         },
         "clock_aom": {
-            "frequency": {},
-            "dedrift_frequency": {}
+            "frequency": {}
         },
         "influxdb": {
             "client": {}

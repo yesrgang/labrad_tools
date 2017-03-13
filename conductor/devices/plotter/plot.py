@@ -14,7 +14,7 @@ from generic_device.generic_parameter import GenericParameter
 
 class Plot(GenericParameter):
     priority = 1
-    value_type = 'once'
+#    value_type = 'once'
 
     @inlineCallbacks
     def initialize(self):
