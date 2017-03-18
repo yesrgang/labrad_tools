@@ -74,6 +74,17 @@ class CurrentControllerServer(DeviceServer):
         callLater(update_delay, self.send_update, c)
         returnValue(shutdown)
 
+ #   @inlineCallbacks
+#    def get_power(self):
+#        yield self.connection.write_line('Power?')
+#        ans = yield self.connection.read_lines()
+#        print ans
+#        returnValue(float(ans[0]))
+
+
+
+
+
 if __name__ == '__main__':
     from labrad import util
     util.runServer(CurrentControllerServer())

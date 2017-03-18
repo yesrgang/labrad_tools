@@ -30,7 +30,7 @@
             "default_current": 0.1494,
             "current_stepsize": 1e-4
         },
-        "m2_pump": {
+        "m2_verdi": {
             "device_type": "Verdi",
             "connection_type": "Serial",
             "servername": "yesr20_serial",
@@ -41,6 +41,15 @@
             "shutter_delay": 600,
             "full_power_delay": 1800,
             "update_parameters": []
-        }
+        },
+        "m2_sprout": {
+            "device_type": "Sprout",
+            "connection_type": "Serial",
+            "servername": "yesr5_serial",
+            "address": "COM9",
+            "power_range": [0, 18], 
+            "init_power": 0,
+            "full_power": 18
+       }
     }
 }
