@@ -21,6 +21,9 @@ def import_parameter(device_name, parameter_name, generic=False):
     return getattr(module, class_name)
 
 def remaining_points(parameters):
+#    for dn, device_parameters in parameters.items():
+#        for pn, parameter in device_parameters.items():
+#            print dn, pn, parameter.remaining_values()
     return max([parameter.remaining_values() 
         for device_parameters in parameters.values()
         for parameter in device_parameters.values()])

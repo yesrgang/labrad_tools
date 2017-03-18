@@ -28,7 +28,7 @@
             "device_type": "E4432B",
             "connection_type": "GPIB",
             "servername": "yesr9_gpib",
-            "address": "GPIB0::19::INSTR",
+            "address": "GPIB0::20::INSTR",
             "state": true,
             "frequency": 1.3629e9,
             "amplitude": 6.0,
@@ -38,6 +38,18 @@
             "init_commands": [
                 "FM1:DEV 1.2e6"
             ]
+        },
+        "beta": {
+            "device_type": "N5181A",
+            "connection_type": "GPIB",
+            "servername": "yesr9_gpib",
+            "address": "GPIB0::19::INSTR",
+            "state": true,
+            "frequency": 100.28e6,
+            "amplitude": 6.0,
+            "amplitude_units": "dB",
+            "frequency_range": [10e3, 200e6],
+            "amplitude_range": [-20, 20]
         },
         "clock_steer": {
             "device_type": "AG335xxx",
