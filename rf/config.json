@@ -140,7 +140,7 @@
             "servername": "yesr20_serial",
             "address": "COM6",
             "subaddress": 5,
-            "frequency": 25.6e6
+            "frequency": 80.0e6
         }
     }
 }
