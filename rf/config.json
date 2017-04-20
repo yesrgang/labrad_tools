@@ -36,7 +36,7 @@
             "frequency_range": [250e3, 3e9],
             "amplitude_range": [-20, 20],
             "init_commands": [
-                "FM1:DEV 1.2e6"
+                "FM1:DEV 2e6"
             ]
         },
         "clock_steer": {
