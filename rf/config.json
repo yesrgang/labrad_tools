@@ -55,6 +55,7 @@
             "connection_type": "VXI",
             "servername": "yesr11_vxi11",
             "address": "192.168.1.1",
+            "source": 1,
             "state": true,
             "frequency": 98.66e6,
             "amplitude": 10.0,

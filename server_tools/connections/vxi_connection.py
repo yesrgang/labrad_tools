@@ -1,10 +1,12 @@
+import os
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.threads import deferToThread
 from vxi11 import Instrument
+from labrad.wrappers import connectAsync
 
 LABRADHOST = os.getenv('LABRADHOST')
 
-class GPIBConnection(object):
+class VXIConnection(object):
     @inlineCallbacks
     def initialize(self, device):
         self.connection = yield connectAsync(LABRADHOST)

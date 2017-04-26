@@ -8,9 +8,6 @@ class DG1000Z(RFWrapper):
     def initialize(self):
         for command in self.init_commands:
             yield self.connection.write(command)
-        yield self.set_state(self.state)
-        yield self.set_frequency(self.frequency)
-        yield self.set_amplitude(self.amplitude)
 
     @inlineCallbacks
     def set_state(self, state):
