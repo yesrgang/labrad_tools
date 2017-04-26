@@ -47,6 +47,7 @@ class PlotterServer(LabradServer):
     @setting(0, json_data='s')
     def plot(self, c, json_data):
 	self.data = json.loads(json_data)
+	print "set data", self.data
 
     def do_plot(self):
         if self.data:
@@ -59,8 +60,10 @@ class PlotterServer(LabradServer):
             try:
                 d = deferToThread(function, *data['args'], **data['kwargs'])
 		d.addCallback(save_and_close)	
+
+                print "saving... {}".format(time())
             except Exception, e:
-                print e
+                print 'ERROR: ', e
         callLater(2, self.do_plot)
             
 
