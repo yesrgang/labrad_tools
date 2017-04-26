@@ -26,7 +26,7 @@
         },
         "clock_detune": {
             "device_type": "DG1000Z",
-            "connection_type": "VXI",
+            "connection_type": "VXIPub",
             "address": "yesr-rigol1.colorado.edu",
             "source": 1,
             "state": true,
@@ -48,6 +48,24 @@
             "amplitude_range": [-20, 20],
             "init_commands": [
                 "FM1:DEV 2e6"
+            ]
+        },
+        "beta": {
+            "device_type": "AG335xxx",
+            "connection_type": "VXI",
+            "servername": "yesr11_vxi11",
+            "address": "192.168.1.1",
+            "state": true,
+            "frequency": 98.66e6,
+            "amplitude": 10.0,
+            "amplitude_units": "dB",
+            "frequency_range": [250e3, 120e6],
+            "amplitude_range": [-20, 20],
+            "init_commands": [
+		"SOUR1:FM:DEV 10e6",
+		"SOUR1:FM:SOUR EXT",
+		"INP:ATT ON",
+		"SOUR1:FM:STAT ON"
             ]
         },
         "clock_steer": {
