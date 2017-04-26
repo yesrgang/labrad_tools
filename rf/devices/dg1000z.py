@@ -17,7 +17,7 @@ class DG1000Z(RFWrapper):
     @inlineCallbacks
     def get_state(self):
         command = 'OUTP{}?'.format(self.source)
-        ans = yield self.connection.ask(command)
+        ans = yield self.connection.query(command)
         if ans == 'ON':
             state = True
         else:
@@ -32,7 +32,7 @@ class DG1000Z(RFWrapper):
     @inlineCallbacks
     def get_frequency(self):
         command = 'SOUR{}:FREQ?'.format(self.source)
-        ans = yield self.connection.ask(command)
+        ans = yield self.connection.query(command)
         returnValue(float(ans))
 
     @inlineCallbacks
@@ -43,5 +43,5 @@ class DG1000Z(RFWrapper):
     @inlineCallbacks
     def get_amplitude(self):
         command = 'SOUR{}:VOLT?'.format(self.source)
-        ans = yield self.connection.ask(command)
+        ans = yield self.connection.query(command)
         returnValue(float(ans))

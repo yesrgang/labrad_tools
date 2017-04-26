@@ -17,3 +17,8 @@ class VXIPubConnection(object):
     def ask(self, value):
         ans = yield deferToThread(self.connection.ask, value)
         returnValue(ans)
+    
+    @inlineCallbacks 
+    def query(self, value):
+        ans = yield deferToThread(self.connection.ask, value)
+        returnValue(ans)
