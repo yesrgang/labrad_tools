@@ -22,91 +22,91 @@
                 },
                 {
                     "loc": ["A", 2],
-                    "name": "HR Abs. AOM",
+                    "name": "Fluores. AOM",
                     "mode": "auto",
                     "manual_output": 0,
                     "invert": 1
                 },
                 {
                     "loc": ["A", 3],
-                    "name": "HR Abs. Shutter",
+                    "name": "Fluores. Shutter",
                     "mode": "auto",
                     "manual_output": 0,
-                    "invert": 0
+                    "invert": 1
                 },
                 {
                     "loc": ["A", 4],
-                    "name": "LR Abs. AOM",
+                    "name": "Abs. AOM",
                     "mode": "auto",
                     "manual_output": 0,
                     "invert": 1
                 },
                 {
                     "loc": ["A", 5],
-                    "name": "LR H Abs. Shutter",
+                    "name": "Abs. Shutter",
                     "mode": "auto",
                     "manual_output": 0,
                     "invert": 0
                 },
                 {
                     "loc": ["A", 6],
-                    "name": "LR V Abs. Shutter",
-                    "mode": "auto",
-                    "manual_output": 0,
-                    "invert": 0
-                },
-                {
-                    "loc": ["A", 7],
                     "name": "2D MOT Shutter",
                     "mode": "auto",
                     "manual_output": 0,
                     "invert": 1
                 },
                 {
-                    "loc": ["A", 8],
+                    "loc": ["A", 7],
                     "name": "Zeeman Shutter",
                     "mode": "auto",
                     "manual_output": 0,
                     "invert": 0
                 },
                 {
-                    "loc": ["A", 9],
+                    "loc": ["A", 8],
                     "name": "AH Enable",
                     "mode": "auto",
                     "manual_output": 0,
                     "invert": 0
                 },
                 {
-                    "loc": ["A", 10],
+                    "loc": ["A", 9],
                     "name": "AH Bottom Enable",
                     "mode": "auto",
                     "manual_output": 0,
                     "invert": 0
                 },
                 {
-                    "loc": ["A", 11],
+                    "loc": ["A", 10],
                     "name": "V Camera Trig.",
                     "mode": "auto",
                     "manual_output": 0,
                     "invert": 0
                 },
                 {
-                    "loc": ["A", 12],
+                    "loc": ["A", 11],
                     "name": "H Camera Trig.",
                     "mode": "auto",
                     "manual_output": 0,
                     "invert": 0
                 },
                 {
+                    "loc": ["A", 12],
+                    "name": "Dimple AOM",
+                    "mode": "auto",
+                    "manual_output": 0,
+                    "invert": 0
+                },
+                {
                     "loc": ["A", 13],
-                    "name": "LR V Camera Trig.",
+                    "name": "HODT AOM",
                     "mode": "auto",
                     "manual_output": 0,
                     "invert": 0
                 },
                 {
                     "loc": ["A", 14],
-                    "name": "TTLA14",
+                    "name": "VODT AOM",
                     "mode": "auto",
                     "manual_output": 0,
                     "invert": 0
@@ -148,14 +148,14 @@
                 },
                 {
                     "loc": ["B", 4],
-                    "name": "HODT AOM",
-                    "mode": "auto",
-                    "manual_output": 0,
+                    "name": "Clock Servo Enable",
+                    "mode": "manual",
+                    "manual_output": 1,
                     "invert": 0
                 },
                 {
                     "loc": ["B", 5],
-                    "name": "VODT AOM",
+                    "name": "Spin Pol. Drive",
                     "mode": "auto",
                     "manual_output": 0,
                     "invert": 0
@@ -281,16 +281,16 @@
                 },
                 {
                     "loc": ["C", 7],
-                    "name": "V Clock Switch",
-                    "mode": "manual",
-                    "manual_output": 1,
-                    "invert": 1
+                    "name": "TTLC07",
+                    "mode": "auto",
+                    "manual_output": 0,
+                    "invert": 0
                 },
                 {
                     "loc": ["C", 8],
-                    "name": "Clock Servo Enable",
-                    "mode": "manual",
-                    "manual_output": 1,
+                    "name": "TTLC08",
+                    "mode": "auto",
+                    "manual_output": 0,
                     "invert": 0
                 },
                 {
@@ -594,13 +594,13 @@
                 },
                 {
                     "loc": 3, 
-                    "name": "813H2 pzt H", 
+                    "name": "DACG03", 
                     "mode": "auto", 
                     "manual_output": 0.0
                 },
                 {
                     "loc": 4, 
-                    "name": "813H2 pzt V", 
+                    "name": "DACG04", 
                     "mode": "auto",
                     "manual_output": 0.0
                 },

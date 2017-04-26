@@ -56,8 +56,8 @@ class ConductorServer(LabradServer):
     def initServer(self):
         callLater(.1, self.register_parameters, None, self.default_parameters)
 
-    @setting(2, config='s', generic_parameter='b', returns='b')
-    def register_parameters(self, c, config, generic_parameter=False):
+    @setting(2, config='s', generic_parameter='b', value_type='s', returns='b')
+    def register_parameters(self, c, config, generic_parameter=False, value_type=None):
         """ create device parameter according to config
         config = {
             device_name: {
@@ -81,6 +81,8 @@ class ConductorServer(LabradServer):
                 parameter = Parameter(parameter_config)
                 parameter.device_name = device_name
                 parameter.name = parameter_name
+                if value_type is not None:
+                    parameter.value_type = value_type
                 self.parameters[device_name][parameter_name] = parameter
                 yield parameter.initialize()
                 yield self.update_parameter(parameter)
@@ -121,8 +123,8 @@ class ConductorServer(LabradServer):
             print '{} {} was improperly removed from available devices.'.format(
                                                     device_name, parameter_name)
 
-    @setting(4, config='s', generic_parameter='b', returns='b')
-    def set_parameter_values(self, c, config, generic_parameter=False):
+    @setting(4, config='s', generic_parameter='b', value_type='s', returns='b')
+    def set_parameter_values(self, c, config, generic_parameter=False, value_type=None):
         for device_name, device_parameters in json.loads(config).items():
             if not self.parameters.get(device_name):
                 self.parameters[device_name] = {}
@@ -143,7 +145,8 @@ class ConductorServer(LabradServer):
                         generic_parameter = True
                     config = {device_name: {parameter_name: {}}}
                     yield self.register_parameters(c, config, 
-                                                   generic_parameter)
+                                                   generic_parameter,
+                                                   value_type)
                 parameter = self.parameters[device_name].get(parameter_name)
                 parameter.value = parameter_value
         returnValue(True)
@@ -284,7 +287,7 @@ class ConductorServer(LabradServer):
         if not pts:
             advanced = yield self.advance_experiment()
         else:
-            print pts
+            print 'remaining points: ', pts
 
         # sort by priority. higher priority is called first. 
         priority_parameters = [parameter for device_name, device_parameters
