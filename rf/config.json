@@ -24,6 +24,17 @@
             "frequency_range": [1, 30e6],
             "amplitude_range": [0.0, 1.0]
         },
+        "clock_detune": {
+            "device_type": "DG1000Z",
+            "connection_type": "VXI",
+            "address": "yesr-rigol1.colorado.edu",
+            "source": 1,
+            "state": true,
+            "frequency": 27e6,
+            "amplitude": 0.5,
+            "frequency_range": [1, 60e6],
+            "amplitude_range": [0.0, 1.0]
+        },
         "alpha": {
             "device_type": "E4432B",
             "connection_type": "GPIB",

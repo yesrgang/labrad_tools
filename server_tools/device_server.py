@@ -127,3 +127,9 @@ class DeviceServer(LabradServer):
         update = {c['name']: {p: getattr(device, p) 
                   for p in device.update_parameters}}
         yield self.update(json.dumps(update))
+
+    @setting(5)
+    def reload_config(self, c):
+        self.load_config()
+        for name, config in self.devices.items():
+           yield self.initialize_device(name, config)

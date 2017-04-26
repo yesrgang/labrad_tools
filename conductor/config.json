@@ -13,9 +13,7 @@
         "influxdb": {
             "client": {}
         },
-        "gage": {
-            "frac": {},
-            "tot": {},
+        "time": {
             "timestamp": {}
         }
     }

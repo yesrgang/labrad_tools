@@ -16,6 +16,8 @@ for node in node_dict.keys():
                 print 'starting ' + server
                 try:
                     cxn.servers[node].start(server)
+                    if server == 'rf':
+                        cxn.servers[node].restart(server)
                 except Exception as e:
                     print 'error with ' + server
                     print e
