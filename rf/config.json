@@ -1,40 +1,5 @@
 {   
     "devices": {
-        "spin_pol_aom": {
-            "device_type": "DS345",
-            "connection_type": "GPIB",
-            "servername": "yesr9_gpib",
-            "address": "GPIB0::21::INSTR",
-            "state": true,
-            "frequency": 20.07e6,
-            "amplitude": 6.0,
-            "amplitude_units": "dB",
-            "frequency_range": [1, 30e6],
-            "amplitude_range": [-36, 20]
-        },
-        "clock_center": {
-            "device_type": "DS345",
-            "connection_type": "GPIB",
-            "servername": "yesr20_gpib",
-            "address": "GPIB0::21::INSTR",
-            "state": true,
-            "frequency": 27e6,
-            "amplitude": 0.5,
-            "amplitude_units": "Vpp",
-            "frequency_range": [1, 30e6],
-            "amplitude_range": [0.0, 1.0]
-        },
-        "clock_detune": {
-            "device_type": "DG1000Z",
-            "connection_type": "VXIPub",
-            "address": "yesr-rigol1.colorado.edu",
-            "source": 1,
-            "state": true,
-            "frequency": 27e6,
-            "amplitude": 0.5,
-            "frequency_range": [1, 60e6],
-            "amplitude_range": [0.0, 1.0]
-        },
         "alpha": {
             "device_type": "E4432B",
             "connection_type": "GPIB",
@@ -54,7 +19,7 @@
             "device_type": "AG335xxx",
             "connection_type": "VXI",
             "servername": "yesr11_vxi11",
-            "address": "192.168.1.1",
+            "address": "192.168.1.3",
             "source": 1,
             "state": true,
             "frequency": 98.66e6,
@@ -63,11 +28,45 @@
             "frequency_range": [250e3, 120e6],
             "amplitude_range": [-20, 20],
             "init_commands": [
-		"SOUR1:FM:DEV 10e6",
-		"SOUR1:FM:SOUR EXT",
-		"INP:ATT ON",
-		"SOUR1:FM:STAT ON"
+                "SOUR1:FM:DEV 10e6",
+                "SOUR1:FM:SOUR EXT",
+                "INP:ATT ON",
+                "SOUR1:FM:STAT ON"
             ]
+        },
+        "spin_pol_aom": {
+            "device_type": "DS345",
+            "connection_type": "GPIB",
+            "servername": "yesr9_gpib",
+            "address": "GPIB0::21::INSTR",
+            "state": true,
+            "frequency": 20.07e6,
+            "amplitude": 6.0,
+            "amplitude_units": "dB",
+            "frequency_range": [1, 30e6],
+            "amplitude_range": [-36, 20]
+        },
+        "clock_center": {
+            "device_type": "DG1000Z",
+            "connection_type": "VXIPub",
+            "address": "yesr-rigol1.colorado.edu",
+            "source": 2,
+            "state": true,
+            "frequency": 27e6,
+            "amplitude": 0.5,
+            "frequency_range": [1, 60e6],
+            "amplitude_range": [0.0, 1.0]
+        },
+        "clock_detune": {
+            "device_type": "DG1000Z",
+            "connection_type": "VXIPub",
+            "address": "yesr-rigol1.colorado.edu",
+            "source": 1,
+            "state": true,
+            "frequency": 27e6,
+            "amplitude": 0.5,
+            "frequency_range": [1, 60e6],
+            "amplitude_range": [0.0, 1.0]
         },
         "clock_steer": {
             "device_type": "AG335xxx",
