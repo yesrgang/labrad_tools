@@ -111,6 +111,42 @@
                 "OUTP2 1"
             ]
         },
+        "707_current_mod": {
+            "device_type": "DG1000Z",
+            "connection_type": "VXI",
+            "servername": "yesr11_vxi11",
+            "address": "192.168.1.5",
+            "source": 1,
+            "state": true,
+            "frequency": 5e3,
+            "amplitude": 2e-3,
+            "amplitude_units": "V",
+            "frequency_range": [1e-3, 30e6],
+            "amplitude_range": [0, 0.5],
+            "init_commands": [
+                "SOUR1:FREQ 5e3",
+                "SOUR1:VOLT 2e-3",
+                "OUTP1:STAT 1"
+            ]
+        },
+        "679_current_mod": {
+            "device_type": "DG1000Z",
+            "connection_type": "VXI",
+            "servername": "yesr11_vxi11",
+            "address": "192.168.1.5",
+            "source": 2,
+            "state": true,
+            "frequency": 5e3,
+            "amplitude": 11e-3,
+            "amplitude_units": "V",
+            "frequency_range": [1e-3, 30e6],
+            "amplitude_range": [0, 0.5],
+            "init_commands": [
+                "SOUR2:FREQ 5e3",
+                "SOUR2:VOLT 11e-3",
+                "OUTP2:STAT 1"
+            ]
+        },
         "813_x_aom": {
             "device_type": "AD9854",
             "connection_type": "Serial",
@@ -161,6 +197,3 @@
         }
     }
 }
-
-
-
