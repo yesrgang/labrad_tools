@@ -57,6 +57,7 @@ class AD9854(object):
         for b in get_instruction_set(self.subaddress, self.freg, self.ftw()):
             yield self.connection.write(b)
         ans = yield self.connection.read_line()
+        print ans
 
     @inlineCallbacks
     def get_frequency(self):

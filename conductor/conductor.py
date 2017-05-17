@@ -23,7 +23,6 @@ from lib.exceptions import ParameterNotRegistered
 # TODO remote save parameter files locally
 # TODO get available parameters
 
-
 class ConductorServer(LabradServer):
     """ coordinate setting and saving experiment parameters.
     
@@ -62,8 +61,8 @@ class ConductorServer(LabradServer):
         # register default parameters after connected to labrad
         callLater(.1, self.register_parameters, None, json.dumps(self.default_parameters))
 
-    @setting(2, parameters='s', generic_parameter='b', returns='b')
-    def register_parameters(self, c, parameters, generic_parameter=False):
+    @setting(2, parameters='s', generic_parameter='b', value_type='s', returns='b')
+    def register_parameters(self, c, parameters, generic_parameter=False, value_type=None):
         """ 
         load parameters into conductor
         
@@ -82,21 +81,21 @@ class ConductorServer(LabradServer):
                 parameter_name: string e.g. "frequency"
                 parameter_config: passed to parameter's __init__
             generic_parameter: bool. If true and no defined parameter is found,
-                will create generic_parameter for holding values.A
+                will create generic_parameter for holding values.AA
+            value_type: string. e.g. "single", "list", "data"
         Returns:
             bool. true if no errors.
         """
         for device_name, device_parameters in json.loads(parameters).items():
             for parameter_name, parameter_config in device_parameters.items():
-                yield self.register_parameter(device_name, 
-                                              parameter_name, 
-                                              parameter_config, 
-                                              generic_parameter)
+                yield self.register_parameter(device_name, parameter_name, 
+                        parameter_config, generic_parameter, value_type)
+
         returnValue(True)
     
     @inlineCallbacks
-    def register_parameter(self, device_name, parameter_name, 
-                           parameter_config, generic_parameter):
+    def register_parameter(self, device_name, parameter_name, parameter_config,
+                           generic_parameter, value_type):
         """ populate self.parameters with specified parameter
 
         look in ./devices/ for specified parameter
@@ -110,6 +109,7 @@ class ConductorServer(LabradServer):
             generic_parameter: bool. specifies whether or not to use 
                 devices/conductor_device/conductor_parameter.py if 
                 devices/device_name/parameter_name.py is not found.
+            value_type: string. e.g. "single", "list", "data"
         Returns:
             None
         Raises:
@@ -131,6 +131,8 @@ class ConductorServer(LabradServer):
                 parameter = Parameter(parameter_config)
                 parameter.device_name = device_name
                 parameter.name = parameter_name
+                if value_type is not None:
+                    parameter.value_type = value_type
                 self.parameters[device_name][parameter_name] = parameter
                 yield parameter.initialize()
                 yield self.update_parameter(parameter)
@@ -175,7 +177,8 @@ class ConductorServer(LabradServer):
         yield parameter.stop()
 
     @setting(4, parameters='s', generic_parameter='b', returns='b')
-    def set_parameter_values(self, c, parameters, generic_parameter=False):
+    def set_parameter_values(self, c, parameters, generic_parameter=False, 
+                             value_type=None):
         """  set specified parameter values
 
         parameters = {
@@ -186,15 +189,14 @@ class ConductorServer(LabradServer):
         """
         for device_name, device_parameters in json.loads(parameters).items():
             for parameter_name, parameter_value in device_parameters.items():
-                yield self.set_parameter_value(device_name, 
-                                               parameter_name, 
+                yield self.set_parameter_value(device_name, parameter_name, 
                                                parameter_value, 
-                                               generic_parameter)
+                                               generic_parameter, value_type)
         returnValue(True)
 
     @inlineCallbacks
     def set_parameter_value(self, device_name, parameter_name, parameter_value,
-                            generic_parameter=False):
+                            generic_parameter=False, value_type=None):
         """ assign parameter value to specified parameter.value
 
         register parameter if not already in self.parameters
@@ -214,7 +216,7 @@ class ConductorServer(LabradServer):
             if parameter_name[0] == '*':
                 generic_parameter = True
             yield self.register_parameter(device_name, parameter_name, 
-                                          generic_parameter)
+                                          generic_parameter, value_type)
 
         self.parameters[device_name][parameter_name].value = parameter_value
 
@@ -362,7 +364,7 @@ class ConductorServer(LabradServer):
         if not pts:
             advanced = yield self.advance_experiment()
         else:
-            print pts
+            print 'remaining points: ', pts
 
         # sort by priority. higher priority is called first. 
         priority_parameters = [parameter for device_name, device_parameters

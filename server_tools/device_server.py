@@ -107,12 +107,15 @@ class DeviceServer(LabradServer):
     @setting(1, name='s', returns='s')
     def select_device(self, c, name):
         if name not in self.devices.keys():
-            message = '{} is not the name of a configured device'.format(name)
-            raise Exception(message)
-        
+            try: 
+                yield self.reload_config(name)
+            except:
+                message = '{} is not the name of a configured device'.format(
+                           name)
+                raise Exception(message)
         c['name'] = name
         device = self.get_device(c)
-        return json.dumps(device.__dict__, default=lambda x: None)
+        returnValue(json.dumps(device.__dict__, default=lambda x: None))
     
     @setting(3, returns='b')
     def reinit_connection(self, c):
@@ -127,3 +130,13 @@ class DeviceServer(LabradServer):
         update = {c['name']: {p: getattr(device, p) 
                   for p in device.update_parameters}}
         yield self.update(json.dumps(update))
+
+    @setting(5, names=['*s', 's'])
+    def reload_config(self, c, names=None):
+        self.load_config()
+        if names is None:
+            names = self.devices
+        elif type(names).__name__ != 'list':
+            names = [names]
+        for name in names:
+                yield self.initialize_device(name, self.devices[name])

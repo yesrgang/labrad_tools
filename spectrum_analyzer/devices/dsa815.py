@@ -13,14 +13,14 @@ class DSA815(SpectrumAnalyzer):
     @inlineCallbacks
     def get_trace(self):
         command = ':TRACe:DATA? TRACE{}'.format(self.trace_index)
-        ans = yield self.connection.ask(command)
+        ans = yield self.connection.query(command)
         trace = re.compile('^#[0-9]+\s(.+)$').match(ans).group(1).split(', ')
         returnValue([float(s) for s in trace])
    
     @inlineCallbacks
     def get_frequency_range(self):
-        start = yield self.connection.ask(':SENSe:FREQuency:STARt?')
-        stop = yield self.connection.ask(':SENSe:FREQuency:STOP?')
+        start = yield self.connection.query(':SENSe:FREQuency:STARt?')
+        stop = yield self.connection.query(':SENSe:FREQuency:STOP?')
         returnValue([float(start), float(stop)])
 
     @inlineCallbacks
@@ -32,7 +32,7 @@ class DSA815(SpectrumAnalyzer):
 
     @inlineCallbacks
     def get_amplitude_scale(self):
-        scale = yield self.connection.ask(':DISPlay:WINdow:TRACe:Y:SCALe:PDIVision?')
+        scale = yield self.connection.query(':DISPlay:WINdow:TRACe:Y:SCALe:PDIVision?')
         returnValue(float(scale))
  
     @inlineCallbacks
@@ -42,7 +42,7 @@ class DSA815(SpectrumAnalyzer):
     
     @inlineCallbacks
     def get_amplitude_offset(self):
-        offset = yield self.connection.ask(':DISPlay:WINdow:TRACe:Y:SCALe:RLEVel?')
+        offset = yield self.connection.query(':DISPlay:WINdow:TRACe:Y:SCALe:RLEVel?')
         returnValue(float(offset))
  
     @inlineCallbacks
@@ -58,6 +58,6 @@ class DSA815(SpectrumAnalyzer):
     @inlineCallbacks
     def get_resolution_bandwidth(self):
         command = ':SENSe:BANDwidth:RESolution?'
-        resolution_bandwidth = yield self.connection.ask(command)
+        resolution_bandwidth = yield self.connection.query(command)
         returnValue(resolution_bandwidth)
 

@@ -29,6 +29,11 @@ class ConductorParameter(object):
             _value is anything. 
             returns _value then sets _value to None
 
+        value_type = 'data':
+            _value is anything
+            remaining_points = None
+            returns _value
+
     """
     priority = 1
     value_type = 'single'
@@ -86,6 +91,8 @@ class ConductorParameter(object):
                 else:
                     return self._value
         elif self.value_type == 'once':
+            return self._value
+        elif self.value_type == 'data':
             return self._value
         else:
             return None

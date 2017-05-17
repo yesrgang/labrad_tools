@@ -1,39 +1,5 @@
 {   
     "devices": {
-        "alpha": {
-            "device_type": "E4432B",
-            "connection_type": "GPIB",
-            "servername": "yesr9_gpib",
-            "address": "GPIB0::19::INSTR",
-            "state": true,
-            "frequency": 1.3629e9,
-            "amplitude": 6.0,
-            "amplitude_units": "dB",
-            "frequency_range": [250e3, 3e9],
-            "amplitude_range": [-20, 20],
-            "init_commands": [
-                "FM1:DEV 2e6"
-            ]
-        },
-        "beta": {
-            "device_type": "AG335xxx",
-            "connection_type": "VXI",
-            "servername": "yesr11_vxi11",
-            "address": "192.168.1.3",
-            "source": 1,
-            "state": true,
-            "frequency": 98.66e6,
-            "amplitude": 10.0,
-            "amplitude_units": "dB",
-            "frequency_range": [250e3, 120e6],
-            "amplitude_range": [-20, 20],
-            "init_commands": [
-                "SOUR1:FM:DEV 10e6",
-                "SOUR1:FM:SOUR EXT",
-                "INP:ATT ON",
-                "SOUR1:FM:STAT ON"
-            ]
-        },
         "spin_pol_aom": {
             "device_type": "DS345",
             "connection_type": "GPIB",
@@ -47,26 +13,43 @@
             "amplitude_range": [-36, 20]
         },
         "clock_center": {
-            "device_type": "DG1000Z",
-            "connection_type": "VXIPub",
-            "address": "yesr-rigol1.colorado.edu",
-            "source": 2,
+            "device_type": "DS345",
+            "connection_type": "GPIB",
+            "servername": "yesr20_gpib",
+            "address": "GPIB0::21::INSTR",
             "state": true,
             "frequency": 27e6,
             "amplitude": 0.5,
-            "frequency_range": [1, 60e6],
+            "amplitude_units": "Vpp",
+            "frequency_range": [1, 30e6],
             "amplitude_range": [0.0, 1.0]
         },
-        "clock_detune": {
-            "device_type": "DG1000Z",
-            "connection_type": "VXIPub",
-            "address": "yesr-rigol1.colorado.edu",
-            "source": 1,
+        "alpha": {
+            "device_type": "E4432B",
+            "connection_type": "GPIB",
+            "servername": "yesr9_gpib",
+            "address": "GPIB0::20::INSTR",
             "state": true,
-            "frequency": 27e6,
-            "amplitude": 0.5,
-            "frequency_range": [1, 60e6],
-            "amplitude_range": [0.0, 1.0]
+            "frequency": 1.3629e9,
+            "amplitude": 6.0,
+            "amplitude_units": "dB",
+            "frequency_range": [250e3, 3e9],
+            "amplitude_range": [-20, 20],
+            "init_commands": [
+                "FM1:DEV 1.2e6"
+            ]
+        },
+        "beta": {
+            "device_type": "N5181A",
+            "connection_type": "GPIB",
+            "servername": "yesr9_gpib",
+            "address": "GPIB0::19::INSTR",
+            "state": true,
+            "frequency": 100.28e6,
+            "amplitude": 6.0,
+            "amplitude_units": "dB",
+            "frequency_range": [10e3, 200e6],
+            "amplitude_range": [-20, 20]
         },
         "clock_steer": {
             "device_type": "AG335xxx",
@@ -109,42 +92,6 @@
                 "SOUR2:VOLT 500e-3",
                 "SOUR2:VOLT:OFFS 0",
                 "OUTP2 1"
-            ]
-        },
-        "707_current_mod": {
-            "device_type": "DG1000Z",
-            "connection_type": "VXI",
-            "servername": "yesr11_vxi11",
-            "address": "192.168.1.5",
-            "source": 1,
-            "state": true,
-            "frequency": 5e3,
-            "amplitude": 2e-3,
-            "amplitude_units": "V",
-            "frequency_range": [1e-3, 30e6],
-            "amplitude_range": [0, 0.5],
-            "init_commands": [
-                "SOUR1:FREQ 5e3",
-                "SOUR1:VOLT 2e-3",
-                "OUTP1:STAT 1"
-            ]
-        },
-        "679_current_mod": {
-            "device_type": "DG1000Z",
-            "connection_type": "VXI",
-            "servername": "yesr11_vxi11",
-            "address": "192.168.1.5",
-            "source": 2,
-            "state": true,
-            "frequency": 5e3,
-            "amplitude": 11e-3,
-            "amplitude_units": "V",
-            "frequency_range": [1e-3, 30e6],
-            "amplitude_range": [0, 0.5],
-            "init_commands": [
-                "SOUR2:FREQ 5e3",
-                "SOUR2:VOLT 11e-3",
-                "OUTP2:STAT 1"
             ]
         },
         "813_x_aom": {
@@ -197,3 +144,6 @@
         }
     }
 }
+
+
+

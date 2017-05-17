@@ -3,5 +3,17 @@
     "time_format": "%Y%m%d",
     "registry_directory": ["", "Servers", "conductor", "parameters"],
     "default_parameters": {
+        "sequencer": {
+            "sequence": {}
+        },
+        "clock_aom": {
+            "frequency": {}
+        },
+        "influxdb": {
+            "client": {}
+        },
+        "time": {
+            "timestamp": {}
+        }
     }
 }

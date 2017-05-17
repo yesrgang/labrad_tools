@@ -2,6 +2,9 @@ node_dict = {
     'node yesr9': [
         'gpib',
     ],
+    'node yesr10': [
+        'okfpga',
+    ],
     'node yesr20': [
         'gpib',
         'serial',
