@@ -46,6 +46,7 @@ class DeviceWrapper(object):
     def initialize(self):
         yield None
 
+
 class DeviceServer(LabradServer):
     def __init__(self, config_path='./config.json'):
         LabradServer.__init__(self)
@@ -58,16 +59,17 @@ class DeviceServer(LabradServer):
 #            add_quick_setting(self, 10 + i, setting, arg_type)
 
     def load_config(self, path=None):
+        self.config = lambda: None
         if path is not None:
             self.config_path = path
         with open(self.config_path, 'r') as infile:
             config = json.load(infile)
             for key, value in config.items():
-                setattr(self, key, value)
+                setattr(self.config, key, value)
 
     @inlineCallbacks
     def initServer(self):
-        for name, config in self.devices.items():
+        for name, config in self.config.devices.items():
             yield self.initialize_device(name, config)
 
     @inlineCallbacks 
@@ -104,15 +106,16 @@ class DeviceServer(LabradServer):
     def get_device_list(self, c):
         return self.devices.keys()
     
-    @setting(1, name='s', returns='s')
+    @setting(1, name='s', returns=['s', ''])
     def select_device(self, c, name):
         if name not in self.devices.keys():
             try: 
-                yield self.reload_config(name)
+                yield self.reload_config(c, name)
             except:
                 message = '{} is not the name of a configured device'.format(
                            name)
                 raise Exception(message)
+                returnValue(None)
         c['name'] = name
         device = self.get_device(c)
         returnValue(json.dumps(device.__dict__, default=lambda x: None))
@@ -135,8 +138,10 @@ class DeviceServer(LabradServer):
     def reload_config(self, c, names=None):
         self.load_config()
         if names is None:
-            names = self.devices
+            names = self.config.devices
         elif type(names).__name__ != 'list':
             names = [names]
         for name in names:
-                yield self.initialize_device(name, self.devices[name])
+            device = self.config.devices.get(name)
+            if device:
+                yield self.initialize_device(name, device)

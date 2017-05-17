@@ -606,13 +606,13 @@
                 },
                 {   "loc": 5, 
                     "name": "DACG05", 
-                    "mode": "auto", 
+                    "mode": "manual", 
                     "manual_output": 0.0
                 },
                 {
                     "loc": 6, 
                     "name": "DACG06", 
-                    "mode": "auto",
+                    "mode": "manual",
                     "manual_output": 0.0
                 },
                 {

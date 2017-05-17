@@ -48,8 +48,9 @@
         },
         "clock_center": {
             "device_type": "DG1000Z",
-            "connection_type": "VXIPub",
-            "address": "yesr-rigol1.colorado.edu",
+            "connection_type": "VXI",
+            "servername": "yesr11_vxi11",
+            "address": "192.168.1.9",
             "source": 2,
             "state": true,
             "frequency": 27e6,
@@ -60,7 +61,8 @@
         "clock_detune": {
             "device_type": "DG1000Z",
             "connection_type": "VXIPub",
-            "address": "yesr-rigol1.colorado.edu",
+            "servername": "yesr11_vxi11",
+            "address": "192.168.1.9",
             "source": 1,
             "state": true,
             "frequency": 27e6,
