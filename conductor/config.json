@@ -1,23 +1,7 @@
 {
-    "data_directory": "Z:\\SrQ\\data\\{}\\",
+    "data_directory": "./data/{}/",
     "time_format": "%Y%m%d",
-    "default_values_path": "./default_values.json",
     "registry_directory": ["", "Servers", "conductor", "parameters"],
     "default_parameters": {
-        "sequencer": {
-            "sequence": {}
-        },
-        "clock_aom": {
-            "frequency": {},
-            "dedrift_frequency": {}
-        },
-        "influxdb": {
-            "client": {}
-        },
-        "gage": {
-            "frac": {},
-            "tot": {},
-            "timestamp": {}
-        }
     }
 }
