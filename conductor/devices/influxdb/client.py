@@ -7,8 +7,7 @@ from labrad.wrappers import connectAsync
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.reactor import callInThread
 
-sys.path.append('../')
-from generic_device.generic_parameter import GenericParameter
+from conductor_device.conductor_parameter import ConductorParameter
 
 def to_float(x):
     try:
@@ -16,7 +15,7 @@ def to_float(x):
     except:
         return 0.
 
-class Client(GenericParameter):
+class Client(ConductorParameter):
     priority = 1
     @inlineCallbacks
     def initialize(self):

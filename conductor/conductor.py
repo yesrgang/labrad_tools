@@ -35,7 +35,7 @@ class ConductorServer(LabradServer):
         and a filename for saving data.
     """
 
-    name = 'conductor-test'
+    name = 'conductor'
     parameters_updated = Signal(698124, 'signal: parameters_updated', 'b')
 
     def __init__(self, config_path='./config.json'):

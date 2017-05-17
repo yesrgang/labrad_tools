@@ -4,15 +4,14 @@ import json
 from twisted.internet.defer import inlineCallbacks
 from labrad.wrappers import connectAsync
 
-sys.path.append('../')
-from generic_device.generic_parameter import GenericParameter
+from conductor_device.conductor_parameter import ConductorParameter
 from lib.helpers import *
 
-class Sequence(GenericParameter):
+class Sequence(ConductorParameter):
     priority = 10
     value_type = 'list'
-    def __init__(self, config):
-        super(Sequence, self).__init__({})
+    def __init__(self, config={}):
+        super(Sequence, self).__init__(config)
         self.value = ['all_off']
 
     @inlineCallbacks
@@ -24,7 +23,8 @@ class Sequence(GenericParameter):
         """ value can be sequence or list of sub-sequences """
         t_advance = 5
         if self.value:
-            parameterized_sequence = value_to_sequence(self.value)
+            parameterized_sequence = value_to_sequence(self.sequence_directory, 
+                                                       self.value)
             parameters = get_parameters(parameterized_sequence)
             parameters_json = json.dumps({'sequencer': parameters})
             pv_json = yield self.cxn.conductor.get_parameter_values(

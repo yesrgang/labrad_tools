@@ -4,7 +4,9 @@
     "registry_directory": ["", "Servers", "conductor", "parameters"],
     "default_parameters": {
         "sequencer": {
-            "sequence": {}
+            "sequence": {
+                "sequence_directory": "/home/yertle/yesrdata/SrQ/data/{}/sequences/"
+            }
         },
         "clock_aom": {
             "frequency": {}
