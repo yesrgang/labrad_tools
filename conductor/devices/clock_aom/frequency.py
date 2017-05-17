@@ -1,7 +1,7 @@
 from twisted.internet.defer import inlineCallbacks
 from labrad.wrappers import connectAsync
 
-from devices.conductor_device.conductor_parameter import ConductorParameter
+from conductor_device.conductor_parameter import ConductorParameter
 
 class Frequency(ConductorParameter):
     priority = 1

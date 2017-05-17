@@ -25,7 +25,7 @@ class ParameterRow(QtGui.QWidget):
         self.nameBox.setFixedSize(self.boxWidth, self.boxHeight)
         self.valueBox = NeatSpinBox()
         self.valueBox.setFixedSize(self.boxWidth, self.boxHeight)
-        self.valueBox.display(0)
+#        self.valueBox.display(0)
 
         self.layout = QtGui.QHBoxLayout()
         self.layout.addWidget(self.nameBox)

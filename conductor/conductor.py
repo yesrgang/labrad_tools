@@ -1,3 +1,21 @@
+"""
+### BEGIN NODE INFO
+[info]
+name = conductor
+version = 1.0
+description = 
+instancename = conductor
+
+[startup]
+cmdline = %PYTHON% %FILE%
+timeout = 20
+
+[shutdown]
+message = 987654321
+timeout = 20
+### END NODE INFO
+"""
+
 import json
 import os
 
@@ -215,7 +233,7 @@ class ConductorServer(LabradServer):
         except KeyError:
             if parameter_name[0] == '*':
                 generic_parameter = True
-            yield self.register_parameter(device_name, parameter_name, 
+            yield self.register_parameter(device_name, parameter_name, {}, 
                                           generic_parameter, value_type)
 
         self.parameters[device_name][parameter_name].value = parameter_value
@@ -249,10 +267,19 @@ class ConductorServer(LabradServer):
     def get_parameter_value(self, device_name, parameter_name, use_registry=False):
         message = None
         try:
-            parameter = self.parameters[device_name][parameter_name]
-            value = parameter.value
+            try: 
+                parameter = self.parameters[device_name][parameter_name]
+                value = parameter.value
+            except:
+                parameters_filename = self.parameters_directory + 'current_parameters.json'
+                with open(parameters_filename, 'r') as infile:
+                    old_parameters = json.load(infile)
+                    value = old_parameters[device_name][parameter_name]
+                    yield self.set_parameter_value(device_name, parameter_name, value, True)
         except:
             if use_registry:
+                print 'looking in registry for parameter {}'.format(device_name + parameter_name)
+                print 'this feature will be depreciated'
                 try: 
                     yield self.client.registry.cd(self.registry_directory
                                                   + [device_name])
@@ -424,19 +451,41 @@ class ConductorServer(LabradServer):
 
     @inlineCallbacks
     def stopServer(self):
+        parameters_filename = self.parameters_directory + 'current_parameters.json'
+        if os.path.isfile(parameters_filename):
+            with open(parameters_filename, 'r') as infile:
+                old_parameters = json.load(infile)
+        else:
+            old_parameters = {}
+        parameters = deepcopy(old_parameters)
         for device_name, device_parameters in self.parameters.items():
-            yield self.client.registry.cd(self.registry_directory)
-            devices = yield self.client.registry.dir()
-            if device_name not in devices:
-                yield self.client.registry.mkdir(device_name)
-            yield self.client.registry.cd(device_name)
+            if not parameters.get(device_name):
+                parameters[device_name] = {}
             for parameter_name, parameter in device_parameters.items():
-                value = parameter.value
-                try:
-                    yield self.client.registry.set(parameter_name, value)
-                except:
-                    pass
+                parameters[device_name][parameter_name] = parameter.value
+        
+        parameters_filename = self.parameters_directory + 'current_parameters.json'
+        with open(parameters_filename, 'w') as outfile:
+            json.dump(parameters, outfile)
 
+        parameters_filename = self.parameters_directory + '{}.json'.format(
+                                  strftime(self.time_format))
+        with open(parameters_filename, 'w') as outfile:
+            json.dump(parameters, outfile)
+
+#        for device_name, device_parameters in self.parameters.items():
+#            yield self.client.registry.cd(self.registry_directory)
+#            devices = yield self.client.registry.dir()
+#            if device_name not in devices:
+#                yield self.client.registry.mkdir(device_name)
+#            yield self.client.registry.cd(device_name)
+#            for parameter_name, parameter in device_parameters.items():
+#                value = parameter.value
+#                try:
+#                    yield self.client.registry.set(parameter_name, value)
+#                except:
+#                    pass
+#
     @setting(15)
     def advance(self, c, delay=0):
         if delay:

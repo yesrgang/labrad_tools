@@ -5,12 +5,19 @@ from datetime import date, timedelta
 from itertools import chain
 from time import strftime
 
-def value_to_sequence(sequence_directory, value):
-    if type(value).__name__ == 'list':
-        return combine_sequences([read_sequence_file(sequence_directory, v) 
-                                  for v in value])
+def value_to_sequence(sequence):
+    if type(sequence.value).__name__ == 'list':
+        try: 
+            return combine_sequences([
+                read_sequence_file(sequence.sequence_directory, v) 
+                for v in sequence.value
+            ])
+        except Exception, e:
+            print e
+            return read_sequence_file(sequence.sequence_directory, 'all_off')
     else:
         return value
+
 
 def read_sequence_file(sequence_directory, filename):
     if type(filename).__name__ == 'dict':

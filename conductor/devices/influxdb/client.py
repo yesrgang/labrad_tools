@@ -1,7 +1,5 @@
 import json
 import os
-import sys
-
 from influxdb import InfluxDBClient
 from labrad.wrappers import connectAsync
 from twisted.internet.defer import inlineCallbacks

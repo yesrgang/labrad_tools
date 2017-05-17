@@ -12,7 +12,7 @@ class Sequence(ConductorParameter):
     value_type = 'list'
     def __init__(self, config={}):
         super(Sequence, self).__init__(config)
-        self.value = ['all_off']
+        self.value = [self.default_sequence]
 
     @inlineCallbacks
     def initialize(self):
@@ -23,8 +23,7 @@ class Sequence(ConductorParameter):
         """ value can be sequence or list of sub-sequences """
         t_advance = 5
         if self.value:
-            parameterized_sequence = value_to_sequence(self.sequence_directory, 
-                                                       self.value)
+            parameterized_sequence = value_to_sequence(self)
             parameters = get_parameters(parameterized_sequence)
             parameters_json = json.dumps({'sequencer': parameters})
             pv_json = yield self.cxn.conductor.get_parameter_values(
