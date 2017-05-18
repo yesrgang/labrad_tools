@@ -34,6 +34,18 @@
                 "SOUR1:FM:STAT ON"
             ]
         },
+        "813_offset": {
+            "device_type": "N5181A",
+            "connection_type": "VXI",
+            "servername": "yesr11_vxi11",
+            "address": "192.168.1.10",
+            "state": true,
+            "frequency": 500e6,
+            "amplitude": 5,
+            "amplitude_units": "dB",
+            "frequency_range": [10e6, 3e9],
+            "amplitude_range": [0, 13]
+        },
         "spin_pol_aom": {
             "device_type": "DS345",
             "connection_type": "GPIB",
