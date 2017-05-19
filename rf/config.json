@@ -160,6 +160,20 @@
                 "SOUR2:VOLT 11e-3",
                 "OUTP2:STAT 1"
             ]
+        },        
+        "comb_offset": {
+            "device_type": "MFG2160",
+            "connection_type": "Serial",
+            "servername": "yesr5_serial",
+            "address": "COM14",
+            "frequency": 75.0e6,
+            "amplitude":3.0,
+            "frequency_range":[10e6, 300e6],
+            "amplitude_range":[0, 1],
+            "init_commands":[
+                "SOUR3RF:AMP MAX",
+                "SOUR3RF:FREQ 70.0e6"
+            ]
         },
         "813_x_aom": {
             "device_type": "AD9854",
