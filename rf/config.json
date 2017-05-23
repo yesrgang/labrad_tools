@@ -166,6 +166,7 @@
             "connection_type": "Serial",
             "servername": "yesr5_serial",
             "address": "COM14",
+            "state": true,
             "frequency": 75.0e6,
             "amplitude":3.0,
             "frequency_range":[10e6, 300e6],

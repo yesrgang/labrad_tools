@@ -22,6 +22,6 @@ if __name__ == '__main__':
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-    widget = RFControl('813_offset', reactor)
+    widget = RFControl('813_offset_control', reactor)
     widget.show()
     reactor.run()
