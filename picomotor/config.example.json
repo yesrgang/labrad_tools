@@ -1,0 +1,36 @@
+{   
+    "devices": {
+        "h2h": {
+            "device_type": "NF8742",
+            "connection_type": "Socket",
+            "servername": "192.168.1.12",
+            "address": "23",
+            "axis": 1,
+            "update_parameters": ["position"]
+        },
+        "h2v": {
+            "device_type": "NF8742",
+            "connection_type": "Socket",
+            "servername": "192.168.1.12",
+            "address": "23",
+            "axis": 2,
+            "update_parameters": ["position"]
+        },
+        "h1h": {
+            "device_type": "NF8742",
+            "connection_type": "Socket",
+            "servername": "192.168.1.12",
+            "address": "23",
+            "axis": 3,
+            "update_parameters": ["position"]
+        },
+        "h1v": {
+            "device_type": "NF8742",
+            "connection_type": "Socket",
+            "servername": "192.168.1.12",
+            "address": "23",
+            "axis": 4,
+            "update_parameters": ["position"]
+        }
+    }
+}

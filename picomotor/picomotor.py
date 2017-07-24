@@ -20,7 +20,7 @@ import sys
 
 from labrad.server import Signal, setting
 
-from twisted.internet.defer import DefferedLock
+from twisted.internet.defer import DeferredLock, returnValue
 
 sys.path.append('../')
 from server_tools.device_server import DeviceServer
@@ -36,23 +36,24 @@ class PicomotorServer(DeviceServer):
     name = 'picomotor'
     
     def __init__(self, config_path='./config.json'):
-        PicomotorServer.__init__(self)
+        DeviceServer.__init__(self)
         self.socket_lock = DeferredLock()
     
 #    @quickSetting(11, 'i')
 #    def position(self, c, position=None):
 #        """ get or set position """
 
-    @setting(11, position='i', return='i')
+    @setting(11, position='i', returns='i')
     def position(self, c, position=None):
         """ get or set position """
         yield self.socket_lock.acquire()
         device = self.get_device(c)
         if position is not None:
             yield device.set_position(position)
-        position = yield device.get_position()
+        device.position = yield device.get_position()
         yield self.socket_lock.release()
-        returnValue(position)
+        yield self.send_update(c)
+        returnValue(device.position)
     
 if __name__ == '__main__':
     from labrad import util
