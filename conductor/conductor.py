@@ -146,6 +146,8 @@ class ConductorServer(LabradServer):
             if not Parameter:
                 raise ParameterNotImported(device_name, parameter_name)
             else:
+                if not parameter_config:
+                    parameter_config = self.default_parameters.get(device_name, {}).get(parameter_name, {})
                 parameter = Parameter(parameter_config)
                 parameter.device_name = device_name
                 parameter.name = parameter_name

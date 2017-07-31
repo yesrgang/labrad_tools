@@ -2,7 +2,7 @@ import json
 from twisted.internet.defer import inlineCallbacks
 from labrad.wrappers import connectAsync
 
-from devices.conductor_device.conductor_parameter import ConductorParameter
+from conductor_device.conductor_parameter import ConductorParameter
 from lib.pid import Dither, DitherPIID
 
 class DitherLock(ConductorParameter):
@@ -43,7 +43,7 @@ class DitherLock(ConductorParameter):
             if data:
                 name = pid_value[0]
                 side = pid_value[1]
-                frac = data['gage']['frac'][-1]
+                frac = data['pico']['frac'][-1]
                 out = self.pid[name].tick(side, frac)
                 pid_value = {name: {'frequency': out}}
 #                print 'lock: ', side, frac, out
