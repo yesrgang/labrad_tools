@@ -52,7 +52,7 @@ class PlotterServer(LabradServer):
             data = self.data
             path = data['plotter_path']
             function_name = data['plotter_function']
-            module_name = os.path.splot(path)[-1].strip('.py')
+            module_name = os.path.split(path)[-1].strip('.py')
             module = imp.load_source(module_name, path)
             function = getattr(module, function_name)
             try:
