@@ -51,8 +51,9 @@ class SerialServer(HardwareInterfaceServer):
                     ser.close()
                     self.interfaces[address] = ser
                     print '{} available'.format(address)
-                except:
-                    pass
+                except Exception, e:
+                    print 'trouble with address {} ...'.format(address)
+                    print e
         
     def get_interface(self, c):
         interface = super(SerialServer, self).get_interface(c)

@@ -1,0 +1,12 @@
+{
+    "devices": {
+        "quadrant_coils": {
+            "device_type": "PSH6018",
+            "connection_type": "Serial",
+            "servername": "yesr10_serial",
+            "address": "/dev/ttyUSB0",
+            "current_range": [0, 10], 
+            "voltage_range": [0, 5]
+       }
+    }
+}
