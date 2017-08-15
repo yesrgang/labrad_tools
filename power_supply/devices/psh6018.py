@@ -4,7 +4,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from generic_power_supply import PowerSupply
 
 class PSH6018(PowerSupply):
-    timeout = 0.2
+    timeout = 0.5
 
     @inlineCallbacks
     def initialize(self):
@@ -23,8 +23,8 @@ class PSH6018(PowerSupply):
     def get_current(self):
         command = 'CHAN:MEAS:CURR?\r\n'
         yield self.connection.write(command)
-        ans = yield self.connection.read_lines()
-        current = float(ans[-1].strip())
+        ans = yield self.connection.read_line()
+        current = float(ans.strip())
         self.current = current
         returnValue(current)
     
@@ -32,8 +32,8 @@ class PSH6018(PowerSupply):
     def get_current_limit(self):
         command = 'CHAN:CURR?\r\n'
         yield self.connection.write(command)
-        ans = yield self.connection.read_lines()
-        current_limit = float(ans[-1].strip())
+        ans = yield self.connection.read_line()
+        current_limit = float(ans.strip())
         self.current_limit = current_limit
         returnValue(current_limit)
 
@@ -52,8 +52,8 @@ class PSH6018(PowerSupply):
     def get_voltage(self):
         command = 'CHAN:MEAS:VOLT?\r\n'
         yield self.connection.write(command)
-        ans = yield self.connection.read_lines()
-        voltage = float(ans[-1].strip())
+        ans = yield self.connection.read_line()
+        voltage = float(ans.strip())
         self.voltage = voltage
         returnValue(voltage)
     
@@ -61,8 +61,8 @@ class PSH6018(PowerSupply):
     def get_voltage_limit(self):
         command = 'CHAN:VOLT?\r\n'
         yield self.connection.write(command)
-        ans = yield self.connection.read_lines()
-        voltage_limit = float(ans[-1].strip())
+        ans = yield self.connection.read_line()
+        voltage_limit = float(ans.strip())
         self.voltage_limit = voltage_limit
         returnValue(voltage_limit)
 
@@ -81,8 +81,8 @@ class PSH6018(PowerSupply):
     def get_state(self):
         command = 'OUTP:STAT?\r\n'
         yield self.connection.write(command)
-        ans = yield self.connection.read_lines()
-        state = bool(int(ans[-1].strip()))
+        ans = yield self.connection.read_line()
+        state = bool(int(ans.strip()))
         self.state = state
         returnValue(state)
     
