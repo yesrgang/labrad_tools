@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = current_controller
+name = power_supply
 version = 1.0
 description = 
-instancename = current_controller
+instancename = power_supply
 
 [startup]
 cmdline = %PYTHON% %FILE%

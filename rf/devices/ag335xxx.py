@@ -32,7 +32,7 @@ class AG335xxx(RFWrapper):
 
     @inlineCallbacks
     def set_amplitude(self, amplitude):
-        command = 'SOUR{}:VOLT {}'.format(self.cource, amplitude)
+        command = 'SOUR{}:VOLT {} dBm'.format(self.source, amplitude)
         yield self.connection.write(command)
 
     @inlineCallbacks

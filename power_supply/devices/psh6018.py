@@ -89,10 +89,8 @@ class PSH6018(PowerSupply):
     @inlineCallbacks
     def set_state(self, state):
         if state:
-            command = 'CHAN:VOLT 1\r\n'
+            command = 'OUTP:STAT 1\r\n'
         else:
-            command = 'CHAN:VOLT 0\r\n'
+            command = 'OUTP:STAT 0\r\n'
         yield self.connection.write(command)
-        
-        yield self.get_current()
         yield self.get_state()

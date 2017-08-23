@@ -28,6 +28,7 @@
             "frequency_range": [250e3, 120e6],
             "amplitude_range": [-20, 20],
             "init_commands": [
+                "SOUR1:VOLT:UNIT dBm",
                 "SOUR1:FM:DEV 10e6",
                 "SOUR1:FM:SOUR EXT",
                 "INP:ATT ON",
