@@ -175,12 +175,12 @@ class MultipleRFControl(QtGui.QWidget):
         self.cxn = cxn
         self.connect()
  
-    @inlineCallbacks
+#    @inlineCallbacks
     def connect(self):
-        if self.cxn is None:
-            self.cxn = connection()
-            yield self.cxn.connect()
-        self.context = yield self.cxn.context()
+#        if self.cxn is None:
+#            self.cxn = connection()
+#            yield self.cxn.connect()
+#        self.context = yield self.cxn.context()
         self.populateGUI()
 
     def populateGUI(self):
