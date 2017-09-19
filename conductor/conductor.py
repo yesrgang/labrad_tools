@@ -141,21 +141,26 @@ class ConductorServer(LabradServer):
         if self.parameters[device_name].get(parameter_name):
             raise ParameterAlreadyRegistered(device_name, parameter_name)
         else:
-            Parameter = import_parameter(device_name, parameter_name, 
-                                         generic_parameter)
-            if not Parameter:
-                raise ParameterNotImported(device_name, parameter_name)
-            else:
-                if not parameter_config:
-                    parameter_config = self.default_parameters.get(device_name, {}).get(parameter_name, {})
-                parameter = Parameter(parameter_config)
-                parameter.device_name = device_name
-                parameter.name = parameter_name
-                if value_type is not None:
-                    parameter.value_type = value_type
-                self.parameters[device_name][parameter_name] = parameter
-                yield parameter.initialize()
-                yield self.update_parameter(parameter)
+            try:
+                Parameter = import_parameter(device_name, parameter_name, 
+                                             generic_parameter)
+                if not Parameter:
+                    raise ParameterNotImported(device_name, parameter_name)
+                else:
+                    if not parameter_config:
+                        parameter_config = self.default_parameters.get(
+                                            device_name, {}).get(parameter_name, {})
+                    parameter = Parameter(parameter_config)
+                    parameter.device_name = device_name
+                    parameter.name = parameter_name
+                    if value_type is not None:
+                        parameter.value_type = value_type
+                    self.parameters[device_name][parameter_name] = parameter
+                    yield parameter.initialize()
+                    yield self.update_parameter(parameter)
+            except Exception, e:
+                print e
+                print 'error registering parameter {} {}'.format(device_name, parameter_name)
 
     @setting(3, parameters='s', returns='b')
     def remove_parameters(self, c, parameters):
