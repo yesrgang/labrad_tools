@@ -461,7 +461,7 @@ class ConductorServer(LabradServer):
     def stopServer(self):
         yield self.backup_parameters()
 
-    @setting(17)
+    @setting(17, returns='b')
     def backup_parameters(self, c=None):
         parameters_filename = self.parameters_directory + 'current_parameters.json'
         if os.path.isfile(parameters_filename):
@@ -485,6 +485,8 @@ class ConductorServer(LabradServer):
                                   strftime(self.time_format))
         with open(parameters_filename, 'w') as outfile:
             json.dump(parameters, outfile)
+
+        return True
 
     @setting(15)
     def advance(self, c, delay=0):
