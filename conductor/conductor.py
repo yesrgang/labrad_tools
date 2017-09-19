@@ -268,6 +268,7 @@ class ConductorServer(LabradServer):
     @inlineCallbacks
     def get_parameter_value(self, device_name, parameter_name, use_registry=False):
         message = None
+        value = 0
         try:
             try: 
                 parameter = self.parameters[device_name][parameter_name]
@@ -453,12 +454,17 @@ class ConductorServer(LabradServer):
 
     @inlineCallbacks
     def stopServer(self):
+        yield self.backup_parameters()
+
+    @setting(17)
+    def backup_parameters(self, c=None):
         parameters_filename = self.parameters_directory + 'current_parameters.json'
         if os.path.isfile(parameters_filename):
             with open(parameters_filename, 'r') as infile:
                 old_parameters = json.load(infile)
         else:
             old_parameters = {}
+
         parameters = deepcopy(old_parameters)
         for device_name, device_parameters in self.parameters.items():
             if not parameters.get(device_name):
@@ -475,19 +481,6 @@ class ConductorServer(LabradServer):
         with open(parameters_filename, 'w') as outfile:
             json.dump(parameters, outfile)
 
-#        for device_name, device_parameters in self.parameters.items():
-#            yield self.client.registry.cd(self.registry_directory)
-#            devices = yield self.client.registry.dir()
-#            if device_name not in devices:
-#                yield self.client.registry.mkdir(device_name)
-#            yield self.client.registry.cd(device_name)
-#            for parameter_name, parameter in device_parameters.items():
-#                value = parameter.value
-#                try:
-#                    yield self.client.registry.set(parameter_name, value)
-#                except:
-#                    pass
-#
     @setting(15)
     def advance(self, c, delay=0):
         if delay:
