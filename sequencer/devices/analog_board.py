@@ -106,7 +106,9 @@ class AnalogBoard(DeviceWrapper):
 
         for c in self.channels:
             c.board = self
-
+#        if self.name == 'G':
+#            self.clk = 10e6 / (8.*2. + 2.)
+#            self.bitfile = 'analog_sequencer.bit'
         super(AnalogBoard, self).__init__({})
 
     @inlineCallbacks

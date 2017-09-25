@@ -1,5 +1,8 @@
 import numpy as np
 
+#DT_TICK = 1e-6 #old, random value, for reference
+DT_TICK = 2 * 18. / 48e6 # time for one clock tick
+
 def H(x):
     """
     step function
@@ -11,14 +14,6 @@ def G(t1, t2):
     pulse
     """
     return lambda t: H(t2-t) - H(t1-t) 
-
-def round_dt(dt):
-    return float('{0:.7f}'.format(dt))
-#    return dt
-
-def round_dv(dv):
-    return float('{0:.7f}'.format(dv))
-#    return dv
 
 def lin_ramp(p):
     """
@@ -61,7 +56,16 @@ class SRamp(object):
         to list of linear ramps [{dt, dv}]
         """
         p = self.p
-        return [{'dt': 1e-6, 'dv': p['vf'] - p['_vi']}, {'dt': p['dt']-1e-6, 'dv': 0}]
+        return [
+                {
+                    'dt': DT_TICK, 
+                    'dv': p['vf'] - p['_vi']
+                }, 
+                {
+                    'dt': p['dt'] - DT_TICK, 
+                    'dv': 0
+                }
+            ]
 
 class LinRamp(object):
     required_parameters = [
@@ -78,7 +82,12 @@ class LinRamp(object):
         to list of linear ramps [{dt, dv}]
         """
         p = self.p
-        return [{'dt': p['dt'], 'dv': p['vf']-p['_vi']}]
+        return [
+                {
+                    'dt': p['dt'], 
+                    'dv': p['vf'] - p['_vi']
+                }
+            ]
 
 class SLinRamp(object):
     required_parameters = [
@@ -97,7 +106,16 @@ class SLinRamp(object):
         to list of linear ramps [{dt, dv}]
         """
         p = self.p
-        return [{'dt': 1e-6, 'dv': p['vi'] - p['_vi']}, {'dt': p['dt']-1e-6, 'dv': p['vf']-p['vi']}]
+        return ([
+                {
+                    'dt': DT_TICK, 
+                    'dv': p['vi'] - p['_vi']
+                }, 
+                {
+                    'dt': p['dt'] - DT_TICK, 
+                    'dv': p['vf'] - p['vi']
+                }
+            ])
 
 class ExpRamp(object):
     required_parameters = [
@@ -117,7 +135,7 @@ class ExpRamp(object):
         """
         p = self.p
         seq = exp_ramp(p, ret_seq=True)
-        return [{'dt': round_dt(s['tf']-s['ti']), 'dv': round_dv(s['vf']-s['vi'])} for s in seq]
+        return [{'dt': s['tf'] - s['ti'], 'dv': s['vf'] - s['vi']} for s in seq]
 
 class SExpRamp(object):
     required_parameters = [
@@ -138,7 +156,27 @@ class SExpRamp(object):
         """
         p = self.p
         seq = exp_ramp(p, ret_seq=True)
-        return [{'dt': 1e-6, 'dv': p['vi']-p['_vi']}] + [{'dt': s['tf']-s['ti'], 'dv': s['vf']-s['vi']} for s in seq]
+        DT_TICK = 18 / 48e6
+        return ([
+                {
+                    'dt': DT_TICK, 
+                    'dv': p['vi'] - p['_vi'],
+                }
+           ] 
+           + [
+                {
+                    'dt': s['tf'] - s['ti'] - DT_TICK, 
+                    'dv': s['vf'] - s['vi'],
+                } 
+                for s in seq[:1]
+           ]
+           + [
+                {
+                    'dt': s['tf'] - s['ti'], 
+                    'dv': s['vf'] - s['vi'],
+                } 
+                for s in seq[1:]
+           ])
 
 class RampMaker(object):
     available_ramps = {
@@ -190,15 +228,15 @@ class RampMaker(object):
         lins = np.concatenate([self.available_ramps[s['type']](s).to_lin() for s in self.sequence]).tolist()
         return lins #combine_flat_ramps([], lins)
 
-def combine_flat_ramps(l, s):
-    if not l:
-        l = [s.pop(0)]
-    if s:
-        nxt = s.pop(0)
-        if nxt['dv'] == 0 and l[-1]['dv'] == 0:
-            l[-1]['dt'] += nxt['dt']
-            return combine_flat_ramps(l, s)
-        else:
-            return l + combine_flat_ramps([nxt], s)
-    else:
-        return l
+#def combine_flat_ramps(l, s):
+#    if not l:
+#        l = [s.pop(0)]
+#    if s:
+#        nxt = s.pop(0)
+#        if nxt['dv'] == 0 and l[-1]['dv'] == 0:
+#            l[-1]['dt'] += nxt['dt']
+#            return combine_flat_ramps(l, s)
+#        else:
+#            return l + combine_flat_ramps([nxt], s)
+#    else:
+#        return l
