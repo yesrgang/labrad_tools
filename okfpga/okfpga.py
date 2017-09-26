@@ -39,17 +39,21 @@ class OKFPGAServer(HardwareInterfaceServer):
             try: 
                 device.GetDeviceID()
             except:
+                print 'removing interface {}'.format(device_id)
                 del self.interfaces[device_id]
-
-        fp = ok.FrontPanel()
+        
+        open_serials = [interface.GetSerialNumber() for interface in self.interfaces.values()]
+        fp = ok.okCFrontPanel()
         device_count = fp.GetDeviceCount()
         for i in range(device_count):
             serial = fp.GetDeviceListSerial(i)
-            tmp = ok.FrontPanel()
-            tmp.OpenBySerial(serial)
-            device_id = tmp.GetDeviceID()
-            tmp.LoadDefaultPLLConfiguration()
-            self.interfaces[device_id] = tmp
+            if serial not in open_serials:
+                print serial
+                tmp = ok.okCFrontPanel()
+                tmp.OpenBySerial(serial)
+                device_id = tmp.GetDeviceID()
+                tmp.LoadDefaultPLLConfiguration()
+                self.interfaces[device_id] = tmp
 
     @setting(3, filename='s')
     def program_bitfile(self, c, filename):
