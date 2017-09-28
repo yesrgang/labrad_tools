@@ -1,16 +1,14 @@
 import json
 import numpy as np
-import sys
 
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
 from twisted.internet.defer import inlineCallbacks
 
-sys.path.append('../../client_tools')
-from connection import connection
-from widgets import SuperSpinBox
+from client_tools.connection import connection
+from client_tools.widgets import SuperSpinBox
 
-class RFControl(QtGui.QGroupBox):
+class RFClient(QtGui.QGroupBox):
     def __init__(self, config, reactor, cxn=None):
         QtGui.QDialog.__init__(self)
         self.reactor = reactor
@@ -167,7 +165,7 @@ class RFControl(QtGui.QGroupBox):
     def closeEvent(self, x):
         self.reactor.stop()
 
-class MultipleRFControl(QtGui.QWidget):
+class MultipleRFClient(QtGui.QWidget):
     def __init__(self, config_list, reactor, cxn=None):
         QtGui.QDialog.__init__(self)
         self.config_list = config_list
@@ -175,18 +173,13 @@ class MultipleRFControl(QtGui.QWidget):
         self.cxn = cxn
         self.connect()
  
-#    @inlineCallbacks
     def connect(self):
-#        if self.cxn is None:
-#            self.cxn = connection()
-#            yield self.cxn.connect()
-#        self.context = yield self.cxn.context()
         self.populateGUI()
 
     def populateGUI(self):
         self.layout = QtGui.QHBoxLayout()
         for config in self.config_list:
-            widget = RFControl(config, self.reactor)
+            widget = RFClient(config, self.reactor)
             self.layout.addWidget(widget)
         self.setFixedSize(650, 120)
         self.setLayout(self.layout)

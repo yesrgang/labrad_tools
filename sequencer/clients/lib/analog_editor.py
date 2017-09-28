@@ -9,12 +9,10 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
-sys.path.append('../../../client_tools')
-from connection import connection
-from widgets import SuperSpinBox
-from helpers import merge_dicts, get_sequence_parameters, substitute_sequence_parameters
-sys.path.append('../')
-from devices.lib.analog_ramps import RampMaker
+from client_tools.connection import connection
+from client_tools.widgets import SuperSpinBox
+from sequencer.clients.lib.helpers import merge_dicts, get_sequence_parameters, substitute_sequence_parameters
+from sequencer.devices.lib.analog_ramps import RampMaker
 
 class ParameterWidget(QtGui.QWidget):
     def __init__(self, ramp_type, ramp):

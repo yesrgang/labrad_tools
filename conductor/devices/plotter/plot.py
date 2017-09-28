@@ -12,7 +12,7 @@ class Plot(ConductorParameter):
 
     @inlineCallbacks
     def initialize(self):
-        self.cxn = yield connectAsync()
+        self.cxn = yield connectAsync(name=self.name)
     
     @inlineCallbacks
     def update(self):

@@ -13,7 +13,7 @@ class PicomotorPosition(ConductorParameter):
 
     @inlineCallbacks
     def initialize(self):
-        self.cxn = yield connectAsync()
+        self.cxn = yield connectAsync(name=self.name)
         yield self.cxn.yesr11_colorado_edu_socket.connect(self.address)
     
     @inlineCallbacks

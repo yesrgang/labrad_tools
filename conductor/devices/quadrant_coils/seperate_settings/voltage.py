@@ -10,7 +10,7 @@ class Voltage(ConductorParameter):
 
     @inlineCallbacks
     def initialize(self):
-        self.cxn = yield connectAsync()
+        self.cxn = yield connectAsync(name=self.name)
         yield self.cxn.power_supply.select_device('quadrant_coils')
     
     @inlineCallbacks
