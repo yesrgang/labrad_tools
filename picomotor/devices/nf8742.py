@@ -12,7 +12,6 @@ class NF8742(DeviceWrapper):
     @inlineCallbacks
     def get_position(self):
         command = '{}PA?\n'.format(self.axis)
-        yield self.connection.send(command)
-        ans = yield self.connection.recv(BUFFER_SIZE)
-        returnValue(int(ans))
+        response = yield self.connection.query(command, BUFFER_SIZE)
+        returnValue(int(response.strip().replace(' ', '')))
 
