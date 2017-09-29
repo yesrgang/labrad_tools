@@ -45,3 +45,14 @@ class DG1000Z(RFWrapper):
         command = 'SOUR{}:VOLT?'.format(self.source)
         ans = yield self.connection.query(command)
         returnValue(float(ans))
+        
+    @inlineCallbacks
+    def set_offset(self, offset):
+        command = 'SOUR{}:VOLT:OFFS {}'.format(self.source, offset)
+        yield self.connection.write(command)
+
+    @inlineCallbacks
+    def get_offset(self):
+        command = 'SOUR{}:VOLT:OFFS?'.format(self.source)
+        ans = yield self.connection.query(command)
+        returnValue(float(ans))

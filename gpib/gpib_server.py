@@ -16,6 +16,7 @@ timeout = 20
 ### END NODE INFO
 """
 import sys
+import os
 
 import visa
 
@@ -31,15 +32,20 @@ class GPIBServer(HardwareInterfaceServer):
 
     def refresh_available_interfaces(self):
         """ fill self.interfaces with available connections """
-        rm = visa.ResourceManager()
+        if os.name =='posix':
+            rm = visa.ResourceManager('@py')
+        else:
+            rm = visa.ResourceManager()
         addresses = rm.list_resources()
         additions = set(addresses) - set(self.interfaces.keys())
         deletions = set(self.interfaces.keys()) - set(addresses)
         for address in additions:
             if address.startswith('GPIB'):
                 inst = rm.get_instrument(address)
-                inst.write_termination = ''
-                inst.clear()
+#                inst.write_termination = ''
+#                if float(visa.__version__) < 1.8:
+#                    pass    
+#                    inst.clear()
                 self.interfaces[address] = inst
                 print 'connected to GPIB device ' + address
         for addr in deletions:

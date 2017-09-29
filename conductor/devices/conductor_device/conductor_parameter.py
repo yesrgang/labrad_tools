@@ -68,6 +68,11 @@ class ConductorParameter(object):
     def stop(self):
         """ close connections if you must """
         yield None
+        if hasattr(self, 'cxn'):
+            try:
+                self.cxn.close()
+            except:
+                print 'failed to close {}.cxn'.format(self.name)
 
     @property
     def value(self):

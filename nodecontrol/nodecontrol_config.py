@@ -13,6 +13,7 @@ node_dict = {
         'current_controller',
         'ecdl',
         'spectrum_analyzer',
+        'power_supply',
 #        'msquared_comb_lock',
         'sequencer',
         'conductor',

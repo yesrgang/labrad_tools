@@ -27,7 +27,7 @@ from labrad.server import LabradServer
 from labrad.server import setting
 from labrad.server import Signal
 from labrad.wrappers import connectAsync
-from twisted.internet.reactor import callLater
+from twisted.internet.reactor import callLater, callInThread
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import returnValue
 from twisted.internet.threads import deferToThread
@@ -141,19 +141,26 @@ class ConductorServer(LabradServer):
         if self.parameters[device_name].get(parameter_name):
             raise ParameterAlreadyRegistered(device_name, parameter_name)
         else:
-            Parameter = import_parameter(device_name, parameter_name, 
-                                         generic_parameter)
-            if not Parameter:
-                raise ParameterNotImported(device_name, parameter_name)
-            else:
-                parameter = Parameter(parameter_config)
-                parameter.device_name = device_name
-                parameter.name = parameter_name
-                if value_type is not None:
-                    parameter.value_type = value_type
-                self.parameters[device_name][parameter_name] = parameter
-                yield parameter.initialize()
-                yield self.update_parameter(parameter)
+            try:
+                Parameter = import_parameter(device_name, parameter_name, 
+                                             generic_parameter)
+                if not Parameter:
+                    raise ParameterNotImported(device_name, parameter_name)
+                else:
+                    if not parameter_config:
+                        parameter_config = self.default_parameters.get(
+                                            device_name, {}).get(parameter_name, {})
+                    parameter = Parameter(parameter_config)
+                    parameter.device_name = device_name
+                    parameter.name = parameter_name
+                    if value_type is not None:
+                        parameter.value_type = value_type
+                    self.parameters[device_name][parameter_name] = parameter
+                    yield parameter.initialize()
+                    yield self.update_parameter(parameter)
+            except Exception, e:
+                print e
+                print 'error registering parameter {} {}'.format(device_name, parameter_name)
 
     @setting(3, parameters='s', returns='b')
     def remove_parameters(self, c, parameters):
@@ -266,6 +273,7 @@ class ConductorServer(LabradServer):
     @inlineCallbacks
     def get_parameter_value(self, device_name, parameter_name, use_registry=False):
         message = None
+        value = 0
         try:
             try: 
                 parameter = self.parameters[device_name][parameter_name]
@@ -408,7 +416,11 @@ class ConductorServer(LabradServer):
         # call parameter updates in order of priority. 
         # 1 is called last. 0 is never called.
         for parameter in sorted(priority_parameters, key=lambda x: x.priority)[::-1]:
+            if self.do_print_delay:
+                ti = time()
             yield self.update_parameter(parameter)
+            if self.do_print_delay:
+                print '{} delay: {}'.format(parameter.name, time() - ti)
 
         # signal update
         yield self.parameters_updated(True)
@@ -425,38 +437,43 @@ class ConductorServer(LabradServer):
                     parameter.device_name, parameter.name)
             yield self.remove_parameter(parameter.device_name, parameter.name)
     
-    def save_parameters(self):
+    def save_data(self, data, data_path):
         # save data to disk
-        if self.data:
-            data_length = max([len(p) for dp in self.data.values()
+        if data:
+            data_length = max([len(p) for dp in data.values()
                                       for p in dp.values()])
         else:
             data_length = 0
         
         for device_name, device_parameters in self.parameters.items():
-            if not self.data.get(device_name):
-                self.data[device_name] = {}
+            if not data.get(device_name):
+                data[device_name] = {}
             for parameter_name, parameter in device_parameters.items():
-                if not self.data[device_name].get(parameter_name):
-                    self.data[device_name][parameter_name] = []
-                parameter_data = self.data[device_name][parameter_name] 
+                if not data[device_name].get(parameter_name):
+                    data[device_name][parameter_name] = []
+                parameter_data = data[device_name][parameter_name] 
                 while len(parameter_data) < data_length:
                     parameter_data.append(None)
                 new_value = parameter.value
                 parameter_data.append(new_value)
         
-        if self.data_path:
-            with open(self.data_path, 'w+') as outfile:
-                json.dump(self.data, outfile, default=lambda x: None)
+        if data_path:
+            with open(data_path, 'w+') as outfile:
+                json.dump(data, outfile, default=lambda x: None)
 
     @inlineCallbacks
     def stopServer(self):
+        yield self.backup_parameters(None)
+
+    @setting(17, returns='b')
+    def backup_parameters(self, c):
         parameters_filename = self.parameters_directory + 'current_parameters.json'
         if os.path.isfile(parameters_filename):
             with open(parameters_filename, 'r') as infile:
                 old_parameters = json.load(infile)
         else:
             old_parameters = {}
+
         parameters = deepcopy(old_parameters)
         for device_name, device_parameters in self.parameters.items():
             if not parameters.get(device_name):
@@ -472,31 +489,21 @@ class ConductorServer(LabradServer):
                                   strftime(self.time_format))
         with open(parameters_filename, 'w') as outfile:
             json.dump(parameters, outfile)
+        print 'parameters backed up'
 
-#        for device_name, device_parameters in self.parameters.items():
-#            yield self.client.registry.cd(self.registry_directory)
-#            devices = yield self.client.registry.dir()
-#            if device_name not in devices:
-#                yield self.client.registry.mkdir(device_name)
-#            yield self.client.registry.cd(device_name)
-#            for parameter_name, parameter in device_parameters.items():
-#                value = parameter.value
-#                try:
-#                    yield self.client.registry.set(parameter_name, value)
-#                except:
-#                    pass
-#
+        return True
+
     @setting(15)
     def advance(self, c, delay=0):
         if delay:
             callLater(delay, self.advance, c)
         else:
+            callInThread(self.save_data, self.data, self.data_path) # maybe better to have callInThread f, not class method, make sure nothing strange happens
             ti = time()
-            yield deferToThread(self.save_parameters)
             yield self.advance_parameters()
             tf = time()
             if self.do_print_delay:
-                print 'delay', tf-ti
+                print 'total delay: ', tf-ti
 
     @setting(16, do_print_delay='b', returns='b')
     def print_delay(self, c, do_print_delay=None):

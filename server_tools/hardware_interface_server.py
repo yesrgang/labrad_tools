@@ -1,5 +1,11 @@
 from labrad.server import LabradServer, setting
 
+class InterfaceNotSelected(Exception):
+    """ context has no selected interface for this server instance 
+    
+    If you have previously selected an interface, this server may have been 
+    restarted and you must call "select_interface" again.
+    """
 
 class HardwareInterfaceServer(LabradServer):
     """ Template for hardware interface server """
@@ -26,7 +32,7 @@ class HardwareInterfaceServer(LabradServer):
 
     def get_interface(self, c):
         if 'address' not in c:
-            raise Exception('no interface selected')
+            raise InterfaceNotSelected
         if c['address'] not in self.interfaces.keys():
             self.refresh_available_interfaces()
             if c['address'] not in self.interfaces.keys():

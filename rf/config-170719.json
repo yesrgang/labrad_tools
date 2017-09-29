@@ -28,7 +28,6 @@
             "frequency_range": [250e3, 120e6],
             "amplitude_range": [-20, 20],
             "init_commands": [
-                "SOUR1:VOLT:UNIT dBm",
                 "SOUR1:FM:DEV 10e6",
                 "SOUR1:FM:SOUR EXT",
                 "INP:ATT ON",
@@ -61,7 +60,7 @@
         },
         "clock_detune": {
             "device_type": "DG1000Z",
-            "connection_type": "VXI",
+            "connection_type": "VXIPub",
             "servername": "yesr11_vxi11",
             "address": "192.168.1.9",
             "source": 1,
@@ -73,9 +72,9 @@
         },
         "clock_steer": {
             "device_type": "AG335xxx",
-            "connection_type": "VXI",
-            "servername": "yesr11_vxi11",
-            "address": "192.168.1.18",
+            "connection_type": "GPIB",
+            "servername": "yesr20_gpib",
+            "address": "GPIB0::25::INSTR",
             "source": 2,
             "state": true,
             "frequency": 27.33e6,
@@ -93,9 +92,9 @@
         },
         "clock_dedrift": {
             "device_type": "AG335xxxRamp",
-            "connection_type": "VXI",
-            "servername": "yesr11_vxi11",
-            "address": "192.168.1.18",
+            "connection_type": "GPIB",
+            "servername": "yesr20_gpib",
+            "address": "GPIB0::25::INSTR",
             "source": 1,
             "state": true,
             "frequency": 29.00e6,
@@ -103,8 +102,8 @@
             "amplitude_units": "V",
             "frequency_range": [20e3, 30e6],
             "amplitude_range": [0, 0.5],
-            "counter_server": "yesr11_vxi11",
-            "counter_address": "192.168.1.13",
+            "counter_server": "yesr20_gpib",
+            "counter_address": "GPIB0::23::INSTR",
             "counter_source": 1,
             "t_ramp": 8000,
             "init_commands": [
@@ -150,6 +149,21 @@
                 "OUTP2:STAT 1"
             ]
         },        
+        "comb_offset": {
+            "device_type": "MFG2160",
+            "connection_type": "Serial",
+            "servername": "yesr5_serial",
+            "address": "COM14",
+            "state": true,
+            "frequency": 75.0e6,
+            "amplitude":3.0,
+            "frequency_range":[10e6, 300e6],
+            "amplitude_range":[0, 1],
+            "init_commands":[
+                "SOUR3RF:AMP MAX",
+                "SOUR3RF:FREQ 70.0e6"
+            ]
+        },
         "813_x_aom": {
             "device_type": "AD9854",
             "connection_type": "Serial",

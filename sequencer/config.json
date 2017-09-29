@@ -568,7 +568,7 @@
             ]
         },
         "G": {
-            "device_type": "AnalogBoard",
+            "device_type": "AnalogBoardTest",
             "connection_type": "OKFPGA",
             "servername": "yesr10_okfpga",
             "address": "srq analog 3",
@@ -606,7 +606,7 @@
                 },
                 {   "loc": 5, 
                     "name": "DACG05", 
-                    "mode": "manual", 
+                    "mode": "auto", 
                     "manual_output": 0.0
                 },
                 {

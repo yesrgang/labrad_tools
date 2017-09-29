@@ -1,4 +1,4 @@
-class ControlConfig(object):
+class ClientConfig(object):
     def __init__(self, name):
         self.name = name
         self.servername = 'rf'
@@ -13,18 +13,16 @@ class ControlConfig(object):
         # widget sizes
         self.spinbox_width = 100
 
-
 if __name__ == '__main__':
-    import sys
-    sys.path.append('../../client_tools')
     from PyQt4 import QtGui
     a = QtGui.QApplication([])
-    import qt4reactor 
+    import client_tools.qt4reactor as qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-    from rf_control import MultipleRFControl
-    channels = ['hodt_aom', 'vodt_aom', 'dimple_aom']
-    configs = [ControlConfig(channel) for channel in channels]
-    widget = MultipleRFControl(configs, reactor)
+    
+    from rf.clients.rf_client import MultipleRFClient
+    channels = ['813_x_aom', '813_y_aom', '813_z_aom']
+    configs = [ClientConfig(channel) for channel in channels]
+    widget = MultipleRFClient(configs, reactor)
     widget.show()
     reactor.run()

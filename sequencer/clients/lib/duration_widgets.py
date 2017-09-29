@@ -2,8 +2,7 @@ import sys
 
 from PyQt4 import QtGui
 
-sys.path.append('../../../client_tools')
-from widgets import SuperSpinBox
+from client_tools.widgets import SuperSpinBox
 
 class DurationRow(QtGui.QWidget):
     """ row of boxes for sequence timing """

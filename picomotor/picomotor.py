@@ -34,7 +34,7 @@ class PicomotorServer(DeviceServer):
     """
     update = Signal(UPDATE_ID, 'signal: update', 's')
     name = 'picomotor'
-
+    
     @setting(11, position='i', returns='i')
     def position(self, c, position=None):
         """ get or set position """

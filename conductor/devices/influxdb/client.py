@@ -15,9 +15,10 @@ def to_float(x):
 
 class Client(ConductorParameter):
     priority = 1
+
     @inlineCallbacks
     def initialize(self):
-        self.cxn = yield connectAsync()
+        self.cxn = yield connectAsync(name=self.name)
         self.counter = 0
         self.dbclient = InfluxDBClient.from_DSN(os.getenv('INFLUXDBDSN'))
     
