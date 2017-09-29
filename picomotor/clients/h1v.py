@@ -1,7 +1,7 @@
-class ControlConfig(object):
+class ClientConfig(object):
     def __init__(self):
         self.servername = 'picomotor'
-        self.name = 'h2h'
+        self.name = 'h1v'
         self.update_id = 461015
 
         self.position_range = [-1e5, 1e5]
@@ -19,6 +19,6 @@ if __name__ == '__main__':
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-    widget = PicoMotorControl('h2h_control', reactor)
+    widget = PicoMotorControl(ClientConfig(), reactor)
     widget.show()
     reactor.run()
