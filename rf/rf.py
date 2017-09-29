@@ -45,6 +45,11 @@ class RFServer(DeviceServer):
     @quickSetting(13, 'v')
     def ramprate(self, c, ramprate=None):
         """ get or change ramprate """
+    
+    @quickSetting(14, 'v')
+    def offset(self, c, offset=None):
+        """ get or change offset """
+
 
 if __name__ == "__main__":
     from labrad import util

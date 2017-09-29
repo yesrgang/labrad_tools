@@ -441,7 +441,7 @@ class SequencerControl(QtGui.QWidget):
 
 if __name__ == '__main__':
     a = QtGui.QApplication([])
-    import qt4reactor 
+    import client_tools.qt4reactor as qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     widget = SequencerControl(reactor)
