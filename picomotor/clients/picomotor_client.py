@@ -7,17 +7,15 @@ from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
 from twisted.internet.defer import inlineCallbacks
 
-sys.path.append('../../client_tools')
-from connection import connection
-from widgets import IntSpinBox
+from client_tools.connection import connection
+from client_tools.widgets import IntSpinBox
 
-class PicoMotorControl(QtGui.QGroupBox):
+class PicomotorClient(QtGui.QGroupBox):
     def __init__(self, config, reactor, cxn=None):
         self.load_config(config)
         QtGui.QDialog.__init__(self)
         self.reactor = reactor
         self.cxn = cxn 
-        sleep(1)
         self.connect()
 
     def load_config(self, config=None):
@@ -57,11 +55,12 @@ class PicoMotorControl(QtGui.QGroupBox):
         self.layout.setContentsMargins(0, 0, 0, 0)
         
         label = QtGui.QLabel('{}: '.format(self.name))
-        label.setFixedWidth(30)
-        self.layout.addWidget(label, 0, 0)
+        label.setFixedWidth(50)
+
+        self.layout.addWidget(label, 0, 0, 1, 1, QtCore.Qt.AlignRight)
         self.layout.addWidget(self.position_box, 0, 1)
         
-        self.setWindowTitle(self.name + '_control')
+        self.setWindowTitle(self.name + '_client')
         self.setLayout(self.layout)
         self.setFixedSize(80 + self.spinbox_width, 40)
 
@@ -115,28 +114,25 @@ class PicoMotorControl(QtGui.QGroupBox):
     def closeEvent(self, x):
         self.reactor.stop()
 
-class MultiplePicoMotorControl(QtGui.QWidget):
+class MultiplePicomotorClient(QtGui.QWidget):
     def __init__(self, config_list, reactor, cxn=None):
         QtGui.QDialog.__init__(self)
         self.config_list = config_list
         self.reactor = reactor
-        self.cxn = cxn
-        self.connect()
- 
-    @inlineCallbacks
-    def connect(self):
-        if self.cxn is None:
-            self.cxn = connection()
-            yield self.cxn.connect()
-        self.context = yield self.cxn.context()
         self.populateGUI()
-
+        self.cxn = cxn
+ 
     def populateGUI(self):
-        self.layout = QtGui.QVBoxLayout()
-        for config in self.config_list:
-            widget = PicoMotorControl(config, self.reactor)
-            self.layout.addWidget(widget)
-        self.setFixedSize(80 + self.spinbox_width, 40*len(self.config_list))
+        self.layout = QtGui.QHBoxLayout()
+        for mirror_config in self.config_list:
+            column = QtGui.QWidget()
+            internal_layout = QtGui.QVBoxLayout()
+            for axis_config in mirror_config:
+                widget = PicomotorClient(axis_config, self.reactor)
+                internal_layout.addWidget(widget)
+            column.setLayout(internal_layout)
+            self.layout.addWidget(column)
+#        self.setFixedSize(80 + widget.spinbox_width, 40*len(self.config_list))
         self.setLayout(self.layout)
 
     def closeEvent(self, x):
