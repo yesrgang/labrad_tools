@@ -1,33 +1,65 @@
 {   
     "devices": {
-        "h2h": {
+        "h2x": {
             "device_type": "NF8742",
-            "connection_type": "Socket",
+            "connection_type": "Socket2",
             "servername": "192.168.1.12",
             "address": "23",
             "axis": 1,
             "update_parameters": ["position"]
         },
-        "h2v": {
+        "h2y": {
             "device_type": "NF8742",
-            "connection_type": "Socket",
+            "connection_type": "Socket2",
             "servername": "192.168.1.12",
             "address": "23",
             "axis": 2,
             "update_parameters": ["position"]
         },
-        "h1h": {
+        "h1x": {
             "device_type": "NF8742",
-            "connection_type": "Socket",
+            "connection_type": "Socket2",
             "servername": "192.168.1.12",
             "address": "23",
             "axis": 3,
             "update_parameters": ["position"]
         },
-        "h1v": {
+        "h1y": {
             "device_type": "NF8742",
-            "connection_type": "Socket",
+            "connection_type": "Socket2",
             "servername": "192.168.1.12",
+            "address": "23",
+            "axis": 4,
+            "update_parameters": ["position"]
+        },
+        "h1x_r": {
+            "device_type": "NF8742",
+            "connection_type": "Socket2",
+            "servername": "192.168.1.20",
+            "address": "23",
+            "axis": 1,
+            "update_parameters": ["position"]
+        },
+        "h1y_r": {
+            "device_type": "NF8742",
+            "connection_type": "Socket2",
+            "servername": "192.168.1.20",
+            "address": "23",
+            "axis": 2,
+            "update_parameters": ["position"]
+        },
+        "h2x_r": {
+            "device_type": "NF8742",
+            "connection_type": "Socket2",
+            "servername": "192.168.1.20",
+            "address": "23",
+            "axis": 3,
+            "update_parameters": ["position"]
+        },
+        "h2y_r": {
+            "device_type": "NF8742",
+            "connection_type": "Socket2",
+            "servername": "192.168.1.20",
             "address": "23",
             "axis": 4,
             "update_parameters": ["position"]

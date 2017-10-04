@@ -4,6 +4,8 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 BUFFER_SIZE = 1024
 
 class NF8742(DeviceWrapper):
+    timeout = 0.1
+
     @inlineCallbacks
     def set_position(self, position):
         command = '{}PA{}\n'.format(self.axis, position)
