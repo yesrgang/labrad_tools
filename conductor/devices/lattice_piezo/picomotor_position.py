@@ -7,20 +7,15 @@ from conductor_device.conductor_parameter import ConductorParameter
 
 class PicomotorPosition(ConductorParameter):
     priority = 2
-    address = None
-    axis = None
     previous_value = None
 
     @inlineCallbacks
     def initialize(self):
         self.cxn = yield connectAsync(name=self.name)
-        yield self.cxn.yesr11_socket.connect(self.address)
+        yield self.cxn.picomotor.select_device(self.name)
     
     @inlineCallbacks
     def update(self):
         if self.value != self.previous_value:
-            yield self.cxn.yesr11_socket.connect(self.address)
-            command = '{}PA{}\n'.format(self.axis, self.value)
-            yield self.cxn.yesr11_socket.send(command)
-            yield self.cxn.yesr11_socket.close()
+            yield self.cxn.picomotor.position(self.value)
             self.previous_value = self.value
