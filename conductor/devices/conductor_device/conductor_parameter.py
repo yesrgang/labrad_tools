@@ -1,4 +1,5 @@
 from twisted.internet.defer import inlineCallbacks
+from labrad.wrappers import connectAsync
 
 class ConductorParameter(object):
     """ Base class/template for conductor parameters
@@ -55,6 +56,12 @@ class ConductorParameter(object):
         use to initialize labrad connection and configure device.
         """
         yield None
+
+    @inlineCallbacks
+    def connect(self):
+        connection_name = 'conductor - {} - {}'.format(self.device_name, 
+                self.name)
+        self.cxn = yield connectAsync(name=connection_name)
     
     @inlineCallbacks
     def update(self):

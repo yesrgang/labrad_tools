@@ -8,7 +8,7 @@ class Frequency(ConductorParameter):
 
     @inlineCallbacks
     def initialize(self):
-        self.cxn = yield connectAsync(name=self.name)
+        yield self.connect()
         yield self.cxn.rf.select_device('clock_steer')
     
     @inlineCallbacks

@@ -18,7 +18,7 @@ class DitherLock(ConductorParameter):
 
     @inlineCallbacks
     def initialize(self):
-        self.cxn = yield connectAsync(name=self.name)
+        yield self.connect()
 
     @inlineCallbacks
     def update(self):

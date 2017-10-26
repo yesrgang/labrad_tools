@@ -11,7 +11,7 @@ class Position(ConductorParameter):
 
     @inlineCallbacks
     def initialize(self):
-        self.cxn = yield connectAsync(name=self.name)
+        yield self.connect()
         yield self.cxn.stepper_motor.select_device('nd_filter')
     
     @inlineCallbacks

@@ -3,12 +3,12 @@ import os
 from twisted.internet.defer import inlineCallbacks, returnValue
 from labrad.wrappers import connectAsync
 
-LABRADHOST = os.getenv('LABRADHOST')
+from server_tools.connections.connection import Connection
 
-class SerialConnection(object):
+class SerialConnection(Connection):
     @inlineCallbacks
     def initialize(self, device):
-        self.connection = yield connectAsync(LABRADHOST)
+        yield self.connect(device)
         self.server = yield self.connection[device.servername]
         yield self.server.select_interface(device.address)
         

@@ -85,8 +85,9 @@ class DeviceServer(LabradServer):
     def initialize_device(self, name, config):
         device_wrapper = get_device_wrapper(config)
         device_wrapper.name = name
+        device_wrapper.server_name = self.name
         device = device_wrapper(config)
-        if hasattr(self, 'connection_name'):
+        if hasattr(device, 'connection_name'):
             if device.connection_name not in self.open_connections:
                 yield self.init_connection(device)
             device.connection = self.open_connections[device.connection_name]

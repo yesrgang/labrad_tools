@@ -18,7 +18,7 @@ class Client(ConductorParameter):
 
     @inlineCallbacks
     def initialize(self):
-        self.cxn = yield connectAsync(name=self.name)
+        yield self.connect()
         self.counter = 0
         self.dbclient = InfluxDBClient.from_DSN(os.getenv('INFLUXDBDSN'))
     

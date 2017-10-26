@@ -8,7 +8,8 @@ class Recorder(ConductorParameter):
 
     @inlineCallbacks
     def initialize(self):
-        self.cxn = yield connectAsync(name=self.name)
+#        self.cxn = yield connectAsync(name=self.name)
+        yield self.connect()
         yield self.cxn.yesr10_andor.select_device('ikon')
     
     @inlineCallbacks

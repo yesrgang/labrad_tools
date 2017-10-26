@@ -11,7 +11,7 @@ class PicomotorPosition(ConductorParameter):
 
     @inlineCallbacks
     def initialize(self):
-        self.cxn = yield connectAsync(name=self.name)
+        yield self.connect()
         yield self.cxn.picomotor.select_device(self.name)
     
     @inlineCallbacks

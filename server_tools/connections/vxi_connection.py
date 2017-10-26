@@ -4,12 +4,12 @@ from twisted.internet.threads import deferToThread
 from vxi11 import Instrument
 from labrad.wrappers import connectAsync
 
-LABRADHOST = os.getenv('LABRADHOST')
+from server_tools.connections.connection import Connection
 
-class VXIConnection(object):
+class VXIConnection(Connection):
     @inlineCallbacks
     def initialize(self, device):
-        self.connection = yield connectAsync(LABRADHOST)
+        yield self.connect(device)
         self.server = self.connection[device.servername]
         yield self.server.select_interface(device.address)
 
