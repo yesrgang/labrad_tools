@@ -24,7 +24,6 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from serial import Serial
 import serial.tools.list_ports
 
-sys.path.append('../')
 from server_tools.hardware_interface_server import HardwareInterfaceServer
 
 class SerialServer(HardwareInterfaceServer):

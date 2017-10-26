@@ -21,7 +21,6 @@ from labrad.server import Signal, setting
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.reactor import callLater
 
-sys.path.append('../')
 from server_tools.device_server import DeviceServer
 from server_tools.decorators import quickSetting
 
