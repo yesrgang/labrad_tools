@@ -153,6 +153,7 @@ class ConductorServer(LabradServer):
                     parameter = Parameter(parameter_config)
                     parameter.device_name = device_name
                     parameter.name = parameter_name
+                    parameter.conductor = self
                     if value_type is not None:
                         parameter.value_type = value_type
                     self.parameters[device_name][parameter_name] = parameter
@@ -340,6 +341,11 @@ class ConductorServer(LabradServer):
                 parameter.value = parameter.value
         self.data = {}
         self.data_path = None
+
+        self.experiment_name = None
+        self.experiment_number = None
+        self.point_number = None
+
         return True
 
     @setting(13, returns='s')
@@ -377,6 +383,9 @@ class ConductorServer(LabradServer):
                 while os.path.isfile(data_path(iteration)):
                     iteration += 1
                 self.data_path = data_path(iteration)
+                self.experiment_name = experiment["name"]
+                self.experiment_number = iteration
+                self.point_number = 0
                 
                 print 'saving data to {}'.format(self.data_path)
                 if not os.path.exists(data_directory):
@@ -397,8 +406,12 @@ class ConductorServer(LabradServer):
         # check if we need to load next experiment
         pts = remaining_points(self.parameters)
         if not pts:
+            # no active experiment, check queue
             advanced = yield self.advance_experiment()
+            if not advanced:
+                yield self.stop_experiment(None)
         else:
+            # we are continuing an active experiment
             print 'remaining points: ', pts
 
         # sort by priority. higher priority is called first. 
@@ -423,6 +436,11 @@ class ConductorServer(LabradServer):
                 print '{} delay: {}'.format(parameter.name, time() - ti)
 
         # signal update
+        if not pts:
+            if advanced:
+                self.point_number += 1
+        else:
+            self.point_number += 1
         yield self.parameters_updated(True)
 
     @inlineCallbacks
