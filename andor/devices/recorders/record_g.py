@@ -1,15 +1,12 @@
 import json
 import numpy as np
 import h5py
+from time import strftime
 
-class RecordG(object):
-    def __init__(self, config_json):
-        config_updates = json.loads(config_json) 
-        with open('./devices/recorders/record_g.json', 'r') as infile:
-            default_config = json.load(infile)
-        config = default_config.update(config_updates)
-        for key, value in config.items():
-            setattr(self, key, value)
+from recorder import Recorder
+
+class RecordG(Recorder):
+    config_path = './devices/recorders/record_g.json'
 
     def record(self, cam, record_name):
         cam.SetNumberKinetics(self.number_kinetics)
@@ -27,8 +24,4 @@ class RecordG(object):
         data = np.reshape(data, (self.number_kinetics, cam.height, cam.width))
         images = {key: data[i] for i, key in enumerate(["dark", "bright", "background"])}
         
-        data_path = self.data_directory + record_name + ".hdf5"
-        h5f = h5py.File(data_path, "w")
-        for image in images:
-            h5f.create_dataset(image, data=images[image])
-        h5f.close()
+        self.save(images, record_name)

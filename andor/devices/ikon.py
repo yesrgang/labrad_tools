@@ -34,6 +34,6 @@ class Ikon(DeviceWrapper):
         
     def record(self, record_name, record_type, recorder_config='{}'):
         Recorder = import_recorder(record_type)
-        recorder = Recorder()
-        callInThread(recorder.record, self.cam, record_name, recorder_config)
+        recorder = Recorder(recorder_config)
+        callInThread(recorder.record, self.cam, record_name)
 
