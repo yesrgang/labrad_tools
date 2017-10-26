@@ -3,9 +3,11 @@ import numpy as np
 import h5py
 
 class RecordG(object):
-    def __init__(self):
+    def __init__(self, config_json):
+        config_updates = json.loads(config_json) 
         with open('./devices/recorders/record_g.json', 'r') as infile:
-            config = json.load(infile)
+            default_config = json.load(infile)
+        config = default_config.update(config_updates)
         for key, value in config.items():
             setattr(self, key, value)
 

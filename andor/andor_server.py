@@ -28,10 +28,10 @@ class AndorServer(DeviceServer):
     update = Signal(UPDATE_ID, 'signal: update', 's')
     name = '%LABRADNODE%_andor'
 
-    @setting(10, 'record', record_name='s', record_type='s', returns='b')
-    def record(self, c, record_name, record_type):
+    @setting(10, 'record', record_name='s', record_type='s', recorder_config='s', returns='b')
+    def record(self, c, record_name, record_type, recorder_config='{}'):
         device = self.get_device(c)
-        device.record(record_name, record_type)
+        device.record(record_name, record_type, recorder_config)
         return True
 
 if __name__ == "__main__":
