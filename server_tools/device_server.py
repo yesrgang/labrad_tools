@@ -40,7 +40,8 @@ class DeviceWrapper(object):
     def __init__(self, config={}):
         for key, value in config.items():
             setattr(self, key, value)
-        self.connection_name = self.servername + ' - ' + self.address
+        if self.servername and self.address:
+            self.connection_name = self.servername + ' - ' + self.address
     
     @inlineCallbacks 
     def initialize(self):
@@ -78,9 +79,10 @@ class DeviceServer(LabradServer):
         device_wrapper.name = name
         device = device_wrapper(config)
         try: 
-            if device.connection_name not in self.open_connections:
-                yield self.init_connection(device)
-            device.connection = self.open_connections[device.connection_name]
+            if hasattr(self, 'connection_name'):
+                if device.connection_name not in self.open_connections:
+                    yield self.init_connection(device)
+                device.connection = self.open_connections[device.connection_name]
             self.devices[name] = device
             yield device.initialize()
         except Exception, e:
