@@ -71,25 +71,27 @@ class DeviceServer(LabradServer):
     @inlineCallbacks
     def initServer(self):
         for name, config in self.config.devices.items():
-            yield self.initialize_device(name, config)
+#            yield self.initialize_device(name, config)
+            try: 
+                yield self.initialize_device(name, config)
+            except Exception, e:
+                print e.message, e.args
+                print 'could not initialize device {}'.format(name)
+                print 'removing {} from available devices'.format(name)
+                if name in self.devices:
+                    self.devices.pop(name)
 
     @inlineCallbacks 
     def initialize_device(self, name, config):
         device_wrapper = get_device_wrapper(config)
         device_wrapper.name = name
         device = device_wrapper(config)
-        try: 
-            if hasattr(self, 'connection_name'):
-                if device.connection_name not in self.open_connections:
-                    yield self.init_connection(device)
-                device.connection = self.open_connections[device.connection_name]
-            self.devices[name] = device
-            yield device.initialize()
-        except Exception, e:
-            print e
-            print 'could not initialize device {}'.format(name)
-            print 'removing {} from available devices'.format(name)
-            self.devices.pop(name)
+        if hasattr(self, 'connection_name'):
+            if device.connection_name not in self.open_connections:
+                yield self.init_connection(device)
+            device.connection = self.open_connections[device.connection_name]
+        self.devices[name] = device
+        yield device.initialize()
     
     @inlineCallbacks
     def init_connection(self, device):

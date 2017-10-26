@@ -5,9 +5,8 @@ from twisted.internet.defer import inlineCallbacks
 import numpy as np
 import json
 
-sys.path.append('../../client_tools')
-from connection import connection
-from widgets import SuperSpinBox
+from client_tools.connection import connection
+from client_tools.widgets import SuperSpinBox
 
 class AnalogVoltageManualControl(QtGui.QGroupBox):
     hasNewVoltage = False

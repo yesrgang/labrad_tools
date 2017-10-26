@@ -35,19 +35,13 @@ class PicomotorServer(DeviceServer):
     update = Signal(UPDATE_ID, 'signal: update', 's')
     name = 'picomotor'
     
-    def __init__(self, config_path='./config.json'):
-        DeviceServer.__init__(self)
-        self.socket_lock = DeferredLock()
-    
     @setting(11, position='i', returns='i')
     def position(self, c, position=None):
         """ get or set position """
-        yield self.socket_lock.acquire()
         device = self.get_device(c)
         if position is not None:
             yield device.set_position(position)
         device.position = yield device.get_position()
-        yield self.socket_lock.release()
         yield self.send_update(c)
         returnValue(device.position)
     

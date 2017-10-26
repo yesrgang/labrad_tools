@@ -5,9 +5,10 @@ from conductor_device.conductor_parameter import ConductorParameter
 
 class DedriftFrequency(ConductorParameter):
     priority = 1
+
     @inlineCallbacks
     def initialize(self):
-        self.cxn = yield connectAsync()
+        self.cxn = yield connectAsync(name=self.name)
         yield self.cxn.yesr20_gpib.select_interface('GPIB0::23::INSTR')
     
     @inlineCallbacks

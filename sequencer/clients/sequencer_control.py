@@ -8,9 +8,8 @@ from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import pyqtSignal 
 from twisted.internet.defer import inlineCallbacks
 
-sys.path.append('../../client_tools')
-from connection import connection
-from widgets import SuperSpinBox
+from client_tools.connection import connection
+from client_tools.widgets import SuperSpinBox
 from lib.duration_widgets import DurationRow
 from lib.digital_widgets import DigitalControl
 from lib.analog_widgets import AnalogControl
@@ -400,7 +399,7 @@ class SequencerControl(QtGui.QWidget):
     def addColumn(self, i):
         def ac():
             sequence = self.getSequence()
-	    for c in self.channels:
+            for c in self.channels:
                 sequence[c].insert(i, sequence[c][i])
             self.displaySequence(sequence)
         return ac
@@ -408,7 +407,7 @@ class SequencerControl(QtGui.QWidget):
     def dltColumn(self, i):
         def dc():
             sequence = self.getSequence()
-	    for c in self.channels:
+            for c in self.channels:
                 sequence[c].pop(i)
             self.displaySequence(sequence)
         return dc
@@ -442,7 +441,7 @@ class SequencerControl(QtGui.QWidget):
 
 if __name__ == '__main__':
     a = QtGui.QApplication([])
-    import qt4reactor 
+    import client_tools.qt4reactor as qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     widget = SequencerControl(reactor)
