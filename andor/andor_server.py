@@ -28,8 +28,16 @@ class AndorServer(DeviceServer):
     update = Signal(UPDATE_ID, 'signal: update', 's')
     name = '%LABRADNODE%_andor'
 
-    @setting(10, 'record', record_name='s', record_type='s', recorder_config='s', returns='b')
-    def record(self, c, record_name, record_type, recorder_config='{}'):
+    @setting(10, 'record', record_name="s", record_type="s", recorder_config="s", returns='b')
+    def record(self, c, record_name="", record_type="", recorder_config='{}'):
+        """ record 
+        Args:
+            record_name: string
+            record_type: string
+            recorder_config: json dumped dict
+        Returns:
+            bool
+        """
         device = self.get_device(c)
         device.record(record_name, record_type, recorder_config)
         return True

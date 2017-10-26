@@ -32,8 +32,11 @@ class Ikon(DeviceWrapper):
         self.cam.SetVSSpeed(self.vs_speed_index)
         self.cam.SetEMCCDGain(self.emccd_gain)
         
-    def record(self, record_name, record_type, recorder_config='{}'):
-        Recorder = import_recorder(record_type)
-        recorder = Recorder(recorder_config)
-        callInThread(recorder.record, self.cam, record_name)
+    def record(self, record_name='', record_type='', recorder_config='{}'):
+        if record_name and record_type:
+            print record_name
+            Recorder = import_recorder(record_type)
+            recorder = Recorder(recorder_config)
+            callInThread(recorder.record, self.cam, record_name)
+#            recorder.record(self.cam, record_name)
 
