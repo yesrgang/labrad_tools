@@ -25,11 +25,9 @@ import os
 
 from time import time
 
-from labrad.server import LabradServer, setting, Signal
+from labrad.server import LabradServer, setting
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.reactor import callLater
-from twisted.internet.task import LoopingCall
-from twisted.internet.threads import deferToThread
 
 def save_and_close(fig):
     fig.savefig('figure.svg')
@@ -56,13 +54,12 @@ class PlotterServer(LabradServer):
             module = imp.load_source(module_name, path)
             function = getattr(module, function_name)
             try:
-                d = deferToThread(function, *data['args'], **data['kwargs'])
-		d.addCallback(save_and_close)	
-
+                fig = function(*data['args'], **data['kwargs'])
                 print "saving... {}".format(time())
+                save_and_close(fig)
             except Exception, e:
                 print 'ERROR: ', e
-        callLater(2, self.do_plot)
+        callLater(1, self.do_plot)
             
 
 if __name__ == "__main__":

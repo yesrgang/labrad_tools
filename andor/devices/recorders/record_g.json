@@ -1,0 +1,8 @@
+{
+    "number_kinetics": 3,
+    "exposure_time": 10e-6,
+    "acquisition_mode": 3,
+    "data_directory": "/home/srgang/yesrdata/SrQ/data/{}/",
+    "compression": "gzip",
+    "compression_level": 4
+}
