@@ -80,6 +80,10 @@ class Andor:
         self.vend        = ch
         self.cooler      = None
         
+        self.exposedRows = None
+        self.seriesLength = None
+        self.offset = 0
+        
     def __del__(self):
         error = self.dll.ShutDown()
     
@@ -170,6 +174,21 @@ class Andor:
         self.verbose(ERROR_CODE[error], sys._getframe().f_code.co_name)
         return ERROR_CODE[error]
 
+    def SetFastKineticsEx(self, exposedRows, seriesLength, time, mode, hbin, 
+            vbin, offset):
+        self.exposedRows = exposedRows
+        self.seriesLength = seriesLength
+        self.exposure = time
+        self.ReadMode = mode
+        self.hbin = hbin
+        self.vbin = vbin
+        self.offset = offset
+
+        error = self.dll.SetFastKineticsEx(exposedRows, seriesLength, 
+                c_float(time), mode, hbin, vbin, offset)
+        self.verbose(ERROR_CODE[error], sys._getframe().f_code.co_name)
+        return ERROR_CODE[error]
+
     def StartAcquisition(self):
         error = self.dll.StartAcquisition()
         self.dll.WaitForAcquisition()
@@ -177,15 +196,17 @@ class Andor:
         return ERROR_CODE[error]
 
     def GetAcquiredData(self,imageArray):
-        if (self.ReadMode==4):
-            if (self.AcquisitionMode==1):
+        if self.ReadMode == 4:
+            if self.AcquisitionMode == 1:
                 dim = self.width * self.height / self.hbin / self.vbin
-            elif (self.AcquisitionMode==3):
+            elif self.AcquisitionMode == 3:
                 dim = self.width * self.height / self.hbin / self.vbin * self.scans
-        elif (self.ReadMode==3 or self.ReadMode==0):
-            if (self.AcquisitionMode==1):
+            elif self.AcquisitionMode == 4:
+                dim = self.width * self.exposedRows / self.hbin / self.vbin * self.seriesLength
+        elif self.ReadMode == 3 or self.ReadMode == 0:
+            if self.AcquisitionMode == 1:
                 dim = self.width
-            elif (self.AcquisitionMode==3):
+            elif self.AcquisitionMode == 3:
                 dim = self.width * self.scans
 
         cimageArray = c_int * dim

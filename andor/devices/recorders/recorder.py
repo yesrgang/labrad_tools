@@ -25,3 +25,12 @@ class Recorder(object):
                     compression=self.compression, 
                     compression_opts=self.compression_level)
         h5f.close()
+
+    def send_update(self, device, record_name):
+        signal = {
+            device.name: {
+                'record_name': record_name+'.hdf5',
+                'record_type': self.name,
+                },
+            }
+        device.server.update(json.dumps(signal))

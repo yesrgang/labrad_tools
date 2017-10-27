@@ -6,10 +6,12 @@ from time import strftime
 from recorder import Recorder
 
 class RecordG(Recorder):
+    name = 'record_g'
     config_path = './devices/recorders/record_g.json'
 
-    def record(self, cam, record_name):
+    def record(self, device, record_name):
         if record_name:
+            cam = device.cam
             cam.AbortAcquisition()
             cam.SetNumberKinetics(self.number_kinetics)
             cam.SetExposureTime(self.exposure_time)
@@ -27,3 +29,4 @@ class RecordG(Recorder):
             images = {key: data[i] for i, key in enumerate(["dark", "bright", "background"])}
             
             self.save(images, record_name)
+            self.send_update(device, record_name)
