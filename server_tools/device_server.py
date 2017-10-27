@@ -71,7 +71,6 @@ class DeviceServer(LabradServer):
     @inlineCallbacks
     def initServer(self):
         for name, config in self.config.devices.items():
-#            yield self.initialize_device(name, config)
             try: 
                 yield self.initialize_device(name, config)
             except Exception, e:
@@ -92,6 +91,7 @@ class DeviceServer(LabradServer):
                 yield self.init_connection(device)
             device.connection = self.open_connections[device.connection_name]
         self.devices[name] = device
+        device.server = self
         yield device.initialize()
     
     @inlineCallbacks

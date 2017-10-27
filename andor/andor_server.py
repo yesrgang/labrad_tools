@@ -4,7 +4,7 @@
 name = andor
 version = 1.0
 description = 
-instancename = andor
+instancename = %LABRADNODE%_andor
 
 [startup]
 cmdline = %PYTHON% %FILE%
