@@ -54,7 +54,8 @@ class ParameterControl(QtGui.QGroupBox):
     def connect(self):
         if self.cxn is None:
             self.cxn = connection()
-            yield self.cxn.connect()
+            cname = '{} - client'.format(self.servername)
+            yield self.cxn.connect(name=cname)
         self.context = yield self.cxn.context()
         try:
             self.populateGUI()

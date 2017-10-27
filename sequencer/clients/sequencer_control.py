@@ -41,6 +41,7 @@ class LoadSaveRun(QtGui.QWidget):
         self.setLayout(self.layout)
 
 class SequencerControl(QtGui.QWidget):
+    name = 'sequencer - client'
     def __init__(self, reactor, config_path='./config.json', cxn=None):
         super(SequencerControl, self).__init__(None)
         self.sequence_parameters = {}
@@ -63,7 +64,7 @@ class SequencerControl(QtGui.QWidget):
     def connect(self):
         if self.cxn is None:
             self.cxn = connection()  
-            yield self.cxn.connect()
+            yield self.cxn.connect(name=self.name)
         self.context = yield self.cxn.context()
         yield self.getChannels()
         self.populate()

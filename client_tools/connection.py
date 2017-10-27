@@ -15,9 +15,9 @@ class connection(object):
         self._on_disconnect = {}
     
     @inlineCallbacks
-    def connect(self):
+    def connect(self, name='some client...'):
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync()
+        self.cxn = yield connectAsync(name=name)
         yield self.setupListeners()
         returnValue(self)
     
