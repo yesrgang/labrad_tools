@@ -29,7 +29,6 @@ class Ikon(DeviceWrapper):
         self.cam.SetPreAmpGain(self.pre_amp_gain)
         self.cam.SetHSSpeed(self.hs_speed_type, self.hs_speed_index)
         self.cam.SetVSSpeed(self.vs_speed_index)
-        self.cam.SetEMCCDGain(self.emccd_gain)
         
     def record(self, record_name='', record_type='', recorder_config='{}'):
         if record_name and record_type:
@@ -38,5 +37,3 @@ class Ikon(DeviceWrapper):
             Recorder = import_recorder(record_type)
             recorder = Recorder(recorder_config)
             callInThread(recorder.record, self, record_name)
-#            recorder.record(self.cam, record_name)
-

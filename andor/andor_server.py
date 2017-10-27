@@ -8,7 +8,7 @@ instancename = %LABRADNODE%_andor
 
 [startup]
 cmdline = %PYTHON% %FILE%
-timeout = 20
+timeout = 60
 
 [shutdown]
 message = 987654321
