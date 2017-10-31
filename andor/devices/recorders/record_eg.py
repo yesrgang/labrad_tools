@@ -27,7 +27,7 @@ class RecordEg(Recorder):
             cam.GetAcquiredData(data)
             data = np.array(data, dtype=np.uint16)
             data = np.reshape(data, (self.number_sub_frames, sub_height, cam.width))
-            images = {key: data[i] for i, key in enumerate(["dark_g", "dark_e", "bright"])}
+            images = {key: data[i] for i, key in enumerate(["image_g", "image_e", "bright"])}
             
             cam.StartAcquisition()
             data = []
@@ -35,7 +35,7 @@ class RecordEg(Recorder):
             data = np.array(data, dtype=np.uint16)
             data = np.reshape(data, (self.number_sub_frames, sub_height, cam.width))
             background_images = {key: data[i] for i, key in 
-                    enumerate(["g_background", "e_background", "bright_background"])}
+                    enumerate(["dark_g", "dark_e", "dark_bright"])}
 
             images.update(background_images)
             

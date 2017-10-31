@@ -3,38 +3,21 @@ import numpy as np
 import json
 import sys
 import h5py
+import matplotlib as mpl
 from twisted.internet.defer import inlineCallbacks
 from time import strftime
 
 from client_tools.connection import connection
 
-from my_cmap import my_cmap
 import pyqtgraph as pg
-
 from cmap_to_colormap import cmapToColormap
 
+cmap = mpl.cm.get_cmap('inferno_r')
+MyColorMap = pg.ColorMap(*zip(*cmapToColormap(cmap)))
 
-MyColorMap = pg.ColorMap(*zip(*cmapToColormap(my_cmap)))
-print MyColorMap
+from data_tools.process_image import process_image
 
 
-#class MplCanvas(FigureCanvas):
-#    def __init__(self):
-#        self.fig = Figure()
-#        self.ax = self.fig.add_subplot(111)
-#        self.ax.set_xlabel(r'x ($\mu$m)')
-#        self.ax.set_ylabel(r'y ($\mu$m)')
-#        self.ax.hold(False)
-#
-#        self.fig.set_tight_layout(True)
-#
-#        FigureCanvas.__init__(self, self.fig)
-#
-#    def make_figure(self, image):
-#
-#        self.ax.pcolormesh(image, vmin=np.mean(image), vmax=np.max(image), cmap=my_cmap)
-#        self.ax.set_aspect('equal')
-#        self.ax.autoscale(tight=True)
 
 class ImageViewer(QtGui.QWidget):
     servername = 'yesr10_andor'
@@ -76,6 +59,7 @@ class ImageViewer(QtGui.QWidget):
         yield server.addListener(listener=self.receive_update, source=None, 
                                  ID=self.update_id)
         self.imageView.scene.sigMouseClicked.connect(self.handle_click)
+        print 'connected!'
 
     def handle_click(self, mouseClickEvent):
         print 'click'
@@ -115,23 +99,23 @@ class ImageViewer(QtGui.QWidget):
     def closeEvent(self, x):
         self.reactor.stop()
 
-def process_image(image_path, record_type):
-    images = {}
-    images_h5 = h5py.File(image_path, "r")
-    for key in images_h5:
-        images[key] = np.array(images_h5[key], dtype='float64')
-    images_h5.close()
-    if record_type == 'record_g': 
-        n_lin = images["bright"] - images["dark"] + images["background"]
-        image = n_lin
-        image = np.flipud(np.fliplr(image))
-        return image
-    elif record_type == 'record_eg':
-        ng_lin = images["bright"] - images["dark_g"] + images["g_background"] - images["bright_background"]
-        ne_lin = images["bright"] - images["dark_e"] + images["e_background"] - images["bright_background"]
-        image = np.vstack((ng_lin, ne_lin))
-        image = np.flipud(np.fliplr(image))
-        return image
+#def process_image(image_path, record_type):
+#    images = {}
+#    images_h5 = h5py.File(image_path, "r")
+#    for key in images_h5:
+#        images[key] = np.array(images_h5[key], dtype='float64')
+#    images_h5.close()
+#    if record_type == 'record_g': 
+#        n_lin = images["bright"] - images["dark"] + images["background"]
+#        image = n_lin
+#        image = np.flipud(np.fliplr(image))
+#        return image
+#    elif record_type == 'record_eg':
+#        ng_lin = images["bright"] - images["dark_g"] + images["g_background"] - images["bright_background"]
+#        ne_lin = images["bright"] - images["dark_e"] + images["e_background"] - images["bright_background"]
+#        image = np.vstack((ne_lin, ng_lin))
+#        image = np.flipud(np.fliplr(image))
+#        return image
 
 if __name__ == '__main__':
     app = QtGui.QApplication([])
