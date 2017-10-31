@@ -433,7 +433,7 @@ class ConductorServer(LabradServer):
                 ti = time()
             yield self.update_parameter(parameter)
             if self.do_print_delay:
-                print '{} delay: {}'.format(parameter.name, time() - ti)
+                print '{} - {} delay: {}'.format(parameter.device_name, parameter.name, time() - ti)
 
         # signal update
         if not pts:

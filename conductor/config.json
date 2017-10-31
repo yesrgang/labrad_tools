@@ -13,6 +13,12 @@
         "clock_aom": {
             "frequency": {}
         },
+        "alpha": {
+            "frequency": {}
+        },
+        "beta": {
+            "frequency": {}
+        },
         "influxdb": {
             "client": {}
         },

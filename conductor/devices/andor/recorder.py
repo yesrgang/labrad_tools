@@ -41,3 +41,6 @@ class Recorder(ConductorParameter):
             yield self.cxn.yesr10_andor.record(record_name, recorder_type, 
                     recorder_config)
 
+        yield self.conductor.set_parameter_value('andor', 'image_path', 
+                record_name, True)
+
