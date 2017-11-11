@@ -12,7 +12,7 @@ from client_tools.connection import connection
 import pyqtgraph as pg
 from cmap_to_colormap import cmapToColormap
 
-cmap = mpl.cm.get_cmap('inferno_r')
+cmap = mpl.cm.get_cmap('inferno')
 MyColorMap = pg.ColorMap(*zip(*cmapToColormap(cmap)))
 
 from data_tools.process_image import process_image
@@ -70,8 +70,8 @@ class ImageViewer(QtGui.QWidget):
             pos = self.imageView.getView().mapSceneToView(scenePos)
             if not hasattr(self, 'crosshairs'):
                 self.crosshairs = {
-                    'x': pg.InfiniteLine(angle=90, pen='k'),
-                    'y': pg.InfiniteLine(angle=0, pen='k'),
+                    'x': pg.InfiniteLine(angle=90, pen='g'),
+                    'y': pg.InfiniteLine(angle=0, pen='g'),
                     }
                 self.imageView.addItem(self.crosshairs['x'])
                 self.imageView.addItem(self.crosshairs['y'])
@@ -88,10 +88,12 @@ class ImageViewer(QtGui.QWidget):
                 record_type = value['record_type']
                 data_directory = self.data_directory.format(strftime('%Y%m%d'))
                 image_path = data_directory + record_name
+                print 'ok'
                 self.plot(image_path, record_type)
         print 'done signal'
     
     def plot(self, image_path, record_type):
+        print image_path
         image = process_image(image_path, record_type)
         image = np.rot90(image)
         self.imageView.setImage(image, autoRange=False, autoLevels=False)

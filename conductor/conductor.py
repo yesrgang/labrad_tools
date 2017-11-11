@@ -439,7 +439,7 @@ class ConductorServer(LabradServer):
         if not pts:
             if advanced:
                 self.point_number += 1
-        else:
+        elif self.point_number is not None:
             self.point_number += 1
         yield self.parameters_updated(True)
 

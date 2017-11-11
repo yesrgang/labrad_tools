@@ -21,7 +21,7 @@ def process_images_g(images):
     pulse_length = 10 # [us]
     efficiency = 0.50348 
     gain = 0.25
-    
+    print images.keys() 
     high_intensity_coefficient = 2 / (linewidth * pulse_length * efficiency * gain)
     low_intensity_coefficient = pixel_size**2 / cross_section
     
@@ -34,8 +34,7 @@ def process_images_g(images):
         low_intensity_coefficient * np.log(bright / image)
         + high_intensity_coefficient * (bright - image)
         )
-    
-    return np.flipid(np.fliplr(n))
+    return np.flipud(np.fliplr(n))
 
 def process_images_eg(images):
     """ process images of e and g atoms """
@@ -49,9 +48,9 @@ def process_images_eg(images):
     high_intensity_coefficient = 2 / (linewidth * pulse_length * efficiency * gain)
     low_intensity_coefficient = pixel_size**2 / cross_section
     
-    bright = np.array(images['bright'], dtype='f') - np.array(images['dark_bright'], dtype='f')
-    image_g = np.array(images['image_g'], dtype='f') - np.array(images['dark_g'], dtype='f')
-    image_e = np.array(images['image_e'], dtype='f') - np.array(images['dark_e'], dtype='f')
+    bright = np.array(images['bright'], dtype='f') #- np.array(images['dark_bright'], dtype='f')
+    image_g = np.array(images['image_g'], dtype='f') #- np.array(images['dark_g'], dtype='f')
+    image_e = np.array(images['image_e'], dtype='f') #- np.array(images['dark_e'], dtype='f')
     
     n_g = (
         low_intensity_coefficient * np.log(bright / image_g)
@@ -64,4 +63,5 @@ def process_images_eg(images):
         )
     
     return np.flipud(np.fliplr(np.vstack((n_e, n_g))))
+#    return np.flipud(np.fliplr(np.vstack((image_e, image_g))))
 

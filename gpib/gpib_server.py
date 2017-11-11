@@ -42,10 +42,6 @@ class GPIBServer(HardwareInterfaceServer):
         for address in additions:
             if address.startswith('GPIB'):
                 inst = rm.get_instrument(address)
-#                inst.write_termination = ''
-#                if float(visa.__version__) < 1.8:
-#                    pass    
-#                    inst.clear()
                 self.interfaces[address] = inst
                 print 'connected to GPIB device ' + address
         for addr in deletions:
@@ -73,8 +69,6 @@ class GPIBServer(HardwareInterfaceServer):
         This query is atomic.  No other communication to the
         device will occur while the query is in progress.
         """
-#        self.call_if_available('write', c, data)
-#        ans = self.call_if_available('read_raw', c)
         response = self.call_if_available('query', c, data)
         return response.strip()
 

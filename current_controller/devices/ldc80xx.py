@@ -11,6 +11,12 @@ T_RAMP = 5
 N_RAMP = 10
 
 class LDC80xx(CurrentController):
+    """ thorlabs ldc80xx device 
+
+    write to gpib bus with write_to_slot and query with query_with_slot
+    so that multiple instances of this device don't get confused responses
+    from thr PRO8000
+    """
     @inlineCallbacks
     def initialize(self):
         self._lock = DeferredLock()
@@ -24,16 +30,28 @@ class LDC80xx(CurrentController):
         self.current = yield self.get_current()
         self.power = yield self.get_power()
 
+#    @inlineCallbacks
+#    def set_slot(self):
+#        yield self.connection.write(':SLOT {}'.format(self.slot))
+
     @inlineCallbacks
-    def set_slot(self):
-        yield self.connection.write(':SLOT {}'.format(self.slot))
+    def write_to_slot(self, command):
+        slot_command = ':SLOT {};'.format(self.slot)
+        yield self.connection.write(slot_command + command)
+    
+    @inlineCallbacks
+    def query_to_slot(self, command):
+        slot_command = ':SLOT {};'.format(self.slot)
+        ans = yield self.connection.query(slot_command + command)
+        returnValue(ans)
 
     @inlineCallbacks
     def get_current(self):
-        yield self._lock.acquire()
-        yield self.set_slot()
-        ans = yield self.connection.query(':ILD:SET?')
-        yield self._lock.release()
+#        yield self._lock.acquire()
+#        yield self.set_slot()
+        command = ':ILD:SET?'
+        ans = yield self.query_to_slot(command)
+#        yield self._lock.release()
         returnValue(float(ans[9:]))
 
     @inlineCallbacks
@@ -43,18 +61,19 @@ class LDC80xx(CurrentController):
         current = sorted([min_current, current, max_current])[1]
         command = ':ILD:SET {}'.format(current)
         
-        yield self._lock.acquire()
-        yield self.set_slot()
-        yield self.connection.write(command)
-        yield self._lock.release()
+#        yield self._lock.acquire()
+#        yield self.set_slot()
+        yield self.write_to_slot(command)
+#        yield self._lock.release()
         self.power = yield self.get_power()
 
     @inlineCallbacks
     def get_power(self):
-        yield self._lock.acquire()
-        yield self.set_slot()
-        ans = yield self.connection.query(':POPT:ACT?')
-        yield self._lock.release()
+#        yield self._lock.acquire()
+#        yield self.set_slot()
+        command = ':POPT:ACT?'
+        ans = yield self.query_to_slot(command)
+#        yield self._lock.release()
         returnValue(float(ans[10:]))
     
     @inlineCallbacks
@@ -63,10 +82,8 @@ class LDC80xx(CurrentController):
 
     @inlineCallbacks
     def get_state(self):
-        yield self._lock.acquire()
-        yield self.set_slot()
-        ans = yield self.connection.query(':LASER?')
-        yield self._lock.release()
+        command = ':LASER?'
+        ans = yield self.query_to_slot(command)
         if ans == ':LASER ON':
             returnValue(True)
         elif ans == ':LASER OFF':
@@ -79,10 +96,10 @@ class LDC80xx(CurrentController):
         else:
             command = ':LASER OFF'
         
-        yield self._lock.acquire()
-        yield self.set_slot()
-        yield self.connection.write(command)
-        yield self._lock.release()
+#        yield self._lock.acquire()
+#        yield self.set_slot()
+        yield self.write_to_slot(command)
+#        yield self._lock.release()
 
     @inlineCallbacks
     def dial_current(self, stop):
@@ -90,7 +107,7 @@ class LDC80xx(CurrentController):
         values = np.linspace(start, stop, N_RAMP+1)[1:]
         times = np.linspace(0, T_RAMP, N_RAMP+1)[1:]
         for t, v in zip(times, values): 
-            self.set_current(v)
+            yield self.set_current(v)
             yield sleep(float(T_RAMP)/N_RAMP)
 #            callLater(t, self.set_current, v)
 

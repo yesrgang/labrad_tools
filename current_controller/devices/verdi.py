@@ -1,4 +1,5 @@
 from time import sleep
+import json
 
 import labrad.types as T
 
@@ -59,9 +60,13 @@ class Verdi(DeviceWrapper):
         returnValue(float(ans[0]))
 
     @inlineCallbacks
-    def set_power(self, power):
+    def set_power(self, power, emit=False):
         yield self.connection.write_line('Light: {}'.format(power))
         ans = yield self.connection.read_lines()
+        if emit:
+            update = {self.name: {p: getattr(self, p) 
+                      for p in self.update_parameters}}
+            yield self.server.update(json.dumps(update))
 
     @inlineCallbacks
     def get_current(self):
