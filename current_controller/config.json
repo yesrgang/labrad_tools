@@ -7,7 +7,7 @@
             "address": "GPIB0::9::INSTR",
             "slot": 2,
             "current_range": [0, 0.153],
-            "default_current": 0.1500,
+            "default_current": 0.1501,
             "current_stepsize": 1e-4
         },
         "2d": {
@@ -17,7 +17,7 @@
             "address": "GPIB0::9::INSTR",
             "slot": 4,
             "current_range": [0, 0.153],
-            "default_current": 0.1511,
+            "default_current": 0.1496,
             "current_stepsize": 1e-4
         },
         "zs": {
@@ -27,7 +27,7 @@
             "address": "GPIB0::9::INSTR",
             "slot": 6,
             "current_range": [0, 0.153],
-            "default_current": 0.1494,
+            "default_current": 0.1502,
             "current_stepsize": 1e-4
         },
         "m2_verdi": {
