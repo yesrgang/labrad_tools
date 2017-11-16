@@ -26,7 +26,7 @@ def process_images_g(images):
     low_intensity_coefficient = pixel_size**2 / cross_section
     
     bright = np.array(images['bright'], dtype='f')
-    image = np.array(images['dark'], dtype='f')
+    image = np.array(images['image'], dtype='f')
     
 #    image, bright = fix_image_gradient(image, bright, settings['norm'])
     

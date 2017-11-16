@@ -12,7 +12,7 @@ from client_tools.connection import connection
 import pyqtgraph as pg
 from cmap_to_colormap import cmapToColormap
 
-cmap = mpl.cm.get_cmap('inferno')
+cmap = mpl.cm.get_cmap('magma')
 MyColorMap = pg.ColorMap(*zip(*cmapToColormap(cmap)))
 
 from data_tools.process_image import process_image
@@ -22,8 +22,8 @@ from data_tools.process_image import process_image
 class ImageViewer(QtGui.QWidget):
     servername = 'yesr10_andor'
     update_id = 194320
-    #data_directory = '/home/yertle/yesrdata/SrQ/data/{}/'
-    data_directory = 'Z:\\SrQ\\data\\{}\\'
+    data_directory = '/home/yertle/yesrdata/SrQ/data/{}/'
+#    data_directory = 'Z:\\SrQ\\data\\{}\\'
     name = 'ikon'
 
     def __init__(self, reactor):
