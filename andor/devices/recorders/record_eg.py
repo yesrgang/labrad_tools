@@ -9,8 +9,8 @@ class RecordEg(Recorder):
     name = 'record_eg'
     config_path = './devices/recorders/record_eg.json'
 
-    def record(self, device, record_name):
-        if record_name:
+    def record(self, device, record_path):
+        if record_path:
             cam = device.cam
             cam.AbortAcquisition()
             cam.SetShutter(1, 1, 0, 0)
@@ -39,5 +39,5 @@ class RecordEg(Recorder):
 
             images.update(background_images)
             
-            self.save(images, record_name)
-            self.send_update(device, record_name)
+            self.save(images, record_path)
+            self.send_update(device, record_path)

@@ -1,10 +1,12 @@
 import json
-from twisted.internet.defer import inlineCallbacks
 from labrad.wrappers import connectAsync
+from time import strftime
+from twisted.internet.defer import inlineCallbacks
+
 from conductor_device.conductor_parameter import ConductorParameter
 
 class Recorder(ConductorParameter):
-    priority = 2
+    priority = 1
     recorders = {
         'image': 'record_g',
         'image_clock': 'record_eg',
@@ -28,19 +30,20 @@ class Recorder(ConductorParameter):
         experiment_number = self.conductor.experiment_number
         point_number = self.conductor.point_number
         if experiment_name is not None:
-            record_name = '{}#{}-image#{}'.format(experiment_name, 
+            record_name = '{}#{}-image#{}.hdf5'.format(experiment_name, 
                     experiment_number, point_number)
         else:
-            record_name = 'current-image'
+            record_name = 'current-image.hdf5'
+        record_path = [strftime('%Y%m%d'), record_name]
 
         if self.value is None:
             self.value = {}
         if recorder_type:
 #            recorder_type = self.value.get('type', recorder_type)
             recorder_config = json.dumps(self.value.get('config', {}))
-            yield self.cxn.yesr10_andor.record(record_name, recorder_type, 
+            yield self.cxn.yesr10_andor.record(record_path, recorder_type, 
                     recorder_config)
 
         yield self.conductor.set_parameter_value('andor', 'image_path', 
-                record_name, True)
+                record_path, True)
 

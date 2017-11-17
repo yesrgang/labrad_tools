@@ -16,9 +16,9 @@ class Recorder(object):
     def record(self, cam, record_name):
         pass
     
-    def save(self, images, record_name):
-        data_directory = self.data_directory.format(strftime("%Y%m%d"))
-        data_path = data_directory + record_name + ".hdf5"
+    def save(self, images, record_path):
+        data_directory = self.data_directory.format(record_path[0])
+        data_path = data_directory + record_path[1]
         h5f = h5py.File(data_path, "w")
         for image in images:
             h5f.create_dataset(image, data=images[image], 
@@ -26,10 +26,10 @@ class Recorder(object):
                     compression_opts=self.compression_level)
         h5f.close()
 
-    def send_update(self, device, record_name):
+    def send_update(self, device, record_path):
         signal = {
             device.name: {
-                'record_name': record_name+'.hdf5',
+                'record_path': record_path,
                 'record_type': self.name,
                 },
             }

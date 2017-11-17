@@ -28,21 +28,21 @@ class AndorServer(DeviceServer):
     update = Signal(UPDATE_ID, 'signal: update', 's')
     name = '%LABRADNODE%_andor'
 
-    @setting(10, 'record', record_name="s", record_type="s", recorder_config="s", returns='b')
-    def record(self, c, record_name="", record_type="", recorder_config='{}'):
+    @setting(10, record_path='s', record_type='s', recorder_config='s', returns='b')
+    def record(self, c, record_path='', record_type='', recorder_config='{}'):
         """ record 
         Args:
-            record_name: string
-            record_type: string
-            recorder_config: json dumped dict
+            record_path: list, first element is day's folder, second element is filename
+            record_type: string, type of image to record
+            recorder_config: json dumped dict, kwargs to be passed to recorder class' init
         Returns:
-            bool
+            bool, success
         """
         device = self.get_device(c)
-        device.record(record_name, record_type, recorder_config)
+        device.record(record_path, record_type, recorder_config)
         return True
     
-    @setting(11, 'get_sums', settings='s', returns='s')
+    @setting(11, settings='s', returns='s')
     def get_sums(self, c, settings):
         """ sum atom numbers using defined regions
         Args:

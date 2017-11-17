@@ -1,0 +1,9 @@
+{
+    "data_directory": "/home/srgang/yesrdata/SrQ/data/{}/{}",
+    "pixel_size": 0.55793991,
+    "cross_section": 0.1014 ,
+    "linewidth": 201.06192983,
+    "pulse_length": 10,
+    "efficiency": 0.50348,
+    "gain": 0.25
+}

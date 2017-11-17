@@ -30,13 +30,11 @@ class Ikon(DeviceWrapper):
         self.cam.SetHSSpeed(self.hs_speed_type, self.hs_speed_index)
         self.cam.SetVSSpeed(self.vs_speed_index)
         
-    def record(self, record_name='', record_type='', recorder_config='{}'):
-        if record_name and record_type:
-            print 'recording: ', record_name
-            print 'record_type: ', record_type
+    def record(self, record_path='', record_type='', recorder_config='{}'):
+        if record_path and record_type:
             Recorder = import_recorder(record_type)
             recorder = Recorder(recorder_config)
-            callInThread(recorder.record, self, record_name)
+            callInThread(recorder.record, self, record_path)
     
     def process(self, settings):
         record_type = settings.get('record_type')
