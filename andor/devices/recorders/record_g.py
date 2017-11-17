@@ -26,7 +26,7 @@ class RecordG(Recorder):
             cam.GetAcquiredData(data)
             data = np.array(data, dtype=np.uint16)
             data = np.reshape(data, (self.number_kinetics, cam.height, cam.width))
-            images = {key: data[i] for i, key in enumerate(["dark", "bright", "background"])}
+            images = {key: data[i] for i, key in enumerate(["image", "bright", "dark"])}
             
             self.save(images, record_name)
             self.send_update(device, record_name)
