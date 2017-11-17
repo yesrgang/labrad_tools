@@ -37,3 +37,9 @@ class Ikon(DeviceWrapper):
             Recorder = import_recorder(record_type)
             recorder = Recorder(recorder_config)
             callInThread(recorder.record, self, record_name)
+    
+    def process(self, settings):
+        record_type = settings.get('record_type')
+        Processor = import_processor(record_type)
+        processor = Processor(settings)
+        return processor.get_counts()

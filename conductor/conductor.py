@@ -434,13 +434,14 @@ class ConductorServer(LabradServer):
             yield self.update_parameter(parameter)
             if self.do_print_delay:
                 print '{} - {} delay: {}'.format(parameter.device_name, parameter.name, time() - ti)
-
-        # signal update
+        
         if not pts:
             if advanced:
                 self.point_number += 1
         elif self.point_number is not None:
             self.point_number += 1
+        
+        # signal update
         yield self.parameters_updated(True)
 
     @inlineCallbacks
