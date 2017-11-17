@@ -15,6 +15,7 @@ message = 987654321
 timeout = 5
 ### END NODE INFO
 """
+import json
 import sys
 
 from labrad.server import Signal, setting
@@ -28,8 +29,8 @@ class AndorServer(DeviceServer):
     update = Signal(UPDATE_ID, 'signal: update', 's')
     name = '%LABRADNODE%_andor'
 
-    @setting(10, record_path='s', record_type='s', recorder_config='s', returns='b')
-    def record(self, c, record_path='', record_type='', recorder_config='{}'):
+    @setting(10, record_path='ss', record_type='s', recorder_config='s', returns='b')
+    def record(self, c, record_path, record_type, recorder_config='{}'):
         """ record 
         Args:
             record_path: list, first element is day's folder, second element is filename
@@ -42,11 +43,11 @@ class AndorServer(DeviceServer):
         device.record(record_path, record_type, recorder_config)
         return True
     
-    @setting(11, settings='s', returns='s')
-    def get_sums(self, c, settings):
+    @setting(11, settings_json='s', returns='s')
+    def get_sums(self, c, settings_json):
         """ sum atom numbers using defined regions
         Args:
-            settings: json dumped dict e.g.
+            settings_json: json dumped dict e.g.
                 {
                     'name': 'andor',
                     'offset': (525, 192),
@@ -68,8 +69,9 @@ class AndorServer(DeviceServer):
             }
         """
         device = self.get_device(c)
-        device.process(settings)
-        return True
+        settings = json.loads(settings_json)
+        sums = device.process(settings)
+        return json.dumps(sums)
 
 if __name__ == "__main__":
     from labrad import util

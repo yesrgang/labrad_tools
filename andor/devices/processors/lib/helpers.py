@@ -1,15 +1,16 @@
+import mahotas
 import numpy as np
 
 def get_norm_indicies(image, norm):
-    x_max = image.shape[-1]
-    y_max = image.shape[-2]
+    x_max = image.shape[1]
+    y_max = image.shape[0]
     x, y = np.meshgrid(range(x_max), range(y_max))    
     r2 = (x - x_max / 2.)**2 + (y - y_max / 2.)**2
     return (r2 > norm[2]**2) & (r2 < norm[3]**2)
 
 def get_roi_corners(image, roi, theta=0):
-    x_max = image.shape[-1]
-    y_max = image.shape[-2]
+    x_max = image.shape[1]
+    y_max = image.shape[0]
     
     R = np.matrix([
         [np.cos(theta), -np.sin(theta)],
@@ -43,8 +44,8 @@ def region_pts(pts):
 
 
 def fix_image_gradient(image1, image2, norm):
-    x_max = image1.shape[-1]
-    y_max = image1.shape[-2]
+    x_max = image1.shape[1]
+    y_max = image1.shape[0]
     x, y = np.meshgrid(range(x_max), range(y_max))    
 
     norm_indicies = get_norm_indicies(image1, norm)

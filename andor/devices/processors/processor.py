@@ -7,10 +7,9 @@ class Processor(object):
     """ process single image """
     config_path = None
 
-    def __init__(self, config_json='{}'):
+    def __init__(self, config_updates={}):
         with open(self.config_path, 'r') as infile:
             config = json.load(infile)
-        config_updates = json.loads(config_json) 
         config.update(config_updates)
         for key, value in config.items():
             setattr(self, key, value)
