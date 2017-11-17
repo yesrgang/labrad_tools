@@ -27,20 +27,20 @@ class ProcessEg(Processor):
         norm_indicies = get_norm_indicies(bright, self.norm)
 
         bright_g = bright * np.sum(image_g[norm_indicies]) / np.sum(bright[norm_indicies])
-        image_g, bright_g = fix_image_gradient(image_g, bright_g, self.)
+        image_g, bright_g = fix_image_gradient(image_g, bright_g, self.norm)
         
         i_g = (image_g > 0) & (bright_g > 0)
-        n_g = np.zeros_like(bright)
+        n_g = np.zeros_like(bright_g)
         n_g[i_g] = (
             low_intensity_coefficient * np.log(bright_g[i_g] / image_g[i_g])
             + high_intensity_coefficient * (bright_g[i_g] - image_g[i_g])
             )
     
         bright_e = bright * np.sum(image_e[norm_indicies]) / np.sum(bright[norm_indicies])
-        image_e, bright_e = fix_image_gradient(image_e, bright_e, settings['norm'])
+        image_e, bright_e = fix_image_gradient(image_e, bright_e, self.norm)
         
         i_e = (image_e > 0) & (bright_e > 0)
-        n_e = np.zeros_like(bright)
+        n_e = np.zeros_like(bright_e)
         n_e[i_e] = (
             low_intensity_coefficient * np.log(bright_e[i_e] / image_e[i_e])
             + high_intensity_coefficient * (bright_e[i_e] - image_e[i_e])
@@ -48,14 +48,14 @@ class ProcessEg(Processor):
 
         counts = {}
         for roi_name, roi in self.roi.items():
-            roi_pts = region_pts(get_roi_corners(n, roi))
-            n_g = np.sum(n_g[zip(*roi_pts)])
-            n_e = np.sum(n_e[zip(*roi_pts)])
+            roi_pts = region_pts(get_roi_corners(n_g, roi))
+            g = np.sum(n_g[zip(*roi_pts)])
+            e = np.sum(n_e[zip(*roi_pts)])
             counts[roi_name] = {
-                'n_g': n_g,
-                'n_e': n_e,
-                'frac': n_e / (n_g + n_e),
-                'tot': n_g + n_e,
+                'n_g': g,
+                'n_e': e,
+                'frac': e / (g + e),
+                'tot': g + e,
                 }
 
         return counts

@@ -1,7 +1,7 @@
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.reactor import callInThread
 from lib.andor import Andor
-from lib.helpers import import_recorder
+from lib.helpers import import_recorder, import_processor
 
 from server_tools.device_server import DeviceWrapper
     
@@ -37,7 +37,8 @@ class Ikon(DeviceWrapper):
             callInThread(recorder.record, self, record_path)
     
     def process(self, settings):
-        record_type = settings.get('record_type')
-        Processor = import_processor(record_type)
-        processor = Processor(settings)
-        return processor.get_counts()
+        processor_type = settings.get('processor_type')
+        if processor_type:
+            Processor = import_processor(processor_type)
+            processor = Processor(settings)
+            return processor.get_counts()
