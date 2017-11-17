@@ -22,8 +22,8 @@ from data_tools.process_image import process_image
 class ImageViewer(QtGui.QWidget):
     servername = 'yesr10_andor'
     update_id = 194320
-    data_directory = '/home/yertle/yesrdata/SrQ/data/{}/'
-#    data_directory = 'Z:\\SrQ\\data\\{}\\'
+#    data_directory = '/home/yertle/yesrdata/SrQ/data/{}/'
+    data_directory = 'Z:\\SrQ\\data\\{}\\{}'
     name = 'ikon'
 
     def __init__(self, reactor):
@@ -84,10 +84,9 @@ class ImageViewer(QtGui.QWidget):
         signal = json.loads(signal)
         for key, value in signal.items():
             if key == self.name:
-                record_name = value['record_name']
+                record_path = value['record_path']
                 record_type = value['record_type']
-                data_directory = self.data_directory.format(strftime('%Y%m%d'))
-                image_path = data_directory + record_name
+                image_path = self.data_directory.format(*record_path)
                 print 'ok'
                 self.plot(image_path, record_type)
         print 'done signal'

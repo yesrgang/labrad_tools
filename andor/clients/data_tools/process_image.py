@@ -55,12 +55,17 @@ def process_images_eg(images):
     n_g = (
         low_intensity_coefficient * np.log(bright / image_g)
         + high_intensity_coefficient * (bright - image_g)
-        )
+        )[10:-10,:]
     
     n_e = (
         low_intensity_coefficient * np.log(bright / image_e)
         + high_intensity_coefficient * (bright - image_e)
-        )
+        )[10:-10,:]
+
+    n_g[:10,:] = 0
+    n_g[-10:,:] = 0
+    n_e[:10,:] = 0
+    n_e[-10:,:] = 0
     
     return np.flipud(np.fliplr(np.vstack((n_e, n_g))))
 #    return np.flipud(np.fliplr(np.vstack((image_e, image_g))))
