@@ -1,6 +1,7 @@
+import h5py
 import json
 import numpy as np
-import h5py
+import os
 from time import strftime
 
 class Recorder(object):
@@ -18,6 +19,8 @@ class Recorder(object):
     
     def save(self, images, record_path):
         data_directory = self.data_directory.format(record_path[0])
+        if not os.path.isdir(data_directory):
+            os.makedirs(data_directory)
         data_path = data_directory + record_path[1]
         h5f = h5py.File(data_path, "w")
         for image in images:
