@@ -35,15 +35,27 @@ class DitherLock(ConductorParameter):
             center = self.pid[name].output
 
             out = self.dither[name].tick(side, center)
+            yield self.conductor.set_parameter_value('clock_aom', 'center_frequency', center)
             yield self.conductor.set_parameter_value('clock_aom', 'frequency', out)
 
         pid_value = self.value.get('pid')
         if pid_value:
             name = pid_value[0]
             side = pid_value[1]
-            readout_device = self.pid[name].readout_device
-            data = self.conductor.data.get(readout_device)
-            frac = get_frac(readout_device, data)
+            readout_type = self.pid[name].readout_type
+            if readout_type == 'pmt':
+                frac = self.conductor.data.['pico']['frac'][-1]
+            elif readout_type == 'camera':
+                camera_settings = self.pid[name].camera_settings
+                response = yield self.cxn.yesr10_andor.get_sums(
+                    json.dumps(camera_settings)
+                    )
+                frac = json.loads(response)['center']['frac']
+                tot = json.loads(response)['center']['tot']
+                yield self.conductor.set_parameter_value(
+                        'andor', 'frac', frac, True)
+                yield self.conductor.set_parameter_value(
+                        'andor', 'tot', tot, True)
 
             if frac:
                 out = self.pid[name].tick(side, frac)

@@ -34,3 +34,5 @@ class Sequence(ConductorParameter):
             yield self.cxn.sequencer.run_sequence(json.dumps(sequence))
             t_advance = get_duration(sequence)
         yield self.cxn.conductor.advance(t_advance)
+
+        yield self.conductor.set_parameter_value('sequencer', 'cycle_time', t_advance, True)
