@@ -77,8 +77,9 @@ class ConductorParameter(object):
         yield None
         if hasattr(self, 'cxn'):
             try:
-                self.cxn.close()
-            except:
+                del self.cxn
+            except Exception as e:
+                print e
                 print 'failed to close {}.cxn'.format(self.name)
 
     @property

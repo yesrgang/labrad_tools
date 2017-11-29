@@ -38,9 +38,9 @@ class DitherIII(object):
 
 
         self.filter_coefficients = {
-            'a_0': -T/2.*i + 1.*T**2/4.*ii,
-            'a_1': T**2/2.*ii,
-            'a_2': T/2.*i + 1.*T**2/4.*ii,
+            'a_0': -T / 2. * i + 1. * T**2 / 4. * ii,
+            'a_1': T**2 / 2. * ii,
+            'a_2': T / 2. *i + 1. * T**2 / 4. * ii,
             'b_1': 2.,
             'b_2': -1.,
         }
@@ -109,8 +109,8 @@ class DitherPID(object):
             'left': deque([], maxlen=1),
             'right': deque([], maxlen=1),
         }
-        self.xbuffer = deque([0., 0., 0.], maxlen=4)
-        self.ybuffer = deque([0., 0., 0.], maxlen=4)
+        self.xbuffer = deque([0., 0.], maxlen=2)
+        self.ybuffer = deque([0., 0.], maxlen=2)
         self.error = None
 
         self.set_parameters(**kwargs)
@@ -121,14 +121,14 @@ class DitherPID(object):
         
         G = self.overall_gain
         T = self.sampling_period
-        p = G*self.prop_gain
-        i = G*self.int_gain
-        d = G*self.diff_gain
+        p = G * self.prop_gain
+        i = G * self.int_gain
+        d = G * self.diff_gain
 
         self.filter_coefficients = {
-            'b_0': p + i*T/2. + d*2./T,
-            'b_1': i*T - d*4./T,
-            'b_2': i*T/2. - p + d*2./T,
+            'b_0': p + i * T / 2. + d * 2. / T,
+            'b_1': i * T - d * 4. / T,
+            'b_2': i * T / 2. - p + d * 2. / T,
             'a_1': 0.,
             'a_2': 1.
         }
@@ -144,9 +144,6 @@ class DitherPID(object):
         in_r = self.input_buffer['right'].pop()
 
         self.error = in_l - in_r - self.input_offset
-        if hasattr(self, 'error_function'):
-            ef = pickle.loads(self.error_function.encode('ISO-8859-1'))
-            self.error = ef(self.error)
 
         b_0 = self.filter_coefficients['b_0']
         b_1 = self.filter_coefficients['b_1']

@@ -21,7 +21,7 @@ from data_tools.process_image import process_image
 
 class ImageViewer(QtGui.QWidget):
     servername = 'yesr10_andor'
-    update_id = 194320
+    update_id = 734520
 #    data_directory = '/home/yertle/yesrdata/SrQ/data/{}/'
     data_directory = 'Z:\\SrQ\\data\\{}\\{}'
     name = 'ikon'

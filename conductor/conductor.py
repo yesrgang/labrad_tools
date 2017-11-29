@@ -435,11 +435,12 @@ class ConductorServer(LabradServer):
             if self.do_print_delay:
                 print '{} - {} delay: {}'.format(parameter.device_name, parameter.name, time() - ti)
         
-        if not pts:
-            if advanced:
+        if self.point_number is not None:
+            if not pts:
+                if advanced:
+                    self.point_number += 1
+            else:
                 self.point_number += 1
-        elif self.point_number is not None:
-            self.point_number += 1
         
         # signal update
         yield self.parameters_updated(True)
@@ -477,8 +478,10 @@ class ConductorServer(LabradServer):
                 parameter_data.append(new_value)
         
         if data_path:
-            with open(data_path, 'w+') as outfile:
+            with open(data_path, 'w') as outfile:
                 json.dump(data, outfile, default=lambda x: None)
+
+        self.data = data
 
     @inlineCallbacks
     def stopServer(self):
@@ -517,12 +520,17 @@ class ConductorServer(LabradServer):
         if delay:
             callLater(delay, self.advance, c)
         else:
-            callInThread(self.save_data, self.data, self.data_path) # maybe better to have callInThread f, not class method, make sure nothing strange happens
+            data_copy = deepcopy(self.data)
+            data_path = self.data_path
+            # maybe better to have callInThread f, not class method, make sure nothing strange happens
+            callInThread(self.save_data, data_copy, data_path) 
+
             ti = time()
             yield self.advance_parameters()
             tf = time()
+
             if self.do_print_delay:
-                print 'total delay: ', tf-ti
+                print 'total delay: ', tf - ti
 
     @setting(16, do_print_delay='b', returns='b')
     def print_delay(self, c, do_print_delay=None):
