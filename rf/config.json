@@ -66,15 +66,15 @@
             "device_type": "DG1000Z",
             "connection_type": "VXI",
             "servername": "yesr11_vxi11",
-            "address": "192.168.1.9",
-            "source": 1,
+            "address": "192.168.1.5",
+            "source": 2,
             "state": true,
             "frequency": 27e6,
             "amplitude": 0.5,
             "frequency_range": [1, 60e6],
             "amplitude_range": [0.0, 1.0],
             "init_commands": [
-                "OUTP1:LOAD 50"
+                "OUTP2:LOAD 50"
             ]
         },
         "clock_steer": {
@@ -120,42 +120,44 @@
                 "OUTP2 1"
             ]
         },
-        "707_current_mod": {
+        "vclock_aom": {
             "device_type": "DG1000Z",
             "connection_type": "VXI",
             "servername": "yesr11_vxi11",
             "address": "192.168.1.5",
             "source": 1,
             "state": true,
-            "frequency": 5e3,
-            "amplitude": 2e-3,
+            "frequency": 57.3e6,
+            "amplitude": 1.5,
             "amplitude_units": "V",
-            "frequency_range": [1e-3, 30e6],
+            "frequency_range": [50e3, 60e6],
             "amplitude_range": [0, 0.5],
             "init_commands": [
-                "SOUR1:FREQ 5e3",
-                "SOUR1:VOLT 2e-3",
+                "OUTP1:LOAD 50",
+                "SOUR1:VOLT 1.5",
+                "SOUR1:VOLT:OFFS 0",
                 "OUTP1:STAT 1"
             ]
         },
-        "679_current_mod": {
+        "vclock_center": {
             "device_type": "DG1000Z",
             "connection_type": "VXI",
             "servername": "yesr11_vxi11",
-            "address": "192.168.1.5",
-            "source": 2,
+            "address": "192.168.1.9",
+            "source": 1,
             "state": true,
-            "frequency": 5e3,
-            "amplitude": 11e-3,
+            "frequency": 57.3e6,
+            "amplitude": 1.5,
             "amplitude_units": "V",
-            "frequency_range": [1e-3, 30e6],
+            "frequency_range": [50e3, 60e6],
             "amplitude_range": [0, 0.5],
             "init_commands": [
-                "SOUR2:FREQ 5e3",
-                "SOUR2:VOLT 11e-3",
-                "OUTP2:STAT 1"
+                "OUTP1:LOAD 50",
+                "SOUR1:VOLT 1.5",
+                "SOUR1:VOLT:OFFS 0",
+                "OUTP1:STAT 0"
             ]
-        },        
+        },
         "707_piezo_mod": {
             "device_type": "DG1000Z",
             "connection_type": "VXI",

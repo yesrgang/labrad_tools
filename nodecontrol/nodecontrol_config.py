@@ -12,6 +12,7 @@ node_dict = {
         'rf',
         'current_controller',
         'ecdl',
+        'keithley',
         'spectrum_analyzer',
         'power_supply',
 #        'msquared_comb_lock',

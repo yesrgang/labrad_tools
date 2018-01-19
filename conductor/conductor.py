@@ -17,6 +17,7 @@ timeout = 20
 """
 
 import json
+#import ujson as json
 import os
 
 from collections import deque
@@ -62,6 +63,7 @@ class ConductorServer(LabradServer):
         self.data = {}
         self.data_path = None
         self.do_print_delay = False
+        self.writing_data = False
 
         self.load_config(config_path)
         LabradServer.__init__(self)
@@ -456,9 +458,9 @@ class ConductorServer(LabradServer):
             print 'could not update {}\'s {}. removing parameter'.format(
                     parameter.device_name, parameter.name)
             yield self.remove_parameter(parameter.device_name, parameter.name)
-    
-    def save_data(self, data, data_path):
-        # save data to disk
+
+    def update_data(self):
+        data = self.data
         if data:
             data_length = max([len(p) for dp in data.values()
                                       for p in dp.values()])
@@ -476,12 +478,64 @@ class ConductorServer(LabradServer):
                     parameter_data.append(None)
                 new_value = parameter.value
                 parameter_data.append(new_value)
-        
-        if data_path:
-            with open(data_path, 'w') as outfile:
-                json.dump(data, outfile, default=lambda x: None)
 
-        self.data = data
+    def save_data(self, data_path):
+        try:
+            if self.data_path and not self.writing_data:
+                self.writing_data = True
+                data_copy = deepcopy(self.data)
+                callInThread(self._save_data, data_copy, data_path)
+        except Exception as e:
+            print "Error writing data"
+            print e
+        finally:
+            self.writing_data = False
+    
+    def _save_data(self, data, data_path):
+        with open(data_path, 'w') as outfile:
+            json.dump(data, outfile, default=lambda x: None)
+
+#    @inlineCallbacks 
+#    def save_data(self, data, data_path):
+#        yield none
+#        # save data to disk
+#        if data:
+#            data_length = max([len(p) for dp in data.values()
+#                                      for p in dp.values()])
+#        else:
+#            data_length = 0
+#        
+#        for device_name, device_parameters in self.parameters.items():
+#            if not data.get(device_name):
+#                data[device_name] = {}
+#            for parameter_name, parameter in device_parameters.items():
+#                if not data[device_name].get(parameter_name):
+#                    data[device_name][parameter_name] = []
+#                parameter_data = data[device_name][parameter_name] 
+#                while len(parameter_data) < data_length:
+#                    parameter_data.append(None)
+#                new_value = parameter.value
+#                parameter_data.append(new_value)
+#
+#        return data_copy
+#        
+#        if data_path:
+#            if not self.writing_data:
+#                self.writing_data = True
+#                data_copy = deepcopy(data)
+#                callInThread(self.write_data, data_path, data_copy)
+#        yield None
+#
+#    def write_data(self, data_path, data):
+#        try:
+#            with open(data_path, 'w') as outfile:
+##                json.dump(data, outfile, default=lambda x: None)
+#                json.dump(data, outfile, escape_forward_slashes=False)
+#        except Exception as e:
+#            print "Error writing data"
+#            print e
+#        finally:
+#            self.writing_data = False
 
     @inlineCallbacks
     def stopServer(self):
@@ -520,13 +574,15 @@ class ConductorServer(LabradServer):
         if delay:
             callLater(delay, self.advance, c)
         else:
-            data_copy = deepcopy(self.data)
-            data_path = self.data_path
-            # maybe better to have callInThread f, not class method, make sure nothing strange happens
-            callInThread(self.save_data, data_copy, data_path) 
-
+#            data_copy = deepcopy(self.data)
+#            data_path = self.data_path
+#            # maybe better to have callInThread f, not class method, make sure nothing strange happens
+#            callInThread(self.save_data, data_copy, data_path) 
+            
             ti = time()
+            yield self.update_data() 
             yield self.advance_parameters()
+#            yield self.save_data(self.data_path) 
             tf = time()
 
             if self.do_print_delay:

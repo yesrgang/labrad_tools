@@ -18,7 +18,7 @@ class DitherLock(ConductorParameter):
     @inlineCallbacks
     def initialize(self):
         yield self.connect()
-        yield self.cxn.yesr10_andor.select_device('ikon')
+#        yield self.cxn.yesr10_andor.select_device('ikon')
 
     @inlineCallbacks
     def update(self):
@@ -34,7 +34,12 @@ class DitherLock(ConductorParameter):
             side = pid_value[1]
             readout_type = self.pid[name].readout_type
             if readout_type == 'pmt':
-                frac = self.conductor.data['pico']['frac'][-1]
+                try:
+                    frac = self.conductor.data['pico']['frac'][-1]
+                except Exception as e:
+                    print e
+                    frac = None
+
             elif readout_type == 'camera':
                 try:
                     image_path = self.conductor.data['andor']['image_path'][-1]
@@ -60,16 +65,18 @@ class DitherLock(ConductorParameter):
 
             if frac:
                 out = self.pid[name].tick(side, frac)
-                yield self.conductor.set_parameter_value(name, 'frequency', out, True)
+            else:
+                out = self.pid[name].output
+            yield self.conductor.set_parameter_value(name, 'frequency', out, True)
         
         dither_value = current_value.get('dither')
         if dither_value:
             name = dither_value[0]
             side = dither_value[1]
 
-            print 
-            print 'dither: ', name, side
-            print 
+#            print 
+#            print 'dither: ', name, side
+#            print 
 
             center = self.pid[name].output
             out = self.dither[name].tick(side, center)

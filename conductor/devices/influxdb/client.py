@@ -1,4 +1,5 @@
 import json
+from time import time
 import os
 from influxdb import InfluxDBClient
 from labrad.wrappers import connectAsync
@@ -15,18 +16,18 @@ def to_float(x):
 
 class Client(ConductorParameter):
     priority = 1
+    update_every = 300 # 5 minutes [s]
+    last_update = 0 # unix timestamp of last update [s]
 
     @inlineCallbacks
     def initialize(self):
         yield self.connect()
-        self.counter = 0
         self.dbclient = InfluxDBClient.from_DSN(os.getenv('INFLUXDBDSN'))
     
     @inlineCallbacks
     def update(self):
-        self.counter += 1
-        if self.counter >= 100:
-            self.counter = 0
+        if (time() - self.last_update) > self.update_every:
+            self.last_update = time()
             parameters_json = yield self.cxn.conductor.get_parameter_values()
             parameters = json.loads(parameters_json)
         
@@ -40,3 +41,4 @@ class Client(ConductorParameter):
             ]
         
             callInThread(self.dbclient.write_points, to_db)
+            print 'wrote to db'

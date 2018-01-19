@@ -63,6 +63,38 @@
             "address": "23",
             "axis": 4,
             "update_parameters": ["position"]
+        },
+        "hodt_x": {
+            "device_type": "NF8742",
+            "connection_type": "Socket2",
+            "servername": "192.168.1.21",
+            "address": "23",
+            "axis": 1,
+            "update_parameters": ["position"]
+        },
+        "hodt_y": {
+            "device_type": "NF8742",
+            "connection_type": "Socket2",
+            "servername": "192.168.1.21",
+            "address": "23",
+            "axis": 2,
+            "update_parameters": ["position"]
+        },
+        "vodt_x": {
+            "device_type": "NF8742",
+            "connection_type": "Socket2",
+            "servername": "192.168.1.21",
+            "address": "23",
+            "axis": 3,
+            "update_parameters": ["position"]
+        },
+        "vodt_y": {
+            "device_type": "NF8742",
+            "connection_type": "Socket2",
+            "servername": "192.168.1.21",
+            "address": "23",
+            "axis": 4,
+            "update_parameters": ["position"]
         }
     }
 }

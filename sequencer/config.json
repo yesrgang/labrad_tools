@@ -3,7 +3,7 @@
         "ABCD": {
             "device_type": "DigitalBoard",
             "connection_type": "OKFPGA",
-            "servername": "yesr10_okfpga",
+            "servername": "yesr20_okfpga",
             "address": "Sr2 dev.",
             "channels": [
                 {
@@ -460,7 +460,7 @@
         "E": {
             "device_type": "AnalogBoard",
             "connection_type": "OKFPGA",
-            "servername": "yesr10_okfpga",
+            "servername": "yesr20_okfpga",
             "address": "sr2 dac1",
             "channels": [
                 {
@@ -515,7 +515,7 @@
         "F": {
             "device_type": "AnalogBoard",
             "connection_type": "OKFPGA",
-            "servername": "yesr10_okfpga",
+            "servername": "yesr20_okfpga",
             "address": "srq analog 2",
             "channels": [
                 {
@@ -570,7 +570,7 @@
         "G": {
             "device_type": "AnalogBoardTest",
             "connection_type": "OKFPGA",
-            "servername": "yesr10_okfpga",
+            "servername": "yesr20_okfpga",
             "address": "srq analog 3",
             "channels": [
                 {

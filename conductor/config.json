@@ -10,14 +10,20 @@
                 "default_sequence": "all_off"
             }
         },
+        "data_recorder": {
+            "data_recorder": {},
+            "remote_copier": {}
+        },
         "clock_aom": {
             "frequency": {}
         },
         "alpha": {
-            "frequency": {}
+            "frequency": {},
+            "frequency_modulation": {}
         },
         "beta": {
-            "frequency": {}
+            "frequency": {},
+            "frequency_modulation": {}
         },
         "influxdb": {
             "client": {}

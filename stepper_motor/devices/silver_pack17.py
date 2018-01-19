@@ -39,6 +39,6 @@ class SilverPack17(DeviceWrapper):
         ans = yield self.connection.read_line()
         yield self.connection.write('/1e0R\r')
         ans = yield self.connection.read_line()
-        print ans
+#        print ans
         
 
