@@ -6,7 +6,7 @@ from lib.helpers import get_instruction_set
 class AD9854(Device):
     serial_server_name = None
     serial_address = None
-    serial_timeout = 0.1
+    serial_timeout = 0.4
     serial_baudrate = 4800
     
     address = None
@@ -41,7 +41,6 @@ class AD9854(Device):
         self.serial_server = yield self.cxn[self.serial_server_name]
         yield self.serial_server.select_interface(self.serial_address)
         yield self.serial_server.timeout(self.serial_timeout)
-        yield self.serial_server.read_lines()
 
         yield self.set_frequency(self.default_frequency)
         yield self.set_amplitude(self.default_amplitude)
@@ -60,7 +59,9 @@ class AD9854(Device):
         ans = yield self.serial_server.read_line()
         if ans != 'Roger that!':
             message = 'Error writing {} frequency'.format(self.name)
-            raise Exception(message)
+            #raise Exception(message)
+            print ans
+            print message
         self.frequency = frequency
 
     def get_frequency(self):
@@ -74,7 +75,9 @@ class AD9854(Device):
         ans = yield self.serial_server.read_line()
         if ans != 'Roger that!':
             message = 'Error writing {} amplitude'.format(self.name)
-            raise Exception(message)
+#            raise Exception(message)
+            print ans
+            print message
         self.amplitude = amplitude
 
     def get_amplitude(self):

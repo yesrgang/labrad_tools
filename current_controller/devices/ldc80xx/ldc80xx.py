@@ -1,7 +1,7 @@
 import numpy as np
 
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
-from twisted.internet.reactor import callLater, callFromThread
+from twisted.internet.reactor import callLater, callInThread
 
 from server_tools.device_server import Device
 from lib.helpers import sleep
@@ -106,14 +106,14 @@ class Ldc80xx(Device):
     @inlineCallbacks
     def warmup(self):
         yield self.set_state(True)
-        callFromThread(self.dial_current, self.default_current)
+        callInThread(self.dial_current, self.default_current)
         callLater(self.current_ramp_duration+.5, self.get_parameters)
         returnValue(self.current_ramp_duration+1.)
 
     @inlineCallbacks
     def shutdown(self):
         yield None
-        callFromThread(self.dial_current, 0)
-        callLater(self.current_ramp_duration+.5, self.set_state, False)
-        callLater(self.current_ramp_duration+1., self.get_parameters)
-        returnValue(self.current_ramp_duration+1.5)
+        callInThread(self.dial_current, 0)
+        callLater(self.current_ramp_duration + 0.5, self.set_state, False)
+        callLater(self.current_ramp_duration + 1.0, self.get_parameters)
+        returnValue(self.current_ramp_duration + 1.5)
