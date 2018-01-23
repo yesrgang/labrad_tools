@@ -41,4 +41,3 @@ class Client(ConductorParameter):
             ]
         
             callInThread(self.dbclient.write_points, to_db)
-            print 'wrote to db'

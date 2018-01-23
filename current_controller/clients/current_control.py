@@ -29,10 +29,9 @@ class CurrentControl(QtGui.QGroupBox):
 
     @inlineCallbacks
     def connect(self):
-        if self.cxn is None:
-            self.cxn = connection()
-            cname = '{} - {} - client'.format(self.servername, self.name)
-            yield self.cxn.connect(name=cname)
+        self.cxn = connection()
+        cname = '{} - {} - client'.format(self.servername, self.name)
+        yield self.cxn.connect(name=cname)
         self.context = yield self.cxn.context()
         yield self.select_device()
         self.populateGUI()

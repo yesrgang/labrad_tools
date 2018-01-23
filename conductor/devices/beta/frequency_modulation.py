@@ -19,6 +19,11 @@ class FrequencyModulation(ConductorParameter):
         self.inst = vxi11.Instrument('sr3waveform.colorado.edu')
     
     @inlineCallbacks
+    def terminate(self):
+        yield None
+        self.inst.close()
+    
+    @inlineCallbacks
     def update(self):
         yield None
         try:

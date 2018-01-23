@@ -202,7 +202,7 @@ class ConductorServer(LabradServer):
         del self.parameters[device_name][parameter_name]
         if not self.parameters[device_name]:
             del self.parameters[device_name]
-        yield parameter.stop()
+        yield parameter.terminate()
 
     @setting(4, parameters='s', generic_parameter='b', returns='b')
     def set_parameter_values(self, c, parameters, generic_parameter=False, 

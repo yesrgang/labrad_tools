@@ -11,7 +11,7 @@
             }
         },
         "data_recorder": {
-            "data_recorder": {},
+            "local_recorder": {},
             "remote_copier": {}
         },
         "clock_aom": {

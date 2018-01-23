@@ -72,7 +72,7 @@ class ConductorParameter(object):
         yield None
 
     @inlineCallbacks
-    def stop(self):
+    def terminate(self):
         """ close connections if you must """
         yield None
         if hasattr(self, 'cxn'):
