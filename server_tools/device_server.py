@@ -2,152 +2,153 @@ import re
 import json
 import types
 import os
+import pkgutil
 
 from twisted.internet.defer import returnValue, inlineCallbacks
 from labrad.server import LabradServer, setting
+from labrad.wrappers import connectAsync
 
 from decorators import quickSetting
 
+def import_device(device_name):
+    try:
+        module_path = 'devices.{}'.format(device_name)
+        device_class_name = '__device__'
+        module = __import__(module_path, fromlist=[device_class_name])
+        reload(module)
+        device = getattr(module, device_class_name)
+        device.name = device_name
+        return device
+    except Exception as e:
+        print e
+        print 'invalid device in ./devices/{}'.format(device_name)
 
-def underscore(name):
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z])([A-Z])', r'\1_\2', s1).lower()
-
-def add_quick_setting(srv, ID, setting_name, arg_type):
-    def setting(self, c, arg=None):
-        pass
-    setting.__name__ = str(setting_name)
-    setting.__doc__ = "get or change {} ".format(setting_name)
-    method = types.MethodType(setting, srv)
-    qs = quickSetting(ID, arg_type)(method)
-    setattr(srv, setting_name, qs)
-
-def get_device_wrapper(device_config):
-    device_type = device_config['device_type']
-    _device_type = underscore(device_type)
-    module_path = 'devices.{}'.format(_device_type)
-    if os.path.isdir(_device_type):
-        module_path += _device_type
-    module = __import__(module_path, fromlist=[device_type])
-    reload(module)
-    return getattr(module, device_type)
-
-def get_connection_wrapper(device):
-    module_path = 'server_tools.connections.{}_connection'.format(device.connection_type.lower())
-    module = __import__(module_path, fromlist=[device.connection_type+'Connection'], level=1)
-    return getattr(module, device.connection_type+'Connection')
-
-class DeviceWrapper(object):
-    def __init__(self, config={}):
-        for key, value in config.items():
-            setattr(self, key, value)
-        if self.servername and self.address:
-            self.connection_name = self.servername + ' - ' + self.address
+class Device(object):
+    autostart = False
+    update_parameters = []
     
-    @inlineCallbacks 
     def initialize(self):
-        yield None
+        pass
 
+    def terminate(self):
+        pass
+
+    @inlineCallbacks
+    def connect_labrad(self):
+        connection_name = '{} - {}'.format(self.device_server_name, self.name)
+        self.cxn = yield connectAsync(name=connection_name)
 
 class DeviceServer(LabradServer):
-    def __init__(self, config_path='./config.json'):
-        LabradServer.__init__(self)
-        self.devices = {}
-        self.open_connections = {}
-        self.quick_settings = []
-
-        self.load_config(config_path)
-#        for i, (setting, arg_type) in enumerate(self.quick_settings):
-#            add_quick_setting(self, 10 + i, setting, arg_type)
-
-    def load_config(self, path=None):
-        self.config = lambda: None
-        if path is not None:
-            self.config_path = path
-        with open(self.config_path, 'r') as infile:
-            config = json.load(infile)
-            for key, value in config.items():
-                setattr(self.config, key, value)
-
+    devices = {}
+    
     @inlineCallbacks
     def initServer(self):
-        for name, config in self.config.devices.items():
-            try: 
-                yield self.initialize_device(name, config)
-            except Exception, e:
-                print e.message, e.args
-                print 'could not initialize device {}'.format(name)
-                print 'removing {} from available devices'.format(name)
-                if name in self.devices:
-                    self.devices.pop(name)
+        for device in self.get_configured_devices():
+            if getattr(device, 'autostart'):
+                yield self.initialize_device(device.name)
+
+    def get_configured_devices(self):
+        assert os.path.exists('./devices/')
+        device_names = [name 
+            for _, name, ispkg in pkgutil.iter_modules(['./devices/'])
+            if not ispkg
+            ]
+        configured_devices = []
+        for device_name in device_names:
+            device = import_device(device_name)
+            if device:
+                configured_devices.append(device)
+        return configured_devices
+    
+    @inlineCallbacks 
+    def initialize_device(self, device_name):
+        if device_name in self.devices:
+            message = 'device {} is already active'.format(device_name)
+            raise Exception(message)
+        try:
+            device_class = import_device(device_name)
+            device = device_class()
+            device.device_server = self
+            device.device_server_name = self.name
+            yield device.initialize()
+            self.devices[device_name] = device
+        except Exception as e:
+            print e
+            print 'unable to initialize device {}'.format(device_name)
 
     @inlineCallbacks 
-    def initialize_device(self, name, config):
-        device_wrapper = get_device_wrapper(config)
-        device_wrapper.name = name
-        device_wrapper.server_name = self.name
-        device = device_wrapper(config)
-        if hasattr(device, 'connection_name'):
-            if device.connection_name not in self.open_connections:
-                yield self.init_connection(device)
-            device.connection = self.open_connections[device.connection_name]
-        self.devices[name] = device
-        device.server = self
-        yield device.initialize()
-    
-    @inlineCallbacks
-    def init_connection(self, device):
-        connection = get_connection_wrapper(device)()
-        yield connection.initialize(device)
-        print 'connection opened: {} - {}'.format(device.servername, device.address)
-        self.open_connections[device.connection_name] = connection
+    def terminate_device(self, device_name):
+        if device_name not in self.devices:
+            message = 'device {} is not active'.format(device_name)
+            raise Exception(message)
+        try:
+            device = self.devices.pop(device_name)
+            yield device.terminate()
+        except Exception as e:
+            print e
+            print 'unable to cleanly terminate device {}'.format(device.name)
+        finally:
+            del device
 
-    def get_device(self, c):
-        name = c.get('name')
-        if name is None:
+    def get_selected_device(self, c):
+        device_name = c.get('device_name')
+        if device_name is None:
             raise Exception('select a device first')
-        return self.devices[name]
-
-    @setting(0, returns='*s')
-    def get_device_list(self, c):
-        return self.devices.keys()
+        return self.devices[device_name]
     
-    @setting(1, name='s', returns=['s', ''])
-    def select_device(self, c, name):
-        if name not in self.devices.keys():
-            try: 
-                yield self.reload_config(c, name)
-            except:
-                message = '{} is not the name of a configured device'.format(
-                           name)
-                raise Exception(message)
-                returnValue(None)
-        c['name'] = name
-        device = self.get_device(c)
-        returnValue(json.dumps(device.__dict__, default=lambda x: None))
-    
-    @setting(3, returns='b')
-    def reinit_connection(self, c):
-        device = self.get_device(c)
-        yield self.init_connection(device)
-        device.connection = self.open_connections[device.connection_name]
-        returnValue(True)
+    @setting(0, returns='s')
+    def list_devices(self, c):
+        """ list available devices
+        
+        Args:
+            None
+        Returns:
+            json dumped dict
+            {
+                'active': active_devices,
+                'configured': configured_devices,
+            }
+            where active_devices is list of names of running devices
+            and configured_devices is list of names of devices configured in './devices'
+        """
+        active_device_names = self.devices.keys()
+        configured_devices = self.get_configured_devices()
+        configured_device_names = [device.name for device in configured_devices]
+        response = {
+            'active': active_device_names,
+            'configured': configured_device_names,
+            }
+        return json.dumps(response)
 
-    @setting(4)
+    @setting(1, device_name='s', returns=['s', ''])
+    def select_device(self, c, device_name):
+        if device_name not in self.devices.keys():
+            yield self.initialize_device(device_name)
+
+        if device_name in self.devices.keys():
+            c['device_name'] = device_name
+            device = self.get_selected_device(c)
+            device_info = {x: getattr(device, x) for x in dir(device) if x[0] != '_'}
+            # ignore if cannot serialise
+            device_info = json.loads(json.dumps(device_info, default=lambda x: None))
+            device_info = {k: v for k, v in device_info.items() if v is not None}
+            returnValue(json.dumps(device_info))
+        else:
+            message = 'Device {} could not be initialized. See server log for details.'.format(device_name)
+            raise Exception(message)
+    
+    @setting(2)
     def send_update(self, c):
-        device = self.get_device(c)
-        update = {c['name']: {p: getattr(device, p) 
+        device = self.get_selected_device(c)
+        update = {c['device_name']: {p: getattr(device, p) 
                   for p in device.update_parameters}}
         yield self.update(json.dumps(update))
 
-    @setting(5, names=['*s', 's'])
-    def reload_config(self, c, names=None):
-        self.load_config()
-        if names is None:
-            names = self.config.devices
-        elif type(names).__name__ != 'list':
-            names = [names]
-        for name in names:
-            device = self.config.devices.get(name)
-            if device:
-                yield self.initialize_device(name, device)
+    @setting(3, device_name='s')
+    def reload_device(self, c, device_name=None):
+        if device_name is None:
+            device_name = c.get('device_name')
+        if device_name in self.devices:
+            yield self.terminate_device(device_name)
+        yield self.initialize_device(device_name)
+

@@ -20,7 +20,6 @@ import sys
 from labrad.server import Signal, setting
 from twisted.internet.defer import inlineCallbacks, returnValue
 
-sys.path.append('../')
 from server_tools.device_server import DeviceServer
 
 UPDATE_ID = 698021
@@ -41,10 +40,6 @@ class StepperMotorServer(DeviceServer):
         device = self.get_device(c)
         if (position1 is not None) and (position2 is not None):
             yield device.toggle_absolute(position1,position2)
-
-
-
-
 
 if __name__ == "__main__":
     from labrad import util

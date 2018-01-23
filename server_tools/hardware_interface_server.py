@@ -40,7 +40,7 @@ class HardwareInterfaceServer(LabradServer):
         return self.interfaces[c['address']]
 
     @setting(0, returns='*s')
-    def get_interface_list(self, c):
+    def list_interfaces(self, c):
         """Get a list of available interfaces"""
         self.refresh_available_interfaces()
         return sorted(self.interfaces.keys())

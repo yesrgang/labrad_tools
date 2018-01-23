@@ -22,7 +22,6 @@ import sys
 from labrad.server import setting, Signal
 from twisted.internet.defer import inlineCallbacks, returnValue
 
-sys.path.append('../')
 from server_tools.device_server import DeviceServer
 
 UPDATE_ID = 698032
@@ -68,7 +67,7 @@ class SequencerServer(DeviceServer):
 
     @setting(10)
     def get_channels(self, cntx):
-        channels = {c.key: c.__dict__
+        channels = {c.key: c.channel_info()
                 for d in self.devices.values() 
                 for c in d.channels}
         return json.dumps(channels, default=lambda x: None)
@@ -112,33 +111,41 @@ class SequencerServer(DeviceServer):
         return self.devices[sequencer].mode
     
     def _fix_sequence_keys(self, sequence):
-        # take sequence name@loc to configuration name@loc
-#        locs = [key.split('@')[1] for key in sequence.keys()]
-#        for key in sequence.keys():
-#            name, loc = key.split('@')
-#            for d in self.devices.values():
-#                for c in d.channels:
-#                    if c.loc == loc:
-#                        s = sequence.pop(key)
-#                        sequence.update({c.key: s})
-#                    elif c.loc not in locs:
-#                        sequence.update({c.key: [
-#                            {'dt': dt, 'out': c.manual_output}
-#                                for dt in sequence[TRIGGER_CHANNEL]]})
-#        return sequence
-        fixed_sequence = {}
-        for old_id, channel_sequence in sequence.items():
-            channel = self.id2channel(old_id)
-            fixed_sequence[channel.key] = channel_sequence
+        """ patch sequence after channel name change 
+        
+        After adding channels, or changing the name of existing channels in the sequencer's configuration,
+        the channels in a previously made sequence might not match up with the newly configured channels.
+        If a configured channel (name@board_loc) does not have an entry in sequence,
+        we insert a new sequence according to 
+        1) if name matches any name@board_loc in sequence, use this sequence.
+        2) if not (1) but board_loc matches any name@board_loc in sequence, use this sequence.
+        3) if neither (1) or (2), sequence is constant, defined by configured channel's manual_output variable.
 
-        # make sure every channel has defined sequence
-        for d in self.devices.values():
-            for c in d.channels:
-                if c.key not in fixed_sequence:
-                    default_sequence = [{'dt': s['dt'], 'out': c.manual_output} 
-                                        for s in sequence[TRIGGER_CHANNEL]]
-                    fixed_sequence.update({c.key: default_sequence})
-        return fixed_sequence
+        should save fixed sequences from sequencer.
+        save and load sequences from local directory as remote yedata is slow.
+        """
+        # sequence might be specified by just names or just board_locs. map to name@board_loc
+        sequence = {self.id2channel(key).key: value for key, value in sequence.items()}
+        sequence_by_name = {key.split('@')[0]: value for key, value in sequence.items()}
+        sequence_by_loc = {key.split('@')[1]: value for key, value in sequence.items()}
+
+        patched_sequence = {}
+        for board_name, board in self.devices.items():
+            for channel in board.channels:
+                if channel.name in sequence_by_name:
+                    patched_sequence[channel.key] = sequence_by_name[channel.name]
+                elif channel.board_loc in sequence_by_loc:
+                    patched_sequence[channel.key] = sequence_by_loc[channel.board_loc]
+                else:
+                    if channel.channel_type == 'digital':
+                        default_sequence = [{'dt': s['dt'], 'out': channel.manual_output}
+                            for s in sequence[TRIGGER_CHANNEL]]
+                    elif channel.channel_type == 'analog':
+                        default_sequence = [{'dt': s['dt'], 'type': 's', 'vf': channel.manual_output}
+                            for s in sequence[TRIGGER_CHANNEL]]
+                    patched_sequence[channel.key] = default_sequence
+
+        return patched_sequence
     
     @setting(2)
     def send_update(self, c):

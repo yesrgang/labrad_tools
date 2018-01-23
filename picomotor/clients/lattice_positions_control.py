@@ -19,7 +19,7 @@ if __name__ == '__main__':
     qt4reactor.install()
     from twisted.internet import reactor
     from picomotor.clients.picomotor_client import MultiplePicomotorClient
-    mirrors = [('h1x', 'h1y'), ('h2x', 'h2y'), ('h1x_r', 'h1y_r'), ('h2x_r', 'h2y_r')]
+    mirrors = [('h1_x', 'h1_y'), ('h2_x', 'h2_y'), ('h1_xr', 'h1_yr'), ('h2_xr', 'h2_yr')]
     configs = [[ClientConfig(axis) for axis in mirror] for mirror in mirrors]
     widget = MultiplePicomotorClient(configs, reactor)
     widget.show()

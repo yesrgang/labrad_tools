@@ -15,12 +15,9 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
-import sys
-
 from labrad.server import Signal, setting
 from twisted.internet.defer import returnValue
 
-sys.path.append('../')
 from server_tools.device_server import DeviceServer
 
 UPDATE_ID = 698327
@@ -31,7 +28,7 @@ class FrequencyCounterServer(DeviceServer):
 
     @setting(10, returns='v')
     def frequency(self, c):
-        device = self.get_device(c)
+        device = self.get_selected_device(c)
         frequency = yield device.get_frequency()
         returnValue(frequency)
 
