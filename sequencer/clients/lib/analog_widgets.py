@@ -11,7 +11,7 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 
 from sequencer.clients.lib.helpers import substitute_sequence_parameters
-from sequencer.devices.lib.analog_ramps import RampMaker
+from sequencer.devices.ad669_board.lib.analog_ramps import RampMaker
 
 class NameBox(QtGui.QLabel):
     clicked = QtCore.pyqtSignal()
