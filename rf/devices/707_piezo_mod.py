@@ -6,7 +6,10 @@ class PiezoMod707(DG1000Z):
 
     frequency_range = (1e-6, 5e3)
     amplitude_range = (0.0, 5.0)
+    amplitude_units = 'V'
     offset_range = (-10, 10)
+
+    update_parameters = ['state', 'offset']
 
     def initialize(self):
         DG1000Z.initialize(self)

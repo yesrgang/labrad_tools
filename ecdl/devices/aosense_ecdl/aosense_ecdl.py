@@ -1,10 +1,12 @@
+import json
 import numpy as np
 import time
-
-from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
-from twisted.internet.reactor import callLater
+from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.reactor import callLater, callInThread
 
 from server_tools.device_server import Device
+from lib.helpers import sleep
+
 
 class AosenseEcdl(Device):
     serial_server_name = None
@@ -95,19 +97,36 @@ class AosenseEcdl(Device):
     @inlineCallbacks
     def dial_current(self, stop):
         start = yield self.get_diode_current()
-        values = np.linspace(start, stop, self.current_ramp_num_points + 1)[1:]
-        times = np.linspace(0, self.current_ramp_duration, self.current_ramp_num_points + 1)[1:]
-        for t, v in zip(times, values): 
-            callLater(t, self.set_diode_current, v)
+        currents = np.linspace(start, stop, self.current_ramp_num_points+1)[1:]
+        dt = float(self.current_ramp_duration) / self.current_ramp_num_points
+        for current in currents: 
+            yield self.set_diode_current(current)
+            yield sleep(dt)
 
     @inlineCallbacks
     def warmup(self):
+        yield None
+        callInThread(self.do_warmup)
+    
+    @inlineCallbacks
+    def do_warmup(self):
         yield self.set_state(True)
         yield self.dial_current(self.default_diode_current)
-        callLater(self.current_ramp_duration + 1.0, self.get_parameters)
-
+        yield sleep(.1)
+        yield self.get_parameters()
+        update = {self.name: {p: getattr(self, p) for p in self.update_parameters}}
+        yield self.device_server.update(json.dumps(update))
+    
     @inlineCallbacks
     def shutdown(self):
+        yield None
+        callInThread(self.do_shutdown)
+
+    @inlineCallbacks
+    def do_shutdown(self):
         yield self.dial_current(min(self.diode_current_range))
-        callLater(self.current_ramp_duration + 0.5, self.set_state, False)
-        callLater(self.current_ramp_duration + 1.0, self.get_parameters)
+        yield self.set_state(False)
+        yield sleep(.1)
+        yield self.get_parameters()
+        update = {self.name: {p: getattr(self, p) for p in self.update_parameters}}
+        yield self.device_server.update(json.dumps(update))

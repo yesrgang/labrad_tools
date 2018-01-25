@@ -14,6 +14,8 @@ class DG1000Z(Device):
     
     amplitude = None
     amplitude_range = None
+
+    offset = None
     
     update_parameters = ['state', 'frequency', 'amplitude']
 
@@ -25,6 +27,7 @@ class DG1000Z(Device):
         self.state = self.get_state()
         self.frequency = self.get_frequency()
         self.amplitude = self.get_amplitude()
+        self.offset = self.get_offset()
 
     def set_state(self, state):
         command = 'OUTP{}:STAT {}'.format(self.source, int(bool(state)))

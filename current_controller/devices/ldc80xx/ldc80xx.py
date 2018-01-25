@@ -1,5 +1,5 @@
+import json
 import numpy as np
-
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
 from twisted.internet.reactor import callLater, callInThread
 
@@ -97,23 +97,38 @@ class Ldc80xx(Device):
     @inlineCallbacks
     def dial_current(self, stop):
         start = yield self.get_current()
-        values = np.linspace(start, stop, self.current_ramp_num_points+1)[1:]
-        times = np.linspace(0, self.current_ramp_duration, self.current_ramp_num_points+1)[1:]
-        for t, v in zip(times, values): 
-            yield self.set_current(v)
-            yield sleep(float(self.current_ramp_duration) / self.current_ramp_num_points)
-
+        currents = np.linspace(start, stop, self.current_ramp_num_points+1)[1:]
+        dt = float(self.current_ramp_duration) / self.current_ramp_num_points
+        for current in currents: 
+            yield self.set_current(current)
+            yield sleep(dt)
+    
     @inlineCallbacks
     def warmup(self):
+        yield None
+        callInThread(self.do_warmup)
+#        yield self.do_warmup()
+    
+    @inlineCallbacks
+    def do_warmup(self):
         yield self.set_state(True)
-        callInThread(self.dial_current, self.default_current)
-        callLater(self.current_ramp_duration+.5, self.get_parameters)
-        returnValue(self.current_ramp_duration+1.)
+        yield self.dial_current(self.default_current)
+        yield sleep(.1)
+        yield self.get_parameters()
+        update = {self.name: {p: getattr(self, p) for p in self.update_parameters}}
+        yield self.device_server.update(json.dumps(update))
 
     @inlineCallbacks
     def shutdown(self):
         yield None
-        callInThread(self.dial_current, 0)
-        callLater(self.current_ramp_duration + 0.5, self.set_state, False)
-        callLater(self.current_ramp_duration + 1.0, self.get_parameters)
-        returnValue(self.current_ramp_duration + 1.5)
+        callInThread(self.do_shutdown)
+#        yield self.do_shutdown()
+
+    @inlineCallbacks
+    def do_shutdown(self):
+        yield self.dial_current(min(self.current_range))
+        yield self.set_state(False)
+        yield sleep(.1)
+        yield self.get_parameters()
+        update = {self.name: {p: getattr(self, p) for p in self.update_parameters}}
+        yield self.device_server.update(json.dumps(update))

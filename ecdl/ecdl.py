@@ -48,7 +48,6 @@ class ECDLServer(DeviceServer):
         device = self.get_selected_device(c)
         if warmup:
             yield device.warmup()
-        callLater(10, self.send_update, c)
         returnValue(warmup)
 
     @setting(14, shutdown='b', returns='b')
@@ -56,7 +55,6 @@ class ECDLServer(DeviceServer):
         device = self.get_selected_device(c)
         if shutdown:
             yield device.shutdown()
-        callLater(10, self.send_update, c)
         returnValue(shutdown)
 
 if __name__ == "__main__":

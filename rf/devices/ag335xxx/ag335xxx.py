@@ -22,10 +22,9 @@ class AG335xxx(Device):
         self.do_update_parameters()
 
     def do_update_parameters(self):
-        self.state = self.get_state()
-        self.frequency = self.get_frequency()
-        self.amplitude = self.get_amplitude()
-
+        for parameter in self.update_parameters:
+            getattr(self, 'get_{}'.format(parameter))()
+    
     def set_state(self, state):
         command = 'OUTP{}:STAT {}'.format(self.source, int(bool(state)))
         self.vxi11.write(command)
@@ -33,7 +32,8 @@ class AG335xxx(Device):
     def get_state(self):
         command = 'OUTP{}?'.format(self.source)
         ans = self.vxi11.ask(command)
-        return bool(int(ans))
+        self.state = bool(int(ans))
+        return self.state
 
     def set_frequency(self, frequency):
         frequency = sorted([min(self.frequency_range), 
@@ -44,7 +44,8 @@ class AG335xxx(Device):
     def get_frequency(self):
         command = 'SOUR{}:FREQ?'.format(self.source)
         ans = self.vxi11.ask(command)
-        return float(ans)
+        self.frequency = float(ans)
+        return self.frequency
 
     def set_amplitude(self, amplitude):
         amplitude = sorted([min(self.amplitude_range), 
@@ -55,4 +56,5 @@ class AG335xxx(Device):
     def get_amplitude(self):
         command = 'SOUR{}:VOLT?'.format(self.source)
         ans = self.vxi11.ask(command)
-        return float(ans)
+        self.amplitude = float(ans)
+        return self.amplitude

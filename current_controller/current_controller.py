@@ -22,7 +22,6 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.reactor import callLater
 from twisted.internet import reactor
 
-sys.path.append('../')
 from server_tools.device_server import DeviceServer
 from server_tools.decorators import quickSetting
 
@@ -54,8 +53,7 @@ class CurrentControllerServer(DeviceServer):
     def warmup(self, c, warmup=True):
         device = self.get_selected_device(c)
         if warmup:
-            update_delay = yield device.warmup()
-        callLater(update_delay, self.send_update, c)
+            yield device.warmup()
         returnValue(warmup)
 
     @setting(15, delta_day='i', hour='i', returns='i')
@@ -70,8 +68,7 @@ class CurrentControllerServer(DeviceServer):
     def shutdown(self, c, shutdown=True):
         device = self.get_selected_device(c)
         if shutdown:
-            update_delay = yield device.shutdown()
-        callLater(update_delay, self.send_update, c)
+            yield device.shutdown()
         returnValue(shutdown)
 
 if __name__ == '__main__':
