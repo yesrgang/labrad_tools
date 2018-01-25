@@ -10,21 +10,11 @@ class FrequencyModulation(ConductorParameter):
         'red_mot': 'INT:\\alpha.arb',
         'red_mot-fast': 'INT:\\alpha_fast.arb',
         }
-    vxi11_address = '192.168.1.24'
 
     @inlineCallbacks
     def initialize(self):
-        yield None
-        self.inst = vxi11.Instrument(self.vxi11_address)
-        self.inst.write('SOUR1:DATA:VOL:CLE')
-        for waveform in self.waveforms.values():
-            self.inst.write('MMEM:LOAD:DATA1 "{}"'.format(waveform))
-            self.inst.write('SOUR1:FUNC:ARB "{}"'.format(waveform))
-    
-    @inlineCallbacks
-    def terminate(self):
-        yield None
-        self.inst.close()
+        yield self.connect()
+        yield self.cxn.awg.select_device('alpha_fm')
     
     @inlineCallbacks
     def update(self):
@@ -35,4 +25,4 @@ class FrequencyModulation(ConductorParameter):
             sequence = []
         for subsequence, waveform in self.waveforms.items():
             if subsequence in sequence:
-                self.inst.write('SOUR1:FUNC:ARB "{}"'.format(waveform))
+                yield self.cxn.awg.waveform(waveform)
