@@ -3,4 +3,13 @@ install/usage guide
 
 neat spin box, units/prefixes...
 move node headers to ini, eh
-meta-variables *HODTf = another_variable
+
+meta-variables *HODTf = *another_variable
+sub sequences follow previous value
+
+make device server stuff more explicit. It's a bit abstract and unintuitive how config -> device wrapper. Maybe have a separate class for each device.
+also, fix connection stuff. inside server_tools.connections should have connection functions that just return a connection object.
+
+figure out some way to always pass conf objects between servers and clients. make immune to server restarts.
+
+conductor advance device, specify trigger on different events: sequencer signal, pmt/camera data recv, manual

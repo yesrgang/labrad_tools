@@ -25,7 +25,11 @@ from server_tools.hardware_interface_server import HardwareInterfaceServer
 
 
 class VXI11Server(HardwareInterfaceServer):
-    """Provides direct access to vxi specified ethernet connected hardware."""
+    """ Provides access to vxi specified ethernet connected hardware.
+    
+    this server can be used to access vxi11 enabled devices on the in-lab network 
+    when the client is itself not on the in-lab network.
+    """
     name = '%LABRADNODE%_vxi11'
 
     def refresh_available_interfaces(self):
@@ -46,7 +50,7 @@ class VXI11Server(HardwareInterfaceServer):
         return response.strip()
 
     @setting(5, data='s', returns='s')
-    def query(self, c, data):
+    def ask(self, c, data):
         """Make a query, writes string then returns instrument response."""
         response = self.call_if_available('ask', c, data)
         return response.strip()
@@ -58,7 +62,6 @@ class VXI11Server(HardwareInterfaceServer):
         if timeout is not None:
             interface.timeout = timeout
         return interface.timeout
-
 
 if __name__ == '__main__':
     from labrad import util
