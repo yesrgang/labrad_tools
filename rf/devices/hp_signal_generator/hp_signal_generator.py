@@ -27,9 +27,8 @@ class HPSignalGenerator(Device):
 
     @inlineCallbacks
     def do_update_parameters(self):
-        self.state = yield self.get_state()
-        self.frequency = yield self.get_frequency()
-        self.amplitude = yield self.get_amplitude()
+        for parameter in self.update_parameters:
+            yield getattr(self, 'get_{}'.format(parameter))()
 
     @inlineCallbacks
     def set_state(self, state):

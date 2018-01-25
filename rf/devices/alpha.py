@@ -14,5 +14,7 @@ class Alpha(HPSignalGenerator):
     def initialize(self):
         yield HPSignalGenerator.initialize(self)
         yield self.gpib_server.write('FM1:DEV 2e6')
+        yield self.set_amplitude(10)
+        yield self.set_state(True)
 
 __device__ = Alpha
