@@ -4,19 +4,6 @@
     "time_format": "%Y%m%d",
     "registry_directory": ["", "Servers", "conductor", "parameters"],
     "default_parameters": {
-        "sequencer": {
-            "sequence": {
-                "sequence_directory": "Z:\\SrQ\\data\\sequences\\{}\\",
-                "default_sequence": "all_off"
-            }
-        },
-        "data_recorder": {
-            "local_recorder": {},
-            "remote_copier": {}
-        },
-        "clock_aom": {
-            "frequency": {}
-        },
         "alpha": {
             "frequency": {},
             "frequency_modulation": {}
@@ -25,8 +12,24 @@
             "frequency": {},
             "frequency_modulation": {}
         },
+        "clock_aom": {
+            "frequency": {}
+        },
+        "data_recorder": {
+            "local_recorder": {},
+            "remote_copier": {}
+        },
         "influxdb": {
             "client": {}
+        },
+        "sequencer": {
+            "sequence": {
+                "sequence_directory": "Z:\\SrQ\\data\\sequences\\{}\\",
+                "default_sequence": "all_off"
+            }
+        },
+        "temperature": {
+            "keithley_temperature": {}
         },
         "time": {
             "timestamp": {}

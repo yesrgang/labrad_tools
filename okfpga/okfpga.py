@@ -48,7 +48,6 @@ class OKFPGAServer(HardwareInterfaceServer):
         for i in range(device_count):
             serial = fp.GetDeviceListSerial(i)
             if serial not in open_serials:
-                print serial
                 tmp = ok.okCFrontPanel()
                 tmp.OpenBySerial(serial)
                 device_id = tmp.GetDeviceID()

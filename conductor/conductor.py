@@ -28,7 +28,9 @@ from labrad.server import LabradServer
 from labrad.server import setting
 from labrad.server import Signal
 from labrad.wrappers import connectAsync
-from twisted.internet.reactor import callLater, callInThread
+from twisted.internet import reactor
+from twisted.internet.reactor import callInThread
+from twisted.internet.reactor import callLater
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import returnValue
 from twisted.internet.threads import deferToThread
@@ -39,7 +41,6 @@ from lib.exceptions import ParameterAlreadyRegistered
 from lib.exceptions import ParameterNotImported
 from lib.exceptions import ParameterNotRegistered
 
-# TODO remote save parameter files locally
 # TODO get available parameters
 
 class ConductorServer(LabradServer):
@@ -63,7 +64,7 @@ class ConductorServer(LabradServer):
         self.data = {}
         self.data_path = None
         self.do_print_delay = False
-        self.writing_data = False
+        self.do_debug = False
 
         self.load_config(config_path)
         LabradServer.__init__(self)
@@ -78,6 +79,10 @@ class ConductorServer(LabradServer):
                 setattr(self, key, value)
 
     def initServer(self):
+        # threads are used for calling parameter updates that can happen asynchronously
+        # threadPoolSize limits number of calls that can happen at the same time, make it 'big'
+        reactor.suggestThreadPoolSize(100)
+
         # register default parameters after connected to labrad
         callLater(.1, self.register_parameters, None, json.dumps(self.default_parameters))
 
@@ -350,9 +355,50 @@ class ConductorServer(LabradServer):
 
         return True
 
-    @setting(13, returns='s')
+    @setting(11, returns='s')
     def get_data(self, c):
         return json.dumps(self.data)
+    
+    @setting(12, returns='b')
+    def backup_parameters(self, c):
+        """ coarse history of parameter values saved as json to self.parameters_directory """
+        parameters_filename = self.parameters_directory + 'current_parameters.json'
+        if os.path.isfile(parameters_filename):
+            with open(parameters_filename, 'r') as infile:
+                old_parameters = json.load(infile)
+        else:
+            old_parameters = {}
+
+        parameters = deepcopy(old_parameters)
+        for device_name, device_parameters in self.parameters.items():
+            if not parameters.get(device_name):
+                parameters[device_name] = {}
+            for parameter_name, parameter in device_parameters.items():
+                parameters[device_name][parameter_name] = parameter.value
+        
+        parameters_filename = self.parameters_directory + 'current_parameters.json'
+        with open(parameters_filename, 'w') as outfile:
+            json.dump(parameters, outfile)
+
+        parameters_filename = self.parameters_directory + '{}.json'.format(
+                                  strftime(self.time_format))
+        with open(parameters_filename, 'w') as outfile:
+            json.dump(parameters, outfile)
+        print 'parameters backed up'
+
+        return True
+    
+    @setting(13)
+    def advance(self, c, delay=0):
+        if delay:
+            callLater(delay, self.advance, c)
+        else:
+            ti = time()
+            self.update_data() 
+            yield self.advance_parameters()
+            tf = time()
+            if self.do_print_delay:
+                print 'total delay: ', tf - ti
     
     @inlineCallbacks
     def advance_experiment(self):
@@ -446,12 +492,15 @@ class ConductorServer(LabradServer):
         
         # signal update
         yield self.parameters_updated(True)
-
+    
     @inlineCallbacks
     def update_parameter(self, parameter):
         """ have device update parameter value """
         try:
-            yield parameter.update()
+            if parameter.priority == 1 and not self.do_debug:
+                callInThread(parameter.update)
+            else:
+                yield parameter.update()
         except Exception, e:
             # remove parameter is update failed.
             print e
@@ -459,7 +508,12 @@ class ConductorServer(LabradServer):
                     parameter.device_name, parameter.name)
             yield self.remove_parameter(parameter.device_name, parameter.name)
 
+    
     def update_data(self):
+        """ append current parameter values to self.data
+        
+        self.data is meant to be a log
+        """
         data = self.data
         if data:
             data_length = max([len(p) for dp in data.values()
@@ -478,121 +532,22 @@ class ConductorServer(LabradServer):
                     parameter_data.append(None)
                 new_value = parameter.value
                 parameter_data.append(new_value)
-
-    def save_data(self, data_path):
-        try:
-            if self.data_path and not self.writing_data:
-                self.writing_data = True
-                data_copy = deepcopy(self.data)
-                callInThread(self._save_data, data_copy, data_path)
-        except Exception as e:
-            print "Error writing data"
-            print e
-        finally:
-            self.writing_data = False
     
-    def _save_data(self, data, data_path):
-        with open(data_path, 'w') as outfile:
-            json.dump(data, outfile, default=lambda x: None)
-
-#    @inlineCallbacks 
-#    def save_data(self, data, data_path):
-#        yield none
-#        # save data to disk
-#        if data:
-#            data_length = max([len(p) for dp in data.values()
-#                                      for p in dp.values()])
-#        else:
-#            data_length = 0
-#        
-#        for device_name, device_parameters in self.parameters.items():
-#            if not data.get(device_name):
-#                data[device_name] = {}
-#            for parameter_name, parameter in device_parameters.items():
-#                if not data[device_name].get(parameter_name):
-#                    data[device_name][parameter_name] = []
-#                parameter_data = data[device_name][parameter_name] 
-#                while len(parameter_data) < data_length:
-#                    parameter_data.append(None)
-#                new_value = parameter.value
-#                parameter_data.append(new_value)
-#
-#        return data_copy
-#        
-#        if data_path:
-#            if not self.writing_data:
-#                self.writing_data = True
-#                data_copy = deepcopy(data)
-#                callInThread(self.write_data, data_path, data_copy)
-#        yield None
-#
-#    def write_data(self, data_path, data):
-#        try:
-#            with open(data_path, 'w') as outfile:
-##                json.dump(data, outfile, default=lambda x: None)
-#                json.dump(data, outfile, escape_forward_slashes=False)
-#        except Exception as e:
-#            print "Error writing data"
-#            print e
-#        finally:
-#            self.writing_data = False
-
-    @inlineCallbacks
-    def stopServer(self):
-        yield self.backup_parameters(None)
-
-    @setting(17, returns='b')
-    def backup_parameters(self, c):
-        parameters_filename = self.parameters_directory + 'current_parameters.json'
-        if os.path.isfile(parameters_filename):
-            with open(parameters_filename, 'r') as infile:
-                old_parameters = json.load(infile)
-        else:
-            old_parameters = {}
-
-        parameters = deepcopy(old_parameters)
-        for device_name, device_parameters in self.parameters.items():
-            if not parameters.get(device_name):
-                parameters[device_name] = {}
-            for parameter_name, parameter in device_parameters.items():
-                parameters[device_name][parameter_name] = parameter.value
-        
-        parameters_filename = self.parameters_directory + 'current_parameters.json'
-        with open(parameters_filename, 'w') as outfile:
-            json.dump(parameters, outfile)
-
-        parameters_filename = self.parameters_directory + '{}.json'.format(
-                                  strftime(self.time_format))
-        with open(parameters_filename, 'w') as outfile:
-            json.dump(parameters, outfile)
-        print 'parameters backed up'
-
-        return True
-
-    @setting(15)
-    def advance(self, c, delay=0):
-        if delay:
-            callLater(delay, self.advance, c)
-        else:
-#            data_copy = deepcopy(self.data)
-#            data_path = self.data_path
-#            # maybe better to have callInThread f, not class method, make sure nothing strange happens
-#            callInThread(self.save_data, data_copy, data_path) 
-            
-            ti = time()
-            yield self.update_data() 
-            yield self.advance_parameters()
-#            yield self.save_data(self.data_path) 
-            tf = time()
-
-            if self.do_print_delay:
-                print 'total delay: ', tf - ti
-
-    @setting(16, do_print_delay='b', returns='b')
+    @setting(14, do_print_delay='b', returns='b')
     def print_delay(self, c, do_print_delay=None):
         if do_print_delay is not None:
             self.do_print_delay = do_print_delay
         return self.do_print_delay
+    
+    @setting(15, do_debug='b', returns='b')
+    def debug(self, c, do_debug=None):
+        if do_debug is not None:
+            self.do_debug = do_debug
+        return self.do_debug
+
+    @inlineCallbacks
+    def stopServer(self):
+        yield self.backup_parameters(None)
 
 if __name__ == "__main__":
     from labrad import util
