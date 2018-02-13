@@ -70,12 +70,12 @@ class SequencerServer(DeviceServer):
         channels = {}
         try:
             channel = self.id2channel(channel_id)
-            channels = {channel.key: channel.channel_info()}
+            return json.dumps(channel.channel_info(), default=lambda x: None)
         except:
             channels = {ch.key: ch.channel_info()
                     for d in self.devices.values() 
                     for ch in d.channels}
-        return json.dumps(channels, default=lambda x: None)
+            return json.dumps(channels, default=lambda x: None)
     
     @setting(11, sequence='s')
     def run_sequence(self, c, sequence):

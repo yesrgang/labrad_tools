@@ -93,12 +93,8 @@ class AnalogVoltageManualControl(QtGui.QGroupBox):
         if signal:
             self.free = False
             sequencer = yield self.cxn.get_server(self.servername)
-            channels = yield sequencer.get_channels()
-            for k, c in json.loads(channels).items():
-                if k.split('@')[0] == self.name:
-                    update = c
-            print update
-            #print update
+            update_json = yield sequencer.get_channels(self.name)
+            update = json.loads(update_json)
             if update['mode'] == 'manual':
                 self.mode_button.setChecked(1)
                 self.mode_button.setText('Manual')
