@@ -39,9 +39,9 @@ class Sprout(Device):
         yield self.serial_server.write_line('OPMODE?')
         ans = yield self.serial_server.read_lines()
         if ans == 'OPMODE=ON':
-            out = 1
+            out = True
         else:
-            out = 0
+            out = False
         returnValue(out)
 
     @inlineCallbacks

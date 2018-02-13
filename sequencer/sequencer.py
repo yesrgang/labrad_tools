@@ -66,10 +66,15 @@ class SequencerServer(DeviceServer):
         return channel
 
     @setting(10)
-    def get_channels(self, cntx):
-        channels = {c.key: c.channel_info()
-                for d in self.devices.values() 
-                for c in d.channels}
+    def get_channels(self, c, channel_id=None):
+        channels = {}
+        try:
+            channel = self.id2channel(channel_id)
+            channels = {channel.key: channel.channel_info()}
+        except:
+            channels = {ch.key: ch.channel_info()
+                    for d in self.devices.values() 
+                    for ch in d.channels}
         return json.dumps(channels, default=lambda x: None)
     
     @setting(11, sequence='s')
