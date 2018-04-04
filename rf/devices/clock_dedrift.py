@@ -23,10 +23,10 @@ class ClockDedrift(AG335xxx):
     @inlineCallbacks
     def initialize(self):
         AG335xxx.initialize(self)
-        self.vxi11.write('SOUR2:FUNC SIN')
-        self.vxi11.write('SOUR2:VOLT 500e-3')
-        self.vxi11.write('SOUR2:VOLT:OFFS 0')
-        self.vxi11.write('OUTP2 1')
+        self.vxi11.write('SOUR1:FUNC SIN')
+        self.vxi11.write('SOUR1:VOLT 500e-3')
+        self.vxi11.write('SOUR1:VOLT:OFFS 0')
+        self.vxi11.write('OUTP1 1')
 
         yield self.connect_labrad()
         self.frequency_counter = yield self.cxn['frequency_counter']

@@ -6,7 +6,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 
 class NF8742(Device):
     socket_address = None
-    socket_timeout = 0.1
+    socket_timeout = 0.5
     socket_buffer_size = 1024
 
     controller_axis = None

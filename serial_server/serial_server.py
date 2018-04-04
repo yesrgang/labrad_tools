@@ -59,6 +59,8 @@ class SerialServer(HardwareInterfaceServer):
         interface = super(SerialServer, self).get_interface(c)
         if not interface.isOpen():
             interface.open()
+            # for arduino, should require opt in somehow
+            sleep(2)
         return interface
     
     @setting(2, returns='b')

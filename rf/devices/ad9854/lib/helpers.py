@@ -1,3 +1,11 @@
+from twisted.internet.defer import Deferred
+from twisted.internet.reactor import callLater
+
+def sleep(secs):
+    d = Deferred()
+    callLater(secs, d.callback, None)
+    return d
+
 def get_instruction_set(address, register, data):
     ins = [58, address, len(data)+1, register] + data
     ins_sum = sum(ins[1:])
