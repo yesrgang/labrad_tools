@@ -7,7 +7,7 @@ Type=simple
 User=srgang
 Group=srgang
 WorkingDirectory=/home/srgang/labrad
-ExecStart=/home/srgang/labrad/bin/labrad-manager --tls-required=false --password=$LABRADPASSWORD
+ExecStart=/home/srgang/labrad/bin/labrad --tls-required=false --password=$LABRADPASSWORD
 StandardOutput=syslog
 StandardError=syslog
 
