@@ -14,20 +14,21 @@ class SilverPack17(Device):
         yield self.serial_server.select_interface(self.serial_address)
 
         # set current
-        yield serial_server.write('/1m30h10R\r')
+        yield self.serial_server.write('/1m30h10R\r')
         ans = yield self.serial_server.read_line()
 
         # set velocity and acceleration
-        yield serial_server.write('/1V1000L500R\r')
+        yield self.serial_server.write('/1V1000L500R\r')
         ans = yield self.serial_server.read_line()
 
         # set step resolution
-        yield serial_server.write('/1j256o1500R\r')
+        yield self.serial_server.write('/1j256o1500R\r')
         ans = yield self.serial_server.read_line()
     
     @inlineCallbacks
     def move_absolute(self, position):
         command = '/1A{}R\r'.format(position)
+        print command
         yield self.serial_server.write(command)
         ans = yield self.serial_server.read_line()
         self.position = position

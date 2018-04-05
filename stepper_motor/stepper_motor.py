@@ -30,14 +30,14 @@ class StepperMotorServer(DeviceServer):
 
     @setting(10, 'move absolute', position='i', returns='i')
     def move_absolute(self, c, position=None):
-        device = self.get_device(c)
+        device = self.get_selected_device(c)
         if position is not None:
             yield device.move_absolute(position)
-        returnValue(device.position)
+        returnValue(position)
 
     @setting(11, position1='i', position2='i')
     def toggle_absolute(self, c, position1=None, position2=None):
-        device = self.get_device(c)
+        device = self.get_selected_device(c)
         if (position1 is not None) and (position2 is not None):
             yield device.toggle_absolute(position1,position2)
 
