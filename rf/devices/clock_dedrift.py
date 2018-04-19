@@ -1,4 +1,5 @@
 from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.reactor import callLater
 
 from devices.ag335xxx.ag335xxx import AG335xxx
 
@@ -19,6 +20,7 @@ class ClockDedrift(AG335xxx):
 
     counter_name = 'clock_dedrift'
     ramp_duration = 8000
+    delayed_calls = []
     
     @inlineCallbacks
     def initialize(self):

@@ -35,8 +35,11 @@ class SilverPack17(Device):
 
     @inlineCallbacks
     def toggle_absolute(self,position1, position2):
-        command = '/1s0gH04A{}H14A{}G0R\r'.format(position1,position2)
+        command = '/1gH04A{}H14A{}G0R\r'.format(position1, position2)
         yield self.serial_server.write(command)
         ans = yield self.serial_server.read_line()
-        yield self.serial_server.write('/1e0R\r')
-        ans = yield self.serial_server.read_line()
+#        command = '/1s0gH04A{}H14A{}G0R\r'.format(position1, position2)
+#        yield self.serial_server.write(command)
+#        ans = yield self.serial_server.read_line()
+#        yield self.serial_server.write('/1e0R\r')
+#        ans = yield self.serial_server.read_line()

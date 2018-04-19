@@ -39,7 +39,9 @@ class StepperMotorServer(DeviceServer):
     def toggle_absolute(self, c, position1=None, position2=None):
         device = self.get_selected_device(c)
         if (position1 is not None) and (position2 is not None):
-            yield device.toggle_absolute(position1,position2)
+            yield device.toggle_absolute(position1, position2)
+        else:
+            raise Exception('must specify two positions')
 
 if __name__ == "__main__":
     from labrad import util
