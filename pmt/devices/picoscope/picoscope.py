@@ -34,9 +34,11 @@ class Picoscope(Device):
         yield self.picoscope_server.set_no_of_captures(self.picoscope_n_capture)
 
     @inlineCallbacks
-    def record(self, record_name):
-        self.recording_name = record_name
-        yield self.picoscope_server.run_block()
+    def record(self, data_path):
+        yield None
+#        self.recording_name = data_path
+#        yield self.picoscope_server.run_block()
+#        yield self.save_data()
 
     @inlineCallbacks
     def retrive(self, record_name, process_name):

@@ -15,15 +15,25 @@ message = 947659321
 timeout = 20
 ### END NODE INFO
 """
+import h5py
 import json
 from labrad.server import LabradServer
 from labrad.server import setting
+import os
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import  returnValue
 
 from picoscope import ps3000a
 
 from server_tools.hardware_interface_server import HardwareInterfaceServer
+
+from twisted.internet.defer import Deferred
+from twisted.internet.reactor import callLater
+
+def async_sleep(secs):
+    d = Deferred()
+    callLater(secs, d.callback, None)
+    return d
 
 class PicoscopeServer(HardwareInterfaceServer):
     """Provides access to picoscopes """
@@ -84,20 +94,64 @@ class PicoscopeServer(HardwareInterfaceServer):
     def run_block(self, c):
         ps = self.get_interface(c)
         ps.runBlock()
-
-    @setting(9, data_format='s')
-    def get_data(self, c, data_format):
+    
+    @setting(9, data_path='s', data_format_json='s')
+    def save_data(self, c, data_path, data_format_json):
+        """
+        ARGS:
+            data_path: (string) location of data to be saved, relative to data_dir.
+            data_format: json dumped dict
+                data_format = {
+                    channel: {
+                        segment_name: 
+                            segment_number
+                        }
+                    }
+        RETURNS:
+            None
+        """
         ps = self.get_interface(c)
-        if not ps.isReady():
-            message = 'picoscope ({}) is not ready'.format(c['address'])
-            raise Exception(message)
+        data_format = json.loads(data_format_json)
+        callInThread(self.do_save_data, ps, data_path, data_format)
+
+    def do_save_data(self, ps, data_path, data_format):
+        while not ps.isReady():
+            sleep(0.1)
+        response = {}
+        data = {}
+        for channel, segments in data_format.items():
+            data[channel] = {name: ps.getDataV(channel, 50000, segmentIndex=num)
+                for name, num in segments.items()}
+
+#        json.dump(response, data_path, default=lambda x: x.tolist())
+
+        data_directory = DATADIR + os.path.dirname(data_path) 
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        with h5py.File(DATADIR + data_path) as h5f:
+            for channel, segments in data.items():
+                grp = h5f.create_group(channel)
+                for name, data in segments.items():
+                    grp.create_dataset(name, data=data, compression='gzip')
+
+    @setting(10, data_format='s', do_wait='b')
+    def get_data(self, c, data_format, do_wait=False):
+        ps = self.get_interface(c)
+        while not ps.isReady():
+            if not do_wait:
+                message = 'picoscope ({}) is not ready'.format(c['address'])
+                raise Exception(message)
+            else:
+                print 'waiting...'
+                sleep(0.1)
+
         data_format = json.loads(data_format)
         response = {}
         for channel, segments in data_format.items():
-            data = []
-            for i in range(len(segments)):
-                data.append(ps.getDataV(channel, 50000, segmentIndex=i))
-            response[channel] = data
+            response[channel] = {}
+            for label, i in segments.items():
+                response[channel][label] =  ps.getDataV(channel, 50000, segmentIndex=i)
 
         return json.dumps(response, default=lambda x: x.tolist())
 
