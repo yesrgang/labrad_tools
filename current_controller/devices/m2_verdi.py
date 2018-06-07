@@ -1,3 +1,5 @@
+import devices.verdi.verdi
+reload(devices.verdi.verdi)
 from devices.verdi.verdi import Verdi
 
 class M2Verdi(Verdi):
@@ -6,9 +8,7 @@ class M2Verdi(Verdi):
     serial_address = 'COM19'
 
     power_range = (0.0, 18.0) # [W]
+
     default_power = 18.0 # [W]
-    warmup_power = 14.0 # [W]
-    shutter_delay = 600 # [s]
-    full_power_delay = 1800 # [s]
 
 __device__ = M2Verdi

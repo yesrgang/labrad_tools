@@ -2,11 +2,12 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 
 from server_tools.device_server import Device
 from lib.helpers import get_instruction_set
+from lib.helpers import sleep
 
 class AD9854(Device):
     serial_server_name = None
     serial_address = None
-    serial_timeout = 0.4
+    serial_timeout = 0.5
     serial_baudrate = 4800
     
     address = None
@@ -40,7 +41,9 @@ class AD9854(Device):
         yield self.connect_labrad()
         self.serial_server = yield self.cxn[self.serial_server_name]
         yield self.serial_server.select_interface(self.serial_address)
+#        yield sleep(2)
         yield self.serial_server.timeout(self.serial_timeout)
+        yield self.serial_server.baudrate(self.serial_baudrate)
 
         yield self.set_frequency(self.default_frequency)
         yield self.set_amplitude(self.default_amplitude)
@@ -62,6 +65,8 @@ class AD9854(Device):
             #raise Exception(message)
             print ans
             print message
+        else:
+            print ans
         self.frequency = frequency
 
     def get_frequency(self):
@@ -78,6 +83,8 @@ class AD9854(Device):
 #            raise Exception(message)
             print ans
             print message
+        else:
+            print ans
         self.amplitude = amplitude
 
     def get_amplitude(self):

@@ -6,7 +6,7 @@ class ClockDetune(DG1000Z):
 
     frequency_range = (1e0, 60e6)
     amplitude_range = (0.0, 1.0)
-    default_amplitude = 0.5
+    default_amplitude = 0.3 # adjusted to make switch between this and clock_steer smooth 
 
     def initialize(self):
         DG1000Z.initialize(self)

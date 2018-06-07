@@ -36,7 +36,8 @@ class HardwareInterfaceServer(LabradServer):
         if c['address'] not in self.interfaces.keys():
             self.refresh_available_interfaces()
             if c['address'] not in self.interfaces.keys():
-                raise Exception(c['address'] + 'is unavailable')
+                message = c['address'] + 'is unavailable'
+                raise Exception(message)
         return self.interfaces[c['address']]
 
     @setting(0, returns='*s')
@@ -49,6 +50,7 @@ class HardwareInterfaceServer(LabradServer):
     def select_interface(self, c, address):
         self.refresh_available_interfaces()
         if address not in self.interfaces:
-            raise Exception(c['address'] + 'is unavailable')
+            message = c['address'] + 'is unavailable'
+            raise Exception(message)
         c['address'] = address
         return c['address'] 

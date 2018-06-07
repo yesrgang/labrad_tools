@@ -126,7 +126,7 @@ class AosenseEcdl(Device):
     def do_shutdown(self):
         yield self.dial_current(min(self.diode_current_range))
         yield self.set_state(False)
-        yield sleep(.1)
+        yield sleep(1)
         yield self.get_parameters()
         update = {self.name: {p: getattr(self, p) for p in self.update_parameters}}
         yield self.device_server.update(json.dumps(update))

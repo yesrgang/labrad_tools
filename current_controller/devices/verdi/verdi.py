@@ -83,19 +83,13 @@ class Verdi(Device):
     @inlineCallbacks
     def warmup(self):
         yield cancel_delayed_calls(self)
-        yield self.set_power(self.warmup_power)
+        yield self.set_power(self.default_power)
         yield self.set_state(True)
-        shutter_call = callLater(self.shutter_delay, self.set_shutter_state, True)
-        self.delayed_calls.append(shutter_call)
-        full_power_call = callLater(self.full_power_delay, self.set_power, 
-                                    self.default_power)
-        self.delayed_calls.append(full_power_call)
-        returnValue(1.)
+        yield self.set_shutter_state(True)
 
     @inlineCallbacks
     def shutdown(self):
         yield cancel_delayed_calls(self)
         yield self.set_shutter_state(False)
-        yield self.set_power(self.warmup_power)
         yield self.set_state(False)
-        returnValue(1.)
+        yield self.set_power(self.warmup_power)
