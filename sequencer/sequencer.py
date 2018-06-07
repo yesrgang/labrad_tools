@@ -18,11 +18,13 @@ timeout = 20
 import json
 import numpy as np
 import sys
+import time
 
 from labrad.server import setting, Signal
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 from server_tools.device_server import DeviceServer
+from server_tools.helpers import deferred_sleep
 
 UPDATE_ID = 698032
 TRIGGER_CHANNEL = 'Trigger@D15'
@@ -79,15 +81,21 @@ class SequencerServer(DeviceServer):
     
     @setting(11, sequence='s')
     def run_sequence(self, c, sequence):
+        """ for complicated sequences, this is taking ~300 ms, can we make faster? """
+#        ti = time.time()
         fixed_sequence = self._fix_sequence_keys(json.loads(sequence))
+#        print 'sequencer 1', time.time() - ti
         for device in self.devices.values():
             yield device.program_sequence(fixed_sequence)
+#        print 'sequencer 2', time.time() - ti
         for device in self.devices.values():
             if device.sequencer_type == 'analog':
                 yield device.start_sequence()
+#        print 'sequencer 3', time.time() - ti
         for device in self.devices.values():
             if device.sequencer_type == 'digital':
                 yield device.start_sequence()
+#        print 'sequencer 4', time.time() - ti
 
     @setting(12, channel_id='s', mode='s')
     def channel_mode(self, c, channel_id, mode=None):

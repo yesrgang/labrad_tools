@@ -17,7 +17,7 @@ class AosenseEcdl(Device):
     current_ramp_duration = 5 # [s]
     current_ramp_num_points = 10 # [s]
     default_diode_current = None # [mA]
-    diode_current_range = (10.0, 165.0) # [mA]
+    diode_current_range = (10.0, 200.0) # [mA]
 
     piezo_voltage_range = (0.0, 125.0) # [V]
     

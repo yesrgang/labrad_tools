@@ -12,7 +12,7 @@ from matplotlib.figure import Figure
 from client_tools.connection import connection
 from client_tools.widgets import SuperSpinBox
 from sequencer.clients.lib.helpers import merge_dicts, get_sequence_parameters, substitute_sequence_parameters
-from sequencer.devices.ad669_board.lib.analog_ramps import RampMaker
+from sequencer.devices.yesr_analog_board.lib.analog_ramps import RampMaker
 
 class ParameterWidget(QtGui.QWidget):
     def __init__(self, ramp_type, ramp):

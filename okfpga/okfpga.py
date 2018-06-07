@@ -71,6 +71,12 @@ class OKFPGAServer(HardwareInterfaceServer):
     def update_wire_ins(self, c):
         self.call_if_available('UpdateWireIns', c)
 
+    @setting(14, trigger='i', mask='i')
+    def is_triggered(self, c, trigger, mask=0xffffffff):
+        self.call_if_available('UpdateTriggerOuts', c)
+        triggered = self.call_if_available('IsTriggered', c, trigger, mask)
+        return bool(triggered)
+
 if __name__ == "__main__":
     from labrad import util
     util.runServer(OKFPGAServer())

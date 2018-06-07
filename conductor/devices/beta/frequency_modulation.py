@@ -8,7 +8,9 @@ class FrequencyModulation(ConductorParameter):
     priority = 1
     waveforms = {
         'red_mot': 'INT:\\BETA.ARB',
+        'rm_tof': 'INT:\\BETA.ARB',
         'red_mot-fast': 'INT:\\BETA_FAST.ARB',
+        'red_mot-fast-tof': 'INT:\\BETA_FAST.ARB',
         }
 
     @inlineCallbacks

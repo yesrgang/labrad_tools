@@ -9,8 +9,10 @@ from lib.helpers import voltage_to_signed
 from lib.helpers import voltage_to_unsigned
 from lib.helpers import ramp_rate
 
+T_WAIT_TRIG = 42.94967294
 
-class AD669Board(Device):
+
+class YeSrAnalogBoard(Device):
     sequencer_type = 'analog'
 
     okfpga_server_name = None
@@ -18,7 +20,9 @@ class AD669Board(Device):
     
     channels = None
 
-    bitfile = 'analog_sequencer.bit'
+    bitfile = 'analog_sequencer-v2b.bit'
+#    bitfile = 'analog_sequencer.bit'
+
     mode_ints = {'idle': 0, 'load': 1, 'run': 2}
     mode_wire = 0x00
     sequence_pipe = 0x80
@@ -26,6 +30,8 @@ class AD669Board(Device):
     manual_voltage_wires = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]
     clk = 48e6 / (8.*2. + 2.)
     mode = 'idle'
+
+    sequence_bytes = None
 
     @inlineCallbacks
     def initialize(self):
@@ -49,13 +55,22 @@ class AD669Board(Device):
         yield self.okfpga_server.update_wire_ins()
         self.mode = mode
 
+#    @inlineCallbacks
+#    def program_sequence(self, sequence):
+#        sequence_bytes = self.make_sequence_bytes(sequence)
+#        yield self.set_mode('idle')
+#        yield self.set_mode('load')
+#        yield self.okfpga_server.write_to_pipe_in(self.sequence_pipe, json.dumps(sequence_bytes))
+#        yield self.set_mode('idle')
     @inlineCallbacks
     def program_sequence(self, sequence):
         sequence_bytes = self.make_sequence_bytes(sequence)
         yield self.set_mode('idle')
-        yield self.set_mode('load')
-        yield self.okfpga_server.write_to_pipe_in(self.sequence_pipe, json.dumps(sequence_bytes))
-        yield self.set_mode('idle')
+        if sequence_bytes != self.sequence_bytes:
+            yield self.set_mode('load')
+            yield self.okfpga_server.write_to_pipe_in(self.sequence_pipe, json.dumps(sequence_bytes))
+            yield self.set_mode('idle')
+        self.sequence_bytes = sequence_bytes
 
     @inlineCallbacks
     def start_sequence(self):
@@ -69,8 +84,12 @@ class AD669Board(Device):
         for channel in self.channels:
             assert channel.key in sequence
             channel_sequence = sequence[channel.key]
-            channel_sequence.append({'dt': 10e-3, 'type': 'lin', 'vf': 0})
-            channel_sequence.append({'dt': 10, 'type': 'lin', 'vf': 0})
+            vf = channel_sequence[-1]['vf']
+            channel_sequence.append({'dt': 10, 'type': 'lin', 'vf': vf})
+
+            # uncommenting for quto-trigger
+            channel_sequence = [cs for cs in channel_sequence if cs['dt'] < T_WAIT_TRIG]
+
             try:
                 channel.set_sequence(channel_sequence)
             except:
