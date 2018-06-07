@@ -6,6 +6,6 @@ class BlueZS(Ldc80xx):
     gpib_address = 'GPIB0::9::INSTR'
 
     pro8_slot = 6
-    default_current = 0.1508
+    default_current = 0.1500
 
 __device__ = BlueZS

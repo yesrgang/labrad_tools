@@ -14,6 +14,7 @@ class Picoscope(Device):
     picoscope_timeout = None # [ms]
 
     records = {}
+    raw_records = {}
     record_names = deque([])
     max_records = 100
     
@@ -36,9 +37,6 @@ class Picoscope(Device):
     @inlineCallbacks
     def record(self, data_path):
         yield None
-#        self.recording_name = data_path
-#        yield self.picoscope_server.run_block()
-#        yield self.save_data()
 
     @inlineCallbacks
     def retrive(self, record_name, process_name):

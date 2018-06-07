@@ -35,10 +35,10 @@ class PMTServer(DeviceServer):
         yield device.record(record_name)
         returnValue(True)
     
-    @setting(12, record_name='s', process_name='s', returns='s')
-    def retrive(self, c, record_name, process_name):
+    @setting(12, record_name=['s', 'i'], raw_data='b', returns='s')
+    def retrive(self, c, record_name, raw_data=False):
         device = self.get_selected_device(c)
-        data = yield device.retrive(record_name, process_name)
+        data = yield device.retrive(record_name, raw_data)
         returnValue(json.dumps(data))
 
 if __name__ == "__main__":

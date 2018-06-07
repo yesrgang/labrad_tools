@@ -5,8 +5,8 @@ class AlphaFM(AG335xxx):
     source = 1
 
     waveforms = [
-        'INT:\\alpha.arb',
-        'INT:\\alpha_fast.arb',
+        'INT:\\ALPHA.ARB',
+        'INT:\\ALPHA_FAST.ARB',
         ]
 
 __device__ = AlphaFM

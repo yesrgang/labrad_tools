@@ -17,7 +17,7 @@ class AosenseEcdl(Device):
     current_ramp_duration = 5 # [s]
     current_ramp_num_points = 10 # [s]
     default_diode_current = None # [mA]
-    diode_current_range = (10.0, 165.0) # [mA]
+    diode_current_range = (10.0, 200.0) # [mA]
 
     piezo_voltage_range = (0.0, 125.0) # [V]
     
@@ -126,7 +126,7 @@ class AosenseEcdl(Device):
     def do_shutdown(self):
         yield self.dial_current(min(self.diode_current_range))
         yield self.set_state(False)
-        yield sleep(.1)
+        yield sleep(1)
         yield self.get_parameters()
         update = {self.name: {p: getattr(self, p) for p in self.update_parameters}}
         yield self.device_server.update(json.dumps(update))

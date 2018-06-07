@@ -1,12 +1,22 @@
 import json
+import h5py
+import numpy as np
+import os
 from scipy.optimize import curve_fit
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import returnValue
+from twisted.internet.reactor import callInThread
 
 from devices.picoscope.picoscope import Picoscope
 
+def fit_function(x, a, b):
+    T0 = -2e1
+    TAU1 = 6.5e3
+    TAU2 = 9.5e1
+    return a * (np.exp(-(x-T0)/TAU1) - np.exp(-(x-T0)/TAU2)) + b
 
 class BluePMT(Picoscope):
+    autostart = False
     picoscope_server_name = 'yesr10_picoscope'
     picoscope_serial_number = 'DU009/008'
     picoscope_duration = 10e-3
@@ -52,20 +62,17 @@ class BluePMT(Picoscope):
 
     p0 = [1, 3e-2]
 
-    def fit_function(x, a, b):
-        T0 = -2e1
-        TAU1 = 6.5e3
-        TAU2 = 9.5e1
-        return a * (np.exp(-(x-T0)/TAU1) - np.exp(-(x-T0)/TAU2)) + b
 
     @inlineCallbacks
     def record(self, data_path):
         self.recording_name = data_path
         yield self.picoscope_server.run_block()
-        callInThread(self.do_save_data, data_path)
-
+        callInThread(self.do_record_data, data_path)
+#        yield self.do_record_data(data_path)
+    
+    @inlineCallbacks
     def do_record_data(self, data_path):
-        raw_data_json = yield self.save_data(data_path, json.dumps(self.data_format))
+        raw_data_json = yield self.picoscope_server.get_data(json.dumps(self.data_format), True)
         raw_data = json.loads(raw_data_json)["A"]
         raw_sums = {label: sum(raw_counts) for label, raw_counts in raw_data.items()}
         raw_fits = {}
@@ -78,10 +85,7 @@ class BluePMT(Picoscope):
         tot_fit = raw_fits['gnd'] + raw_fits['exc'] - 2 * raw_fits['bac']
         frac_fit = (raw_fits['exc'] - raw_fits['bac']) / tot_fit
 
-        data = {
-            'gnd': raw_data['gnd'],
-            'exc': raw_data['exc'],
-            'bac': raw_data['bac'],
+        processed_data = {
             'frac_sum': frac_sum,
             'tot_sum': tot_sum,
             'frac_fit': frac_fit,
@@ -89,47 +93,50 @@ class BluePMT(Picoscope):
             }
 
         data_directory = os.path.dirname(data_path) 
-        if not os.path.isdir(directory):
-            os.makedirs(directory)
-
-        with open(data_path, 'w') as outfile:
-            json.dump(data, outfile, default=lambda x: x.tolist())
+        if not os.path.isdir(data_directory):
+            os.makedirs(data_directory)
     
-#    @inlineCallbacks
-#    def retrive(self, record_name, process_name):
-#        if record_name == self.recording_name:
-#            self.record_names.append(record_name)
-#            while len(self.record_names) > self.max_records:
-#                rn = self.record_names.popleft()
-#                del self.records[rn]
-#
-#            data_format = {"A": [None, None, None]}
-#            response_json = yield self.picoscope_server.get_data(json.dumps(data_format))
-#            response = json.loads(response_json)
-#            gnd = response["A"][0]
-#            exc = response["A"][1]
-#            bac = response["A"][2]
-#            self.records[record_name] = {
-#                "gnd": gnd,
-#                "exc": exc,
-#                "bac": bac,
-#                }
-#            self.recording_name = None
-#        
-#        record = self.records.get(record_name)
-#        if record is None:
-#            message = 'record ({}) is not available'.format(record_name)
-#            raise Exception(message)
-#
-#        if process_name == 'full':
-#            returnValue(record)
-#        elif process_name == 'sum':
-#            data = {k: sum(v) for k, v in record.items()}
-#            data['tot'] = data['gnd'] + data['exc'] - 2 * data['bac']
-#            data['frac'] = (data['exc'] - data['bac']) / data['tot']
-#            returnValue(data)
-#        else:
-#            message = 'undefined process_name ({})'.format(process_name)
-#            raise Exception(message)
+        print "saving processed data to {}".format(data_path)
+
+        json_path = data_path + '.json'
+        if os.path.exists(json_path):
+            print 'not saving data to {}. file already exists'.format(json_path)
+        else:
+            with open(data_path + '.json', 'w') as outfile:
+                json.dump(processed_data, outfile, default=lambda x: x.tolist())
+        
+        h5py_path = data_path + '.h5py'
+        if os.path.exists(h5py_path):
+            print 'not saving data to {}. file already exists'.format(h5py_path)
+        else:
+            with h5py.File(h5py_path) as h5f:
+                for k, v in raw_data.items():
+                    h5f.create_dataset(k, data=np.array(v), compression='gzip')
+        
+        """ temporairly store data """
+        if len(self.record_names) > self.max_records:
+            oldest_name = self.record_names.popleft()
+            if oldest_name not in self.record_names:
+                _ = self.records.pop(oldest_name)
+                _ = self.raw_records.pop(oldest_name)
+        self.record_names.append(data_path)
+        self.records[data_path] = processed_data
+        self.raw_records[data_path] = raw_data
+
+        yield self.device_server.update(self.name)
+
+    
+    @inlineCallbacks
+    def retrive(self, record_name, raw_data=False):
+        yield None
+        if type(record_name).__name__ == 'int':
+            record_name = self.record_names[record_name]
+        if record_name not in self.records:
+            message = 'cannot locate record: {}'.format(record_name)
+            raise Exception(message)
+        record = self.records[record_name]
+        if raw_data:
+            record.update(self.raw_data[record_name])
+        returnValue(record)
 
 __device__ = BluePMT

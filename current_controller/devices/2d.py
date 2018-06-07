@@ -6,6 +6,6 @@ class Blue2D(Ldc80xx):
     gpib_address = 'GPIB0::9::INSTR'
 
     pro8_slot = 4
-    default_current = 0.1503
+    default_current = 0.1501
 
 __device__ = Blue2D

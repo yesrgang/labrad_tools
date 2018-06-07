@@ -95,24 +95,24 @@ class PicoscopeServer(HardwareInterfaceServer):
         ps = self.get_interface(c)
         ps.runBlock()
     
-    @setting(9, data_path='s', data_format_json='s')
-    def save_data(self, c, data_path, data_format_json):
-        """
-        ARGS:
-            data_path: (string) location of data to be saved, relative to data_dir.
-            data_format: json dumped dict
-                data_format = {
-                    channel: {
-                        segment_name: 
-                            segment_number
-                        }
-                    }
-        RETURNS:
-            None
-        """
-        ps = self.get_interface(c)
-        data_format = json.loads(data_format_json)
-        callInThread(self.do_save_data, ps, data_path, data_format)
+#    @setting(9, data_path='s', data_format_json='s')
+#    def save_data(self, c, data_path, data_format_json):
+#        """
+#        ARGS:
+#            data_path: (string) location of data to be saved, relative to data_dir.
+#            data_format: json dumped dict
+#                data_format = {
+#                    channel: {
+#                        segment_name: 
+#                            segment_number
+#                        }
+#                    }
+#        RETURNS:
+#            None
+#        """
+#        ps = self.get_interface(c)
+#        data_format = json.loads(data_format_json)
+#        callInThread(self.do_save_data, ps, data_path, data_format)
 
     def do_save_data(self, ps, data_path, data_format):
         while not ps.isReady():
@@ -143,8 +143,7 @@ class PicoscopeServer(HardwareInterfaceServer):
                 message = 'picoscope ({}) is not ready'.format(c['address'])
                 raise Exception(message)
             else:
-                print 'waiting...'
-                sleep(0.1)
+                yield async_sleep(0.1)
 
         data_format = json.loads(data_format)
         response = {}
@@ -153,7 +152,7 @@ class PicoscopeServer(HardwareInterfaceServer):
             for label, i in segments.items():
                 response[channel][label] =  ps.getDataV(channel, 50000, segmentIndex=i)
 
-        return json.dumps(response, default=lambda x: x.tolist())
+        returnValue(json.dumps(response, default=lambda x: x.tolist()))
 
 __server__ = PicoscopeServer()
 
