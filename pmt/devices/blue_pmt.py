@@ -9,18 +9,23 @@ from twisted.internet.reactor import callInThread
 
 from devices.picoscope.picoscope import Picoscope
 
-def fit_function(x, a, b):
-    T0 = -2e1
-    TAU1 = 6.5e3
-    TAU2 = 9.5e1
-    return a * (np.exp(-(x-T0)/TAU1) - np.exp(-(x-T0)/TAU2)) + b
+#def fit_function(x, a, b):
+#    T0 = -2e1
+#    TAU1 = 6.5e3
+#    TAU2 = 9.5e1
+#    return a * (np.exp(-(x-T0)/TAU1) - np.exp(-(x-T0)/TAU2)) + b
+#
+
+TAU = 2.3e4
+def fit_function(x, a):
+    return a * np.exp(-x / TAU)
 
 class BluePMT(Picoscope):
     autostart = False
     picoscope_server_name = 'yesr10_picoscope'
     picoscope_serial_number = 'DU009/008'
-    picoscope_duration = 10e-3
-    picoscope_frequency = 25e6
+    picoscope_duration = 2e-3
+    picoscope_frequency = 100e6
     picoscope_n_capture = 3
     picoscope_trigger_threshold = 2 # [V]
     picoscope_timeout = -1 # [ms]
@@ -60,7 +65,7 @@ class BluePMT(Picoscope):
             },
         }
 
-    p0 = [1, 3e-2]
+    p0 = [1]
 
 
     @inlineCallbacks
@@ -76,8 +81,11 @@ class BluePMT(Picoscope):
         raw_data = json.loads(raw_data_json)["A"]
         raw_sums = {label: sum(raw_counts) for label, raw_counts in raw_data.items()}
         raw_fits = {}
+
+        b = np.mean(raw_data['bac'])
         for label, raw_counts in raw_data.items():
-            popt, pcov = curve_fit(fit_function, range(len(raw_counts)), raw_counts, p0=self.p0)
+            counts = np.array(raw_counts)[500:] - b
+            popt, pcov = curve_fit(fit_function, range(len(counts)), counts, p0=self.p0)
             raw_fits[label] = popt[0]
 
         tot_sum = raw_sums['gnd'] + raw_sums['exc'] - 2 * raw_sums['bac']
@@ -105,7 +113,7 @@ class BluePMT(Picoscope):
             with open(data_path + '.json', 'w') as outfile:
                 json.dump(processed_data, outfile, default=lambda x: x.tolist())
         
-        h5py_path = data_path + '.h5py'
+        h5py_path = data_path + '.hdf5'
         if os.path.exists(h5py_path):
             print 'not saving data to {}. file already exists'.format(h5py_path)
         else:
@@ -118,16 +126,14 @@ class BluePMT(Picoscope):
             oldest_name = self.record_names.popleft()
             if oldest_name not in self.record_names:
                 _ = self.records.pop(oldest_name)
-                _ = self.raw_records.pop(oldest_name)
         self.record_names.append(data_path)
         self.records[data_path] = processed_data
-        self.raw_records[data_path] = raw_data
 
         yield self.device_server.update(self.name)
 
     
     @inlineCallbacks
-    def retrive(self, record_name, raw_data=False):
+    def retrive(self, record_name):
         yield None
         if type(record_name).__name__ == 'int':
             record_name = self.record_names[record_name]
@@ -135,8 +141,7 @@ class BluePMT(Picoscope):
             message = 'cannot locate record: {}'.format(record_name)
             raise Exception(message)
         record = self.records[record_name]
-        if raw_data:
-            record.update(self.raw_data[record_name])
+        record['record_name'] = record_name
         returnValue(record)
 
 __device__ = BluePMT

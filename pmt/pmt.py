@@ -23,7 +23,7 @@ from twisted.internet.defer import returnValue
 
 from server_tools.device_server import DeviceServer
 
-UPDATE_ID = 648821
+UPDATE_ID = 64883241
 
 class PMTServer(DeviceServer):
     update = Signal(UPDATE_ID, 'signal: update', 's')
@@ -35,10 +35,10 @@ class PMTServer(DeviceServer):
         yield device.record(record_name)
         returnValue(True)
     
-    @setting(12, record_name=['s', 'i'], raw_data='b', returns='s')
-    def retrive(self, c, record_name, raw_data=False):
+    @setting(12, record_name=['s', 'i'], returns='s')
+    def retrive(self, c, record_name):
         device = self.get_selected_device(c)
-        data = yield device.retrive(record_name, raw_data)
+        data = yield device.retrive(record_name)
         returnValue(json.dumps(data))
 
 if __name__ == "__main__":

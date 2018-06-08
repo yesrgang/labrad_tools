@@ -116,7 +116,7 @@ class PicoscopeServer(HardwareInterfaceServer):
 
     def do_save_data(self, ps, data_path, data_format):
         while not ps.isReady():
-            sleep(0.1)
+            sleep(0.05)
         response = {}
         data = {}
         for channel, segments in data_format.items():

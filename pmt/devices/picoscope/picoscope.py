@@ -14,7 +14,6 @@ class Picoscope(Device):
     picoscope_timeout = None # [ms]
 
     records = {}
-    raw_records = {}
     record_names = deque([])
     max_records = 100
     
