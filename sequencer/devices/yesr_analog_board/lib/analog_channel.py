@@ -3,7 +3,7 @@ from twisted.internet.defer import inlineCallbacks
 
 from analog_ramps import RampMaker
 
-class AD669Channel(object):
+class AnalogChannel(object):
     channel_type = 'analog'
     dac_voltage_range = (-10.0, 10.0)
     dac_bits = 16

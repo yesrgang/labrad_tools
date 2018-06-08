@@ -7,11 +7,14 @@ from lib.helpers import time_to_ticks
 from lib.helpers import get_output
 
 T_TRIG = 10e-6
-T_END = 30.0
+
+T_END = 10e-3 
+T_WAIT_TRIGGER = 42.94967294 # (2**31 - 1) / clk
+
 TRIGGER_CHANNEL = 'Trigger@D15'
 
 
-class XEM6001Board(Device):
+class YeSrDigitalBoard(Device):
     sequencer_type = 'digital'
 
     okfpga_server_name = None
@@ -19,7 +22,9 @@ class XEM6001Board(Device):
 
     channels = None
         
-    bitfile = 'digital_sequencer.bit'
+#    bitfile = 'digital_sequencer.bit'
+#    bitfile = 'digital_sequencer-v2.bit'
+    bitfile = 'digital_sequencer-v2b.bit'
     mode_ints = {'idle': 0, 'load': 1, 'run': 2}
     mode_wire = 0x00
     sequence_pipe = 0x80
@@ -27,6 +32,8 @@ class XEM6001Board(Device):
     state_invert_wires = [0x02, 0x04, 0x06, 0x08]
     clk = 50e6
     mode = 'idle'
+    
+    sequence_bytes = None
 
     @inlineCallbacks
     def initialize(self):
@@ -50,13 +57,23 @@ class XEM6001Board(Device):
         yield self.okfpga_server.update_wire_ins()
         self.mode = mode
 
+#    @inlineCallbacks
+#    def program_sequence(self, sequence):
+#        sequence_bytes = self.make_sequence_bytes(sequence)
+#        yield self.set_mode('idle')
+#        yield self.set_mode('load')
+#        yield self.okfpga_server.write_to_pipe_in(self.sequence_pipe, json.dumps(sequence_bytes))
+#        yield self.set_mode('idle')
     @inlineCallbacks
     def program_sequence(self, sequence):
         sequence_bytes = self.make_sequence_bytes(sequence)
         yield self.set_mode('idle')
-        yield self.set_mode('load')
-        yield self.okfpga_server.write_to_pipe_in(self.sequence_pipe, json.dumps(sequence_bytes))
-        yield self.set_mode('idle')
+        if sequence_bytes != self.sequence_bytes:
+            yield self.set_mode('load')
+            yield self.okfpga_server.write_to_pipe_in(self.sequence_pipe, json.dumps(sequence_bytes))
+            yield self.set_mode('idle')
+        self.sequence_bytes = sequence_bytes
+
 
     @inlineCallbacks
     def start_sequence(self):
@@ -70,7 +87,10 @@ class XEM6001Board(Device):
 
         # trigger other boards
         for s in sequence[TRIGGER_CHANNEL]:
-            s['out'] = False
+            if s['dt'] >= (2**31 - 2) / self.clk:
+                s['out'] = True
+            else:
+                s['out'] = False
         sequence[TRIGGER_CHANNEL][0]['out'] = True
 
         # allow for analog's ramp to zero, last item will not be written

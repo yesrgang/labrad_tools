@@ -1,9 +1,18 @@
 import json
 import os
 
+from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import Deferred
+from twisted.internet.reactor import callLater
+
 from datetime import date, timedelta
 from itertools import chain
 from time import strftime
+
+def sleep(secs):
+    d = Deferred()
+    callLater(secs, d.callback, None)
+    return d
 
 def value_to_sequence(sequence):
     if type(sequence.value).__name__ == 'list':
@@ -17,7 +26,6 @@ def value_to_sequence(sequence):
             return read_sequence_file(sequence.sequence_directory, 'all_off')
     else:
         return value
-
 
 def read_sequence_file(sequence_directory, filename):
     if type(filename).__name__ == 'dict':
@@ -67,3 +75,14 @@ def substitute_sequence_parameters(x, parameter_values):
 def get_duration(sequence):
     return max([sum([s['dt'] for s in cs]) for cs in sequence.values()])
 
+@inlineCallbacks
+def auto_trigger_advance(okfpga_server, conductor):
+    # clear trigger
+    is_triggered = yield okfpga_server.is_triggered(0x60)
+
+    while True:
+        is_triggered = yield okfpga_server.is_triggered(0x60)
+        if is_triggered:
+            break
+        yield sleep(0.01)
+    yield conductor.advance(None)

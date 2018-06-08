@@ -3,15 +3,17 @@ from labrad.wrappers import connectAsync
 
 from conductor_device.conductor_parameter import ConductorParameter
 
-class CenterFrequency(ConductorParameter):
+class CenterDemodFrequency(ConductorParameter):
     priority = 2
-    dark_frequency = 43.49e6
+    dark_frequency = 135.27e6
+#    ramp_range = 1e6
+#    dark_offset = 1e6
     ramp_rate = 1
 
     @inlineCallbacks
     def initialize(self):
         yield self.connect()
-        yield self.cxn.rf.select_device('ad9959_2')
+        yield self.cxn.rf.select_device('ad9959_3')
         yield self.cxn.rf.linear_ramp(0, 0, self.ramp_rate)
     
     @inlineCallbacks

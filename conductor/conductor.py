@@ -165,7 +165,7 @@ class ConductorServer(LabradServer):
                         parameter.value_type = value_type
                     self.parameters[device_name][parameter_name] = parameter
                     yield parameter.initialize()
-                    yield self.update_parameter(parameter)
+#                    yield self.update_parameter(parameter)
             except Exception, e:
                 print e
                 print 'error registering parameter {} {}'.format(device_name, parameter_name)
@@ -390,11 +390,17 @@ class ConductorServer(LabradServer):
     
     @setting(13)
     def advance(self, c, delay=0):
+#        ti = time()
+#        self.update_data() 
+#        yield self.advance_parameters()
+#        tf = time()
+#        if self.do_print_delay:
+#            print 'total delay: ', tf - ti
         if delay:
             callLater(delay, self.advance, c)
         else:
             ti = time()
-            self.update_data() 
+#            self.update_data() 
             yield self.advance_parameters()
             tf = time()
             if self.do_print_delay:
@@ -476,6 +482,7 @@ class ConductorServer(LabradServer):
         
         # call parameter updates in order of priority. 
         # 1 is called last. 0 is never called.
+
         for parameter in sorted(priority_parameters, key=lambda x: x.priority)[::-1]:
             if self.do_print_delay:
                 ti = time()

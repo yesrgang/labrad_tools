@@ -32,7 +32,7 @@ class SerialServer(HardwareInterfaceServer):
 
     def refresh_available_interfaces(self):
         if sys.platform.startswith('win32'):
-            addresses = ['COM{}'.format(i) for i in range(1, 20)]
+            addresses = ['COM{}'.format(i) for i in range(1, 30)]
         else:
             addresses = [cp[0] for cp in serial.tools.list_ports.comports()]
         

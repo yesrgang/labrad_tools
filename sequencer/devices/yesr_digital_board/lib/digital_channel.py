@@ -1,7 +1,7 @@
 import json
 from twisted.internet.defer import inlineCallbacks
 
-class XEM6001Channel(object):
+class DigitalChannel(object):
     channel_type = 'digital'
 
     def __init__(self, loc=None, name=None, mode='auto', manual_output=False,

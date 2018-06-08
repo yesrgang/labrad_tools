@@ -7,8 +7,14 @@ from conductor_device.conductor_parameter import ConductorParameter
 class FrequencyModulation(ConductorParameter):
     priority = 1
     waveforms = {
-        'red_mot': 'INT:\\alpha.arb',
-        'red_mot-fast': 'INT:\\alpha_fast.arb',
+#        'red_mot': 'INT:\\alpha.arb',
+#        'rm_tof': 'INT:\\alpha.arb',
+#        'red_mot-fast': 'INT:\\alpha_fast.arb',
+#        'red_mot-fast-tof': 'INT:\\alpha_fast.arb',
+        'red_mot': 'INT:\\ALPHA.ARB',
+        'rm_tof': 'INT:\\ALPHA.ARB',
+        'red_mot-fast': 'INT:\\ALPHA_FAST.ARB',
+        'red_mot-fast-tof': 'INT:\\ALPHA_FAST.ARB',
         }
 
     @inlineCallbacks
