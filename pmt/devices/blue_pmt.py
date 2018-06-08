@@ -3,6 +3,8 @@ import h5py
 import numpy as np
 import os
 from scipy.optimize import curve_fit
+import time
+
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import returnValue
 from twisted.internet.reactor import callInThread
@@ -130,7 +132,6 @@ class BluePMT(Picoscope):
         self.records[data_path] = processed_data
 
         yield self.device_server.update(self.name)
-
     
     @inlineCallbacks
     def retrive(self, record_name):

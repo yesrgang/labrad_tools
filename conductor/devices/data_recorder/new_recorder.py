@@ -8,8 +8,9 @@ from twisted.internet.defer import inlineCallbacks
 from conductor_device.conductor_parameter import ConductorParameter
 
 class NewRecorder(ConductorParameter):
-    priority = 1
-    data_dir = 'Z:\\SrQ\\new_data\\{}\\{}#{}\\'
+    priority = 2
+    #data_dir = 'Z:\\SrQ\\new_data\\{}\\{}#{}\\'
+    data_dir = '/home/srgang/yesrdata/SrQ/new_data/{}/{}#{}/'
     data_filename = '{}.conductor'
 
     @inlineCallbacks
@@ -29,4 +30,5 @@ class NewRecorder(ConductorParameter):
         pv = json.loads(pv_json)
         if exp_name is not None:
             with open(pt_path + '.json', 'w') as outfile:
+#                print 'saving {}.json'.format(pt_path)
                 json.dump(pv, outfile, default=lambda x: None)

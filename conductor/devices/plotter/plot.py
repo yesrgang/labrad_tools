@@ -4,8 +4,6 @@ from copy import deepcopy
 from labrad.wrappers import connectAsync
 from twisted.internet.defer import inlineCallbacks
 
-from matplotlib import pyplot as plt
-
 from conductor_device.conductor_parameter import ConductorParameter
 
 class Plot(ConductorParameter):

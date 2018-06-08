@@ -13,7 +13,7 @@ from conductor_device.conductor_parameter import ConductorParameter
 
 class RemoteCopier(ConductorParameter):
     priority = 1
-    local_data_dir = 'C:\\Users\\Ye Lab\\Desktop\\data\\{}'
+    local_data_dir = '/home/srgang/.local-data/{}'
     copy_counts = 1
     current_count = 1
     verbose = False

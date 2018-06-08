@@ -84,5 +84,5 @@ def auto_trigger_advance(okfpga_server, conductor):
         is_triggered = yield okfpga_server.is_triggered(0x60)
         if is_triggered:
             break
-        yield sleep(0.01)
+        yield sleep(0.02)
     yield conductor.advance(None)

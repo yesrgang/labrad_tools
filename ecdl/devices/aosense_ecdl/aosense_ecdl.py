@@ -8,7 +8,7 @@ from server_tools.device_server import Device
 from lib.helpers import sleep
 
 
-class AosenseEcdl(Device):
+class AOSenseECDL(Device):
     serial_server_name = None
     serial_address = None
     serial_timeout = 0.05
@@ -38,6 +38,7 @@ class AosenseEcdl(Device):
     @inlineCallbacks 
     def get_parameters(self):
         self.state = yield self.get_state()
+        print self.state
         self.diode_current = yield self.get_diode_current()
         self.piezo_voltage = yield self.get_piezo_voltage()
 
@@ -112,7 +113,7 @@ class AosenseEcdl(Device):
     def do_warmup(self):
         yield self.set_state(True)
         yield self.dial_current(self.default_diode_current)
-        yield sleep(.1)
+        yield sleep(1)
         yield self.get_parameters()
         update = {self.name: {p: getattr(self, p) for p in self.update_parameters}}
         yield self.device_server.update(json.dumps(update))
@@ -126,7 +127,7 @@ class AosenseEcdl(Device):
     def do_shutdown(self):
         yield self.dial_current(min(self.diode_current_range))
         yield self.set_state(False)
-        yield sleep(1)
+        yield sleep(5)
         yield self.get_parameters()
         update = {self.name: {p: getattr(self, p) for p in self.update_parameters}}
         yield self.device_server.update(json.dumps(update))

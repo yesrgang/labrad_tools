@@ -390,17 +390,10 @@ class ConductorServer(LabradServer):
     
     @setting(13)
     def advance(self, c, delay=0):
-#        ti = time()
-#        self.update_data() 
-#        yield self.advance_parameters()
-#        tf = time()
-#        if self.do_print_delay:
-#            print 'total delay: ', tf - ti
         if delay:
             callLater(delay, self.advance, c)
         else:
             ti = time()
-#            self.update_data() 
             yield self.advance_parameters()
             tf = time()
             if self.do_print_delay:

@@ -28,7 +28,8 @@ def deepish_copy(org):
 
 class LocalRecorder(ConductorParameter):
     priority = 1
-    local_data_dir = 'C:\\Users\\Ye Lab\\Desktop\\data\\{}'
+#    local_data_dir = 'C:\\Users\\Ye Lab\\Desktop\\data\\{}'
+    local_data_dir = '/home/srgang/.local-data/{}'
     writing_data = False
     write_counts = 1
     current_count = 1    
