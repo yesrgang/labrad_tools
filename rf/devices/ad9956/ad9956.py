@@ -59,6 +59,7 @@ class AD9956(Device):
 
         yield self.set_frequency(self.default_frequency)
 
+
     def make_cfr1w(self, mode):
         """ make control function register 1 word
 
@@ -219,10 +220,12 @@ class AD9956(Device):
                 + get_instruction_set(self.board_num, self.flow_reg, ftw)
                 )        
         command = ''.join(instruction_set)
+#        print 'command', command
         yield self.serial_server.write(command)
         
         if output == 'low':
             self.frequency_low = frequency
+            print 'frequency', frequency
         else:
             self.frequency_high = frequency
 

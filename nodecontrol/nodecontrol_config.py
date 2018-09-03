@@ -1,28 +1,28 @@
 node_dict = {
     'node yesr9': [
         'gpib',
-    ],
+        ],
     'node yesr10': [
-        'okfpga',
-        'serial',
-        'rf',
-        'frequency_counter',
-        'picomotor',
+        'awg',
         'current_controller',
         'ecdl',
-        'spectrum_analyzer',
+        'frequency_counter',
+        'okfpga',
+        'picomotor',
+        'picoscope',
+        'pmt',
         'power_supply',
-#        'sequencer',
-    ],
+        'rf',
+        'serial',
+        'spectrum_analyzer',
+        ],
     'node yesr20': [
         'gpib',
-        'serial',
         'okfpga',
-#        'keithley',
         'sequencer',
-        'conductor',
-    ],
+        'serial',
+        ],
     'node yesr5': [
         'serial',
-    ],
-}
+        ],
+    }

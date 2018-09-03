@@ -49,7 +49,10 @@ class ConductorServer(LabradServer):
     parameters are classes defined in ./devices/...
         parameters hold values representing real world attributes.
         typically send/receive data to/from hardware.
-        see ./devices/conductor_device/conductor_parameter.py for documentation
+        see ./devices/conductor_device/conductor_parameter.py for documentation.
+
+        the basic idea is that each time this server's "advance" method is called,
+        we will iterate through all registered parameters and call parameter.update()
     
     experiments specify parameter values to be iterated over 
         and a filename for saving data.
@@ -81,7 +84,7 @@ class ConductorServer(LabradServer):
     def initServer(self):
         # threads are used for calling parameter updates that can happen asynchronously
         # threadPoolSize limits number of calls that can happen at the same time, make it 'big'
-        reactor.suggestThreadPoolSize(100)
+        reactor.suggestThreadPoolSize(20)
 
         # register default parameters after connected to labrad
         callLater(.1, self.register_parameters, None, json.dumps(self.default_parameters))
@@ -475,7 +478,6 @@ class ConductorServer(LabradServer):
         
         # call parameter updates in order of priority. 
         # 1 is called last. 0 is never called.
-
         for parameter in sorted(priority_parameters, key=lambda x: x.priority)[::-1]:
             if self.do_print_delay:
                 ti = time()

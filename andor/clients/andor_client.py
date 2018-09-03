@@ -6,6 +6,7 @@ import h5py
 import matplotlib as mpl
 from twisted.internet.defer import inlineCallbacks
 from time import strftime
+import os
 
 from client_tools.connection import connection
 
@@ -22,9 +23,8 @@ from data_tools.process_image import process_image
 class ImageViewer(QtGui.QWidget):
     servername = 'yesr10_andor'
     update_id = 734520
-#    data_directory = '/home/yertle/yesrdata/SrQ/data/{}/'
-    data_directory = 'Z:\\SrQ\\data\\{}\\{}'
-    name = 'ikon'
+    data_dir = 'Z:\\SrQ\\new_data\\'
+    name = 'hr_ikon'
 
     def __init__(self, reactor):
         super(ImageViewer, self).__init__()
@@ -83,16 +83,17 @@ class ImageViewer(QtGui.QWidget):
         print 'got signal!', signal
         signal = json.loads(signal)
         for key, value in signal.items():
+            print 0
             if key == self.name:
                 record_path = value['record_path']
                 record_type = value['record_type']
-                image_path = self.data_directory.format(*record_path)
+                record_name = record_path.split('/')[6:]
+                image_path = self.data_dir + os.path.join(*record_name) + '.hdf5'                
                 print 'ok'
                 self.plot(image_path, record_type)
         print 'done signal'
     
     def plot(self, image_path, record_type):
-        print image_path
         image = process_image(image_path, record_type)
         image = np.rot90(image)
         self.imageView.setImage(image, autoRange=False, autoLevels=False)

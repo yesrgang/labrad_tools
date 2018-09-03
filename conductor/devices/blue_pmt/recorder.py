@@ -27,5 +27,13 @@ class Recorder(ConductorParameter):
         pt_filename = self.data_filename.format(exp_pt)
         pt_path = run_dir + pt_filename
         
-        if exp_name:
+        do_record = False
+        try:
+            sequence = self.conductor.parameters['sequencer']['sequence'].value
+            if 'pmt-fast-v' in sequence:
+                do_record = True
+        except:
+            print "conductor's blue_pmt unable to determine sequence"
+        
+        if exp_name and do_record:
             yield self.cxn.pmt.record(pt_path)

@@ -16,6 +16,7 @@ class PicomotorPosition(ConductorParameter):
     
     @inlineCallbacks
     def update(self):
-        if self.value != self.previous_value:
+        if self.value:
             yield self.cxn.picomotor.position(self.value)
-            self.previous_value = self.value
+            if type(self.value).__name__ is not 'list':
+                self.value = None
