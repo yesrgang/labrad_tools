@@ -1,6 +1,8 @@
-from aosense_ecdl.aosense_ecdl import AosenseEcdl
+import aosense_ecdl.aosense_ecdl
+reload(aosense_ecdl.aosense_ecdl)
+from aosense_ecdl.aosense_ecdl import AOSenseECDL
 
-class BlueMaster(AosenseEcdl):
+class BlueMaster(AOSenseECDL):
     autostart = False
     serial_server_name = 'yesr20_serial'
     serial_address = 'COM12'

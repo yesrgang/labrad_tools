@@ -26,7 +26,6 @@ class Recorder(ConductorParameter):
         
         pt_filename = self.data_filename.format(exp_pt)
         pt_path = run_dir + pt_filename
-
         try:
             sequence = self.conductor.parameters['sequencer']['sequence'].value
             if 'pmt-fast-v' in sequence:
