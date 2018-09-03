@@ -7,6 +7,7 @@ class DigitalChannel(object):
     def __init__(self, loc=None, name=None, mode='auto', manual_output=False,
             invert=False):
         self.loc = loc
+        self.idloc = '{}{:02d}'.format(loc[0], loc[1])
         self.name = str(name)
         self.mode = str(mode)
         self.manual_output = bool(manual_output)

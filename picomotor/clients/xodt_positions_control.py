@@ -22,5 +22,6 @@ if __name__ == '__main__':
     mirrors = [('hodt_x', 'hodt_y'), ('vodt_x', 'vodt_y'), ('trans_x', 'trans_y'), ('image_x', 'image_y')]
     configs = [[ClientConfig(axis) for axis in mirror] for mirror in mirrors]
     widget = MultiplePicomotorClient(configs, reactor)
+    widget.setWindowTitle('odt_positions_control')
     widget.show()
     reactor.run()

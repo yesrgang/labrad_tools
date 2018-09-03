@@ -13,7 +13,7 @@ class BoardG(YeSrAnalogBoard):
         AnalogChannel(loc=2, name='DACG02', mode='auto', manual_output=0.0),
         AnalogChannel(loc=3, name='813H2 pzt H', mode='auto', manual_output=0.0),
         AnalogChannel(loc=4, name='813H2 pzt V', mode='auto', manual_output=0.0),
-        AnalogChannel(loc=5, name='DACG05', mode='auto', manual_output=0.0),
+        AnalogChannel(loc=5, name='Alpha FM', mode='auto', manual_output=0.0),
         AnalogChannel(loc=6, name='DACG06', mode='auto', manual_output=0.0),
         AnalogChannel(loc=7, name='DACG07', mode='auto', manual_output=0.0),
         ]

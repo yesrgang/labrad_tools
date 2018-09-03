@@ -6,7 +6,7 @@ import os
 from conductor_device.conductor_parameter import ConductorParameter
 
 class Recorder(ConductorParameter):
-    priority = 1
+    priority = 2
     data_dir = '/home/srgang/yesrdata/SrQ/new_data/{}/{}#{}/'
     #data_filename = 'test_pmt-{}.json'
     data_filename = '{}.blue_pmt'
@@ -26,5 +26,10 @@ class Recorder(ConductorParameter):
         
         pt_filename = self.data_filename.format(exp_pt)
         pt_path = run_dir + pt_filename
-        
-        yield self.cxn.pmt.record(pt_path)
+
+        try:
+            sequence = self.conductor.parameters['sequencer']['sequence'].value
+            if 'pmt-fast-v' in sequence:
+                yield self.cxn.pmt.record(pt_path)
+            else:
+                print sequence

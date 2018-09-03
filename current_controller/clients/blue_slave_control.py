@@ -17,5 +17,6 @@ if __name__ == '__main__':
     channels = ['3d', '2d', 'zs']
     configs = [ControlConfig(channel) for channel in channels]
     widget = MultipleCurrentControl(configs, reactor)
+    widget.setWindowTitle('blue_slave_control')
     widget.show()
     reactor.run()

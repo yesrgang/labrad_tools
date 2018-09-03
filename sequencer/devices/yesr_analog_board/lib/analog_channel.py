@@ -21,6 +21,7 @@ class AnalogChannel(object):
     def set_board(self, board):
         self.board = board
         self.board_loc = board.name.upper() + str(self.loc).zfill(2)
+        self.idloc = board.name.upper() + str(self.loc).zfill(2)
         self.key = self.name + '@' + self.board_loc
 
     @inlineCallbacks

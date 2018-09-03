@@ -22,5 +22,6 @@ if __name__ == '__main__':
     mirrors = [('h1_x', 'h1_y'), ('h2_x', 'h2_y'), ('h1_xr', 'h1_yr'), ('h2_xr', 'h2_yr'), ('v_x', 'v_y')]
     configs = [[ClientConfig(axis) for axis in mirror] for mirror in mirrors]
     widget = MultiplePicomotorClient(configs, reactor)
+    widget.setWindowTitle('lattice_positions_control')
     widget.show()
     reactor.run()

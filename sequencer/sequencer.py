@@ -59,7 +59,7 @@ class SequencerServer(DeviceServer):
         if not channel:
             for d in self.devices.values():
                 for c in d.channels:
-                    if c.loc == loc:
+                    if c.idloc == loc:
                         channel = c
 
         if channel is None:
