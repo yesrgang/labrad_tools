@@ -6,44 +6,45 @@ from twisted.internet.defer import inlineCallbacks
 from conductor_device.conductor_parameter import ConductorParameter
 
 class Recorder(ConductorParameter):
-    priority = 1
+    priority = 2
     recorders = {
         'image': 'record_g',
+        'image_3P1_excitation': 'record_g',
+        'image_v2': 'record_g',
         'image_clock': 'record_eg',
         'image_ft': 'record_eg',
         }
 
+    data_dir = '/home/srgang/yesrdata/SrQ/new_data/{}/{}#{}/'
+    data_filename = '{}.ikon'
+
+    image_settings = {}
+
     @inlineCallbacks
     def initialize(self):
         yield self.connect()
-        yield self.cxn.yesr10_andor.select_device('ikon')
+        yield self.cxn.yesr10_andor.select_device('hr_ikon')
     
     @inlineCallbacks
     def update(self):
+        date_str = strftime('%Y%m%d')
+        exp_name = self.conductor.experiment_name
+        exp_num = self.conductor.experiment_number
+        exp_pt = self.conductor.point_number
+        run_dir = self.data_dir.format(date_str, exp_name, exp_num)
+        
+        pt_filename = self.data_filename.format(exp_pt)
+        pt_path = run_dir + pt_filename
+        
         recorder_type = ''
-        sequence = self.conductor.parameters['sequencer']['sequence'].value
-        for subsequence, recorder in self.recorders.items():
-            if subsequence in sequence:
-                recorder_type = recorder
+        try:
+            sequence = self.conductor.parameters['sequencer']['sequence'].value
+            for subsequence in self.recorders:
+                if subsequence in sequence:
+                    recorder_type = self.recorders[subsequence]
+        except:
+            print "conductor's andor ikon unable to determine sequence"
 
-        experiment_name = self.conductor.experiment_name
-        experiment_number = self.conductor.experiment_number
-        point_number = self.conductor.point_number
-        if experiment_name is not None:
-            record_name = '{}#{}-image#{}.hdf5'.format(experiment_name, 
-                    experiment_number, point_number)
-        else:
-            record_name = 'current-image.hdf5'
-        record_path = [strftime('%Y%m%d'), record_name]
-
-        if self.value is None:
-            self.value = {}
         if recorder_type:
-#            recorder_type = self.value.get('type', recorder_type)
-            recorder_config = json.dumps(self.value.get('config', {}))
-            yield self.cxn.yesr10_andor.record(record_path, recorder_type, 
-                    recorder_config)
-
-        yield self.conductor.set_parameter_value('andor', 'image_path', 
-                record_path, True)
-
+            image_settings_json = json.dumps(self.image_settings)
+            yield self.cxn.yesr10_andor.record(pt_path, recorder_type, image_settings_json)

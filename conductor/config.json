@@ -5,15 +5,12 @@
     "registry_directory": ["", "Servers", "conductor", "parameters"],
     "default_parameters": {
         "alpha": {
-            "frequency": {},
-            "frequency_modulation": {}
+            "frequency_modulation": {},
+            "frequency": {}
         },
         "beta": {
-            "frequency": {},
-            "frequency_modulation": {}
-        },
-        "blue_pmt": {
-            "recorder": {}
+            "frequency_modulation": {},
+            "frequency": {}
         },
         "clock_aom": {
             "frequency": {}
@@ -23,17 +20,14 @@
             "remote_copier": {},
             "new_recorder": {}
         },
-        "influxdb": {
-            "client": {}
-        },
+	"influxdb": {
+	    "client": {}
+	},
         "sequencer": {
             "sequence": {
                 "sequence_directory": "/home/srgang/yesrdata/SrQ/data/sequences/{}/",
                 "default_sequence": "all_off"
             }
-        },
-        "temperature": {
-            "keithley_temperature": {}
         },
         "time": {
             "timestamp": {}
