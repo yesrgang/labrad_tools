@@ -27,42 +27,103 @@ from time import time
 
 from labrad.server import LabradServer, setting
 from twisted.internet.defer import inlineCallbacks
+from twisted.internet import reactor
 from twisted.internet.reactor import callLater
+import StringIO
 
-def save_and_close(fig):
-    fig.savefig('figure.svg')
-    plt.close(fig)
+from autobahn.twisted.websocket import WebSocketServerProtocol
+from autobahn.twisted.websocket import WebSocketServerFactory
+
+WEBSOCKET_PORT = 9000
+
+class MyServerProtocol(WebSocketServerProtocol):
+    connections = list()
+
+    def onConnect(self, request):
+        self.connections.append(self)
+        print("Client connecting: {0}".format(request.peer))
+
+    def onOpen(self):
+        print("WebSocket connection open.")
+    
+    @classmethod
+    def send_figure(cls, figure):
+        print 'num connections', len(cls.connections)
+        for c in set(cls.connections):
+            reactor.callFromThread(cls.sendMessage, c, figure, False)
+    
+    @classmethod
+    def close_all_connections(cls):
+        for c in set(cls.connections):
+            reactor.callFromThread(cls.sendClose, c)
+    
+    def onMessage(self, payload, isBinary):
+        if isBinary:
+            print("Binary message received: {0} bytes".format(len(payload)))
+        else:
+            print("Text message received: {0}".format(payload.decode('utf8')))
+
+        # echo back message verbatim
+        self.sendMessage(payload, isBinary)
+
+    def onClose(self, wasClean, code, reason):
+        self.connections.remove(self)
+        print("WebSocket connection closed: {0}".format(reason))
 
 class PlotterServer(LabradServer):
     name = 'plotter'
+    is_plotting = False
 
     def initServer(self):
-        self.data = None
-        self.do_plot()
+        """ socket server """
+        url = u"ws://0.0.0.0:{}".format(WEBSOCKET_PORT)
+        factory = WebSocketServerFactory()
+        factory.protocol = MyServerProtocol
+        reactor.listenTCP(WEBSOCKET_PORT, factory)
+    
+    def stopServer(self):
+        """ socket server """
+        MyServerProtocol.close_all_connections()
 
-    @setting(0, json_data='s')
-    def plot(self, c, json_data):
-	self.data = json.loads(json_data)
-	print "set data", self.data
+    @setting(0)
+    def plot(self, c, settings_json='{}'):
+        settings = json.loads(settings_json)
+        if not self.is_plotting:
+            reactor.callInThread(self._plot, settings)
+        else:
+            print 'still making previous plot'
 
-    def do_plot(self):
-        if self.data:
-            data = self.data
-            path = data['plotter_path']
-            function_name = data['plotter_function']
+    def _plot(self, settings):
+        try:
+            self.is_plotting = True
+            print 'plotting'
+            path = settings['plotter_path']                 
+            function_name = settings['plotter_function'] # name of function that will process data
             module_name = os.path.split(path)[-1].strip('.py')
             module = imp.load_source(module_name, path)
             function = getattr(module, function_name)
+            fig = function(settings)
+            sio = StringIO.StringIO()
+            fig.savefig(sio, format='svg')
+            sio.seek(0)
+            figure_data = sio.read()
+            MyServerProtocol.send_figure(figure_data)
+            print 'done plotting'
+        except Exception as e:
+            raise e
+            print 'failed plotting'
+        finally:
+            self.is_plotting = False
             try:
-                fig = function(*data['args'], **data['kwargs'])
-                print "saving... {}".format(time())
-                save_and_close(fig)
-            except Exception, e:
-                print 'ERROR: ', e
-        callLater(1, self.do_plot)
-            
+                plt.close(fig)
+                del fig
+                del sio
+                del figure_data
+            except:
+                pass
+
+__server__ = PlotterServer
 
 if __name__ == "__main__":
     from labrad import util
-    server = PlotterServer()
-    util.runServer(server)
+    util.runServer(__server__())
