@@ -1,4 +1,5 @@
 import re
+import struct
 import vxi11
 
 from server_tools.device_server import Device
@@ -11,15 +12,23 @@ class DSA815(Device):
 
     def initialize(self):
         self.vxi11 = vxi11.Instrument(self.vxi11_address)
+        self.vxi11.write(':format:trace:data REAL')
 
     def set_trace(self, value):
         pass
 
     def get_trace(self):
+#        command = ':TRACe:DATA? TRACE{}'.format(self.trace_index)
+#        ans = self.vxi11.ask(command)
+#        trace = re.compile('^#[0-9]+\s(.+)$').match(ans).group(1).split(', ')
+#        return [float(s) for s in trace]
         command = ':TRACe:DATA? TRACE{}'.format(self.trace_index)
-        ans = self.vxi11.ask(command)
-        trace = re.compile('^#[0-9]+\s(.+)$').match(ans).group(1).split(', ')
-        return [float(s) for s in trace]
+        response = self.vxi11.ask_raw(command)
+        header = response[:11]
+        body = response[11:-1]
+        num_bytes = int(header[2:])
+        trace = struct.unpack('{}f'.format(num_bytes / 4), body)
+        return trace
    
     def get_frequency_range(self):
         start = self.vxi11.ask(':SENSe:FREQuency:STARt?')

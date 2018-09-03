@@ -17,12 +17,12 @@ def sleep(secs):
 def value_to_sequence(sequence):
     if type(sequence.value).__name__ == 'list':
         try: 
-            return combine_sequences([
+            read_sequences = [
                 read_sequence_file(sequence.sequence_directory, v) 
-                for v in sequence.value
-            ])
+                for v in sequence.value]
+            return combine_sequences(read_sequences)
         except Exception, e:
-            print e
+            print 'value_to_sequence error', e
             return read_sequence_file(sequence.sequence_directory, 'all_off')
     else:
         return value

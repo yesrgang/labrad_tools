@@ -1,12 +1,12 @@
 import json
-from copy import deepcopy
+import time
 
-from labrad.wrappers import connectAsync
 from twisted.internet.defer import inlineCallbacks
 
 from conductor_device.conductor_parameter import ConductorParameter
 
 class Plot(ConductorParameter):
+    data_dir = '/home/srgang/yesrdata/SrQ/new_data/{}/{}#{}/'
     priority = 1
 
     @inlineCallbacks
@@ -15,7 +15,13 @@ class Plot(ConductorParameter):
     
     @inlineCallbacks
     def update(self):
-        data_copy = deepcopy(self.conductor.data)
         if self.value:
-            yield self.cxn.plotter.plot(json.dumps(self.value), 
-                    json.dumps(data_copy, default=lambda x: None))
+            settings = json.loads(self.value)
+            date_str = time.strftime('%Y%m%d')
+            exp_name = self.conductor.experiment_name
+            exp_num = self.conductor.experiment_number
+            exp_pt = self.conductor.point_number
+            run_dir = self.data_dir.format(date_str, exp_name, exp_num)
+            settings['data_path'] = run_dir
+
+            yield self.cxn.plotter.plot(json.dumps(settings))
