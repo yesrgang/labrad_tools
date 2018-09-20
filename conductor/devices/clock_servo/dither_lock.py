@@ -2,6 +2,9 @@ import json
 from twisted.internet.defer import inlineCallbacks
 
 from conductor_device.conductor_parameter import ConductorParameter
+
+import lib.pid
+reload(lib.pid)
 from lib.pid import Dither, DitherPIID, DitherPID
 
 class DitherLock(ConductorParameter):
@@ -44,8 +47,9 @@ class DitherLock(ConductorParameter):
 
 #                    frac = self.conductor.data['pico']['fit_frac'][-1]
 #                    tot = self.conductor.data['pico']['fit_tot'][-1]
-
-                    pmt_data_json = yield self.cxn.pmt.retrive(-1)
+                    i_retrive = -2
+                    pmt_data_json = yield self.cxn.pmt.retrive(i_retrive)
+                    print i_retrive
                     pmt_data = json.loads(pmt_data_json)
                     frac = pmt_data['frac_fit']
                     tot = pmt_data['tot_fit']
@@ -55,29 +59,11 @@ class DitherLock(ConductorParameter):
                 except Exception as e:
                     print e
                     frac = None
-#            elif readout_type == 'camera':
-#                try:
-#                    image_path = self.conductor.data['andor']['image_path'][-1]
-#                    print 
-#                    print 'pid: ', name, side
-#                    print 'image_path', image_path
-#                    print 
-#                    camera_settings = self.pid[name].camera_settings
-#                    camera_settings.update({'image_path': image_path})
-#                    response = yield self.cxn.yesr10_andor.get_sums(
-#                        json.dumps(camera_settings)
-#                        )
-#                    frac = json.loads(response)['center']['frac']
-#                    tot = json.loads(response)['center']['tot']
-#                    yield self.conductor.set_parameter_value(
-#                            'andor', 'frac', frac, True)
-#                    yield self.conductor.set_parameter_value(
-#                            'andor', 'tot', tot, True)
                 except Exception as e:
                     print e
                     print 'error getting frac from camera'
                     frac = None
-            print 'tc', self.pid[name].tot_cutoff
+            
             if frac:
                 if tot > self.pid[name].tot_cutoff:
                     out = self.pid[name].tick(side, frac)

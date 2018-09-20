@@ -1,6 +1,6 @@
 {
-    "data_directory": "./.data/{}/",
-    "parameters_directory": "/home/srgang/srqdata/parameters/",
+    "data_directory": "/home/srgang/yesrdata/SrQ/data/{}/",
+    "parameters_directory": "/home/srgang/yesrdata/SrQ/data/parameters/",
     "time_format": "%Y%m%d",
     "registry_directory": ["", "Servers", "conductor", "parameters"],
     "default_parameters": {
@@ -25,7 +25,7 @@
 	},
         "sequencer": {
             "sequence": {
-                "sequence_directory": "/home/srgang/srqdata/sequences/{}/",
+                "sequence_directory": "/home/srgang/yesrdata/SrQ/data/sequences/{}/",
                 "default_sequence": "all_off"
             }
         },

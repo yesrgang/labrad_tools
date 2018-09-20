@@ -10,12 +10,14 @@ class Recorder(ConductorParameter):
     recorders = {
         'image': 'record_g',
         'image_3P1_excitation': 'record_g',
+        'image_3P1_excitation-405': 'record_g',
         'image_v2': 'record_g',
         'image_clock': 'record_eg',
         'image_ft': 'record_eg',
         }
 
-    data_dir = '/home/srgang/yesrdata/SrQ/new_data/{}/{}#{}/'
+    #data_dir = '/home/srgang/yesrdata/SrQ/new_data/{}/{}#{}/'
+    data_dir = '/home/srgang/srqdata/data/{}/{}#{}/'
     data_filename = '{}.ikon'
 
     image_settings = {}

@@ -6,9 +6,9 @@ import os
 from conductor_device.conductor_parameter import ConductorParameter
 
 class Recorder(ConductorParameter):
-    priority = 2
-    data_dir = '/home/srgang/yesrdata/SrQ/new_data/{}/{}#{}/'
-    #data_filename = 'test_pmt-{}.json'
+    #priority = 2
+    priority = 8
+    data_dir = '/home/srgang/srqdata/data/{}/{}#{}/'
     data_filename = '{}.blue_pmt'
 
     @inlineCallbacks
@@ -26,7 +26,7 @@ class Recorder(ConductorParameter):
         
         pt_filename = self.data_filename.format(exp_pt)
         pt_path = run_dir + pt_filename
-        
+
         do_record = False
         try:
             sequence = self.conductor.parameters['sequencer']['sequence'].value

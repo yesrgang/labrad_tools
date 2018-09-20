@@ -6,7 +6,8 @@ from twisted.internet.defer import inlineCallbacks
 from conductor_device.conductor_parameter import ConductorParameter
 
 class Plot(ConductorParameter):
-    data_dir = '/home/srgang/yesrdata/SrQ/new_data/{}/{}#{}/'
+#    data_dir = '/home/srgang/yesrdata/SrQ/new_data/{}/{}#{}/'
+    data_dir = '/home/srgang/srqdata/data/{}/{}#{}/'
     priority = 1
 
     @inlineCallbacks

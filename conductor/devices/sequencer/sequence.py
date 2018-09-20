@@ -10,7 +10,7 @@ from conductor_device.conductor_parameter import ConductorParameter
 from lib.helpers import *
 
 class Sequence(ConductorParameter):
-    priority = 10
+    priority = 11
     value_type = 'list'
 
     auto_trigger = True

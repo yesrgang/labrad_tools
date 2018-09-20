@@ -8,9 +8,9 @@ from twisted.internet.defer import inlineCallbacks
 from conductor_device.conductor_parameter import ConductorParameter
 
 class NewRecorder(ConductorParameter):
-    priority = 10
-    #data_dir = 'Z:\\SrQ\\new_data\\{}\\{}#{}\\'
-    data_dir = '/home/srgang/yesrdata/SrQ/new_data/{}/{}#{}/'
+#    priority = 10
+    priority = 2
+    data_dir = '/home/srgang/srqdata/data/{}/{}#{}/'
     data_filename = '{}.conductor'
 
     @inlineCallbacks

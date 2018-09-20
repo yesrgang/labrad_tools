@@ -1,10 +1,6 @@
-import os
 from twisted.internet.defer import inlineCallbacks
-from labrad.wrappers import connectAsync
 
 from conductor_device.conductor_parameter import ConductorParameter
-
-LABRADPASSWORD = os.getenv('LABRADPASSWORD')
 
 class Frequency(ConductorParameter):
     priority = 1

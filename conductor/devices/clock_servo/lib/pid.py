@@ -133,6 +133,8 @@ class DitherPID(object):
             'a_2': 1.
         }
 
+        print self.filter_coefficients
+
     def tick(self, side, value):
         self.input_buffer[side].append(value)
         if np.product([bool(v) for v in self.input_buffer.values()]):
